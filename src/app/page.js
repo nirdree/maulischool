@@ -137,7 +137,7 @@ const INITIAL_DATA = {
     }
   ],
   schoolSettings: {
-    name: "Sunrise International School",
+    name: "Mauli  School",
     address: "123 Education Lane, Pune, Maharashtra 411001",
     phone: "020-6543210",
     email: "info@sunrise.edu",
@@ -541,7 +541,7 @@ const LoginView = ({ onLogin }) => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-200">🌅</div>
-          <h1 className="text-2xl font-bold text-gray-900">Sunrise International School</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Mauli  School</h1>
           <p className="text-gray-500 text-sm mt-1">School Management System</p>
         </div>
         <Card className="p-8">
@@ -638,7 +638,7 @@ const PublicEnquiryView = ({ onBack }) => {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-indigo-600 rounded-xl flex items-center justify-center text-2xl mx-auto mb-3">🌅</div>
-          <h1 className="text-xl font-bold text-gray-900">Sunrise International School</h1>
+          <h1 className="text-xl font-bold text-gray-900">Mauli  School</h1>
           <p className="text-sm text-gray-500">Admission Enquiry Form</p>
         </div>
         <Card className="p-6">
