@@ -225,19 +225,19 @@ const useApp = () => useContext(AppContext);
 // ==================== HELPERS ====================
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const STATUS_COLORS = {
-  New: "bg-blue-100 text-blue-700", Contacted: "bg-yellow-100 text-yellow-700",
-  AdmissionDone: "bg-green-100 text-green-700", Cancelled: "bg-red-100 text-red-700",
-  PlanningFuture: "bg-purple-100 text-purple-700", Other: "bg-gray-100 text-gray-700",
-  Approved: "bg-green-100 text-green-700", UnderReview: "bg-blue-100 text-blue-700",
-  Rejected: "bg-red-100 text-red-700", OnHold: "bg-orange-100 text-orange-700",
-  Left: "bg-gray-100 text-gray-700", Alumni: "bg-teal-100 text-teal-700",
-  Paid: "bg-green-100 text-green-700", Pending: "bg-yellow-100 text-yellow-700",
-  Overdue: "bg-red-100 text-red-700", PartiallyPaid: "bg-orange-100 text-orange-700",
-  Waived: "bg-gray-100 text-gray-700", Present: "bg-green-100 text-green-700",
-  Absent: "bg-red-100 text-red-700", Late: "bg-yellow-100 text-yellow-700",
-  HalfDay: "bg-orange-100 text-orange-700", Holiday: "bg-blue-100 text-blue-700",
-  active: "bg-green-100 text-green-700", inactive: "bg-gray-100 text-gray-700",
-  resigned: "bg-red-100 text-red-700",
+  New: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", Contacted: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  AdmissionDone: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", Cancelled: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+  PlanningFuture: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300", Other: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  Approved: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", UnderReview: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+  Rejected: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300", OnHold: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+  Left: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300", Alumni: "bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300",
+  Paid: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", Pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  Overdue: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300", PartiallyPaid: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+  Waived: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300", Present: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  Absent: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300", Late: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  HalfDay: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300", Holiday: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+  active: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300", inactive: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  resigned: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
 };
 
 const fmt = (date) => date ? new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-';
@@ -257,7 +257,7 @@ const genId = (prefix, list) => {
 
 // ==================== UI COMPONENTS ====================
 const Badge = ({ status, label }) => (
-  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[status] || 'bg-gray-100 text-gray-700'}`}>
+  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
     {label || status}
   </span>
 );
@@ -282,10 +282,10 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
     <div className="fixed inset-0 z-40 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-        <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto`}>
-          <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-            <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-500 text-xl">×</button>
+        <div className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto`}>
+          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">{title}</h3>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 text-xl">×</button>
           </div>
           <div className="p-6">{children}</div>
         </div>
@@ -296,9 +296,9 @@ const Modal = ({ isOpen, onClose, title, children, size = "md" }) => {
 
 const Confirm = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Confirm", danger = false }) => (
   <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-    <p className="text-gray-600 mb-6">{message}</p>
+    <p className="text-gray-600 dark:text-gray-400 mb-6">{message}</p>
     <div className="flex gap-3 justify-end">
-      <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Cancel</button>
+      <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
       <button onClick={() => { onConfirm(); onClose(); }} className={`px-4 py-2 rounded-lg text-white font-medium ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-indigo-600 hover:bg-indigo-700'}`}>{confirmText}</button>
     </div>
   </Modal>
@@ -306,16 +306,16 @@ const Confirm = ({ isOpen, onClose, onConfirm, title, message, confirmText = "Co
 
 const Input = ({ label, required, error, className = "", ...props }) => (
   <div className="space-y-1">
-    {label && <label className="block text-sm font-medium text-gray-700">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
-    <input className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${error ? 'border-red-400' : 'border-gray-200'} ${className}`} {...props} />
+    {label && <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
+    <input className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${error ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'} ${className}`} {...props} />
     {error && <p className="text-xs text-red-500">{error}</p>}
   </div>
 );
 
 const Select = ({ label, required, error, options = [], className = "", ...props }) => (
   <div className="space-y-1">
-    {label && <label className="block text-sm font-medium text-gray-700">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
-    <select className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white ${error ? 'border-red-400' : 'border-gray-200'} ${className}`} {...props}>
+    {label && <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
+    <select className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${error ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'} ${className}`} {...props}>
       <option value="">Select...</option>
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
@@ -325,8 +325,8 @@ const Select = ({ label, required, error, options = [], className = "", ...props
 
 const Textarea = ({ label, required, error, className = "", ...props }) => (
   <div className="space-y-1">
-    {label && <label className="block text-sm font-medium text-gray-700">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
-    <textarea className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none ${error ? 'border-red-400' : 'border-gray-200'} ${className}`} rows={3} {...props} />
+    {label && <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>}
+    <textarea className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${error ? 'border-red-400' : 'border-gray-200 dark:border-gray-600'} ${className}`} rows={3} {...props} />
     {error && <p className="text-xs text-red-500">{error}</p>}
   </div>
 );
@@ -334,12 +334,12 @@ const Textarea = ({ label, required, error, className = "", ...props }) => (
 const Button = ({ children, variant = "primary", size = "md", loading, className = "", ...props }) => {
   const variants = {
     primary: "bg-indigo-600 hover:bg-indigo-700 text-white",
-    secondary: "bg-gray-100 hover:bg-gray-200 text-gray-700",
+    secondary: "bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300",
     danger: "bg-red-500 hover:bg-red-600 text-white",
     success: "bg-emerald-500 hover:bg-emerald-600 text-white",
     warning: "bg-amber-500 hover:bg-amber-600 text-white",
-    outline: "border border-gray-200 hover:bg-gray-50 text-gray-700",
-    ghost: "hover:bg-gray-100 text-gray-600",
+    outline: "border border-gray-200 hover:bg-gray-50 text-gray-700 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-gray-300",
+    ghost: "hover:bg-gray-100 text-gray-600 dark:hover:bg-gray-700 dark:text-gray-400",
   };
   const sizes = { sm: "px-3 py-1.5 text-xs", md: "px-4 py-2 text-sm", lg: "px-6 py-2.5 text-base" };
   return (
@@ -351,18 +351,18 @@ const Button = ({ children, variant = "primary", size = "md", loading, className
 };
 
 const Card = ({ children, className = "", ...props }) => (
-  <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm ${className}`} {...props}>{children}</div>
+  <div className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm ${className}`} {...props}>{children}</div>
 );
 
 const StatCard = ({ label, value, icon, color = "indigo", change }) => {
-  const colors = { indigo: "bg-indigo-50 text-indigo-600", green: "bg-emerald-50 text-emerald-600", amber: "bg-amber-50 text-amber-600", red: "bg-red-50 text-red-600", blue: "bg-blue-50 text-blue-600", purple: "bg-purple-50 text-purple-600" };
+  const colors = { indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-400", green: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900 dark:text-emerald-400", amber: "bg-amber-50 text-amber-600 dark:bg-amber-900 dark:text-amber-400", red: "bg-red-50 text-red-600 dark:bg-red-900 dark:text-red-400", blue: "bg-blue-50 text-blue-600 dark:bg-blue-900 dark:text-blue-400", purple: "bg-purple-50 text-purple-600 dark:bg-purple-900 dark:text-purple-400" };
   return (
     <Card className="p-5">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-gray-500 font-medium">{label}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
-          {change && <p className={`text-xs mt-1 ${change > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{change > 0 ? '↑' : '↓'} {Math.abs(change)}% vs last month</p>}
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{value}</p>
+          {change && <p className={`text-xs mt-1 ${change > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>{change > 0 ? '↑' : '↓'} {Math.abs(change)}% vs last month</p>}
         </div>
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${colors[color]}`}>{icon}</div>
       </div>
@@ -374,18 +374,18 @@ const Table = ({ columns, data, onRowClick, emptyMsg = "No records found" }) => 
   <div className="overflow-x-auto">
     <table className="w-full text-sm">
       <thead>
-        <tr className="border-b border-gray-100 bg-gray-50">
-          {columns.map((col, i) => <th key={i} className="text-left px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide whitespace-nowrap">{col.header}</th>)}
+        <tr className="border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          {columns.map((col, i) => <th key={i} className="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">{col.header}</th>)}
         </tr>
       </thead>
       <tbody>
         {data.length === 0 ? (
-          <tr><td colSpan={columns.length} className="px-4 py-12 text-center text-gray-400">
+          <tr><td colSpan={columns.length} className="px-4 py-12 text-center text-gray-400 dark:text-gray-500">
             <div className="flex flex-col items-center gap-2"><span className="text-4xl">📭</span><span className="font-medium">{emptyMsg}</span></div>
           </td></tr>
         ) : data.map((row, i) => (
-          <tr key={i} onClick={onRowClick ? () => onRowClick(row) : undefined} className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}>
-            {columns.map((col, j) => <td key={j} className="px-4 py-3 whitespace-nowrap">{col.render ? col.render(row) : row[col.key]}</td>)}
+          <tr key={i} onClick={onRowClick ? () => onRowClick(row) : undefined} className={`border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}>
+            {columns.map((col, j) => <td key={j} className="px-4 py-3 whitespace-nowrap text-gray-900 dark:text-gray-100">{col.render ? col.render(row) : row[col.key]}</td>)}
           </tr>
         ))}
       </tbody>
@@ -402,9 +402,9 @@ const Avatar = ({ name, photo, size = 8 }) => {
 };
 
 const Tabs = ({ tabs, activeTab, onChange }) => (
-  <div className="flex gap-1 p-1 bg-gray-100 rounded-xl overflow-x-auto">
+  <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-x-auto">
     {tabs.map(t => (
-      <button key={t.value} onClick={() => onChange(t.value)} className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeTab === t.value ? 'bg-white shadow text-indigo-600' : 'text-gray-500 hover:text-gray-700'}`}>
+      <button key={t.value} onClick={() => onChange(t.value)} className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${activeTab === t.value ? 'bg-white dark:bg-gray-700 shadow text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}>
         {t.label}
       </button>
     ))}
@@ -414,12 +414,12 @@ const Tabs = ({ tabs, activeTab, onChange }) => (
 const PageHeader = ({ title, subtitle, breadcrumbs, actions }) => (
   <div className="mb-6">
     {breadcrumbs && (
-      <div className="flex items-center gap-1 text-xs text-gray-400 mb-2">
-        {breadcrumbs.map((b, i) => <span key={i} className="flex items-center gap-1">{i > 0 && <span>/</span>}<span className={i === breadcrumbs.length - 1 ? 'text-gray-600 font-medium' : ''}>{b}</span></span>)}
+      <div className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 mb-2">
+        {breadcrumbs.map((b, i) => <span key={i} className="flex items-center gap-1">{i > 0 && <span>/</span>}<span className={i === breadcrumbs.length - 1 ? 'text-gray-600 dark:text-gray-400 font-medium' : ''}>{b}</span></span>)}
       </div>
     )}
     <div className="flex items-start justify-between gap-4 flex-wrap">
-      <div><h1 className="text-2xl font-bold text-gray-900">{title}</h1>{subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}</div>
+      <div><h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h1>{subtitle && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>}</div>
       {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
     </div>
   </div>
@@ -427,8 +427,8 @@ const PageHeader = ({ title, subtitle, breadcrumbs, actions }) => (
 
 const SearchBar = ({ value, onChange, placeholder = "Search..." }) => (
   <div className="relative">
-    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-    <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">🔍</span>
+    <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="w-full pl-9 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
   </div>
 );
 
@@ -493,34 +493,34 @@ const LoginView = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-indigo-200">🌅</div>
-          <h1 className="text-2xl font-bold text-gray-900">Mauli School</h1>
-          <p className="text-gray-500 text-sm mt-1">School Management System</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mauli School</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">School Management System</p>
         </div>
         <Card className="p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Sign In</h2>
-          {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">Sign In</h2>
+          {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">{error}</div>}
           <form onSubmit={handleLogin} className="space-y-4">
             <Input label="Email Address" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Enter your email" required />
             <Input label="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter your password" required />
             <Button className="w-full" loading={loading} type="submit">Sign In</Button>
           </form>
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Demo Accounts</p>
+          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Demo Accounts</p>
             <div className="grid grid-cols-2 gap-2">
               {DEMO_ACCOUNTS.map(acc => (
-                <button key={acc.role} onClick={() => { setEmail(acc.email); setPassword(acc.pass); }} className="text-xs p-2 rounded-lg border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-left transition-colors">
-                  <span className="font-semibold text-gray-700">{acc.label}</span><br /><span className="text-gray-400">{acc.email}</span>
+                <button key={acc.role} onClick={() => { setEmail(acc.email); setPassword(acc.pass); }} className="text-xs p-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 text-left transition-colors">
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">{acc.label}</span><br /><span className="text-gray-400 dark:text-gray-500">{acc.email}</span>
                 </button>
               ))}
             </div>
           </div>
         </Card>
-        <p className="text-center text-xs text-gray-400 mt-4">
-          For enquiry: <button onClick={() => onLogin({ role: 'public' })} className="text-indigo-600 hover:underline">Submit Enquiry (Public)</button>
+        <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4">
+          For enquiry: <button onClick={() => onLogin({ role: 'public' })} className="text-indigo-600 dark:text-indigo-400 hover:underline">Submit Enquiry (Public)</button>
         </p>
       </div>
     </div>
@@ -567,14 +567,14 @@ const PublicEnquiryView = ({ onBack }) => {
   const classes = [...data.classrooms].filter(c => c.isActive).sort((a, b) => a.order - b.order);
 
   if (submitted) return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <Card className="p-8 max-w-md w-full text-center">
         <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">✓</div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Enquiry Submitted!</h2>
-        <p className="text-gray-500 mb-4">Your enquiry has been received. We will contact you shortly.</p>
-        <div className="bg-indigo-50 rounded-xl p-4 mb-6">
-          <p className="text-xs text-indigo-500 font-medium uppercase tracking-wide">Your Enquiry ID</p>
-          <p className="text-3xl font-bold text-indigo-700 font-mono">{submitted.enquiryId}</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Enquiry Submitted!</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-4">Your enquiry has been received. We will contact you shortly.</p>
+        <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4 mb-6">
+          <p className="text-xs text-indigo-500 dark:text-indigo-400 font-medium uppercase tracking-wide">Your Enquiry ID</p>
+          <p className="text-3xl font-bold text-indigo-700 dark:text-indigo-300 font-mono">{submitted.enquiryId}</p>
         </div>
         <div className="space-y-2">
           <Button className="w-full" onClick={() => setSubmitted(null)}>Submit Another Enquiry</Button>
@@ -585,15 +585,15 @@ const PublicEnquiryView = ({ onBack }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-indigo-600 rounded-xl flex items-center justify-center text-2xl mx-auto mb-3">🌅</div>
-          <h1 className="text-xl font-bold text-gray-900">Mauli School</h1>
-          <p className="text-sm text-gray-500">Admission Enquiry Form</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Mauli School</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Admission Enquiry Form</p>
         </div>
         <Card className="p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-5">📋 Student Enquiry</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-5">📋 Student Enquiry</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <Select label="Class Applying For" required value={form.classApplying} onChange={e => f('classApplying', e.target.value)} error={errors.classApplying} options={classes.map(c => ({ value: c._id, label: c.displayName }))} />
@@ -606,12 +606,12 @@ const PublicEnquiryView = ({ onBack }) => {
             <Input label="Mobile No" required value={form.mobileNo} onChange={e => f('mobileNo', e.target.value)} error={errors.mobileNo} maxLength={10} />
             <Input label="Email ID" required type="email" value={form.email} onChange={e => f('email', e.target.value)} error={errors.email} />
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Gender <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gender <span className="text-red-500">*</span></label>
               <div className="flex gap-4 pt-1">
                 {["Male", "Female", "Other"].map(g => (
                   <label key={g} className="flex items-center gap-2 cursor-pointer">
                     <input type="radio" name="gender" value={g} checked={form.gender === g} onChange={() => f('gender', g)} />
-                    <span className="text-sm">{g}</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100">{g}</span>
                   </label>
                 ))}
               </div>
@@ -668,34 +668,34 @@ const AdminDashboard = () => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-5 lg:col-span-2">
-          <h3 className="font-bold text-gray-900 mb-4">Fee Collection (Last 6 Months)</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Fee Collection (Last 6 Months)</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={feeData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `₹${v / 1000}k`} />
-              <Tooltip formatter={v => fmtCurrency(v)} />
-              <Legend />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" opacity={0.2} />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9CA3AF" />
+              <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `₹${v / 1000}k`} stroke="#9CA3AF" />
+              <Tooltip formatter={v => fmtCurrency(v)} contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} />
+              <Legend wrapperStyle={{ color: '#6B7280' }} />
               <Bar dataKey="collected" fill="#6366F1" radius={[4, 4, 0, 0]} name="Collected" />
               <Bar dataKey="target" fill="#E0E7FF" radius={[4, 4, 0, 0]} name="Target" />
             </BarChart>
           </ResponsiveContainer>
         </Card>
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Attendance Overview</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Attendance Overview</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={attendanceData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
                 {attendanceData.map((e, i) => <Cell key={i} fill={e.fill} />)}
               </Pie>
-              <Tooltip formatter={v => `${v}%`} />
+              <Tooltip formatter={v => `${v}%`} contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} />
             </PieChart>
           </ResponsiveContainer>
           <div className="space-y-1 mt-2">
             {attendanceData.map(d => (
               <div key={d.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ background: d.fill }} /><span className="text-gray-600">{d.name}</span></div>
-                <span className="font-semibold">{d.value}%</span>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ background: d.fill }} /><span className="text-gray-600 dark:text-gray-400">{d.name}</span></div>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{d.value}%</span>
               </div>
             ))}
           </div>
@@ -704,15 +704,15 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-900">Recent Enquiries</h3>
+            <h3 className="font-bold text-gray-900 dark:text-gray-100">Recent Enquiries</h3>
             <Badge status="New" label={`${data.enquiries.filter(e => e.status === 'New').length} New`} />
           </div>
           <div className="space-y-3">
             {data.enquiries.slice(-4).reverse().map(enq => {
               const cls = data.classrooms.find(c => c._id === enq.classApplying);
               return (
-                <div key={enq._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div><p className="font-medium text-sm text-gray-900">{enq.childName}</p><p className="text-xs text-gray-500">{cls?.displayName} · {enq.enquiryId}</p></div>
+                <div key={enq._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                  <div><p className="font-medium text-sm text-gray-900 dark:text-gray-100">{enq.childName}</p><p className="text-xs text-gray-500 dark:text-gray-400">{cls?.displayName} · {enq.enquiryId}</p></div>
                   <Badge status={enq.status} />
                 </div>
               );
@@ -720,56 +720,56 @@ const AdminDashboard = () => {
           </div>
         </Card>
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Fee Defaulters</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Fee Defaulters</h3>
           <div className="space-y-3">
             {data.fees.filter(f => f.status === 'Pending' || f.status === 'Overdue').map(fee => {
               const student = data.students.find(s => s._id === fee.studentId);
               const cls = data.classrooms.find(c => c._id === fee.classId);
               return student ? (
-                <div key={fee._id} className="flex items-center justify-between p-3 bg-red-50 rounded-xl">
+                <div key={fee._id} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
                   <div className="flex items-center gap-2">
                     <Avatar name={`${student.firstName} ${student.lastName}`} size={8} />
-                    <div><p className="font-medium text-sm">{student.firstName} {student.lastName}</p><p className="text-xs text-gray-500">{cls?.displayName} · {MONTHS[fee.month - 1]}</p></div>
+                    <div><p className="font-medium text-sm text-gray-900 dark:text-gray-100">{student.firstName} {student.lastName}</p><p className="text-xs text-gray-500 dark:text-gray-400">{cls?.displayName} · {MONTHS[fee.month - 1]}</p></div>
                   </div>
-                  <div className="text-right"><p className="font-bold text-red-600 text-sm">{fmtCurrency(fee.finalAmount)}</p><Badge status={fee.status} /></div>
+                  <div className="text-right"><p className="font-bold text-red-600 dark:text-red-400 text-sm">{fmtCurrency(fee.finalAmount)}</p><Badge status={fee.status} /></div>
                 </div>
               ) : null;
             })}
-            {data.fees.filter(f => f.status === 'Pending' || f.status === 'Overdue').length === 0 && <p className="text-center text-gray-400 text-sm py-4">✅ All fees are paid!</p>}
+            {data.fees.filter(f => f.status === 'Pending' || f.status === 'Overdue').length === 0 && <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-4">✅ All fees are paid!</p>}
           </div>
         </Card>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Recent Notices</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Recent Notices</h3>
           <div className="space-y-3">
             {data.notices.slice(0, 3).map(n => (
-              <div key={n._id} className={`p-3 rounded-xl border-l-4 ${n.priority === 'Urgent' ? 'bg-red-50 border-red-400' : n.priority === 'Important' ? 'bg-amber-50 border-amber-400' : 'bg-blue-50 border-blue-400'}`}>
+              <div key={n._id} className={`p-3 rounded-xl border-l-4 ${n.priority === 'Urgent' ? 'bg-red-50 dark:bg-red-900/20 border-red-400' : n.priority === 'Important' ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400' : 'bg-blue-50 dark:bg-blue-900/20 border-blue-400'}`}>
                 <div className="flex items-start justify-between">
-                  <p className="font-medium text-sm text-gray-900">{n.title}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${n.priority === 'Urgent' ? 'bg-red-100 text-red-700' : n.priority === 'Important' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{n.priority}</span>
+                  <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{n.title}</p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${n.priority === 'Urgent' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' : n.priority === 'Important' ? 'bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300' : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'}`}>{n.priority}</span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1 line-clamp-1">{n.content}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{n.content}</p>
               </div>
             ))}
           </div>
         </Card>
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Pending Leave Requests</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Pending Leave Requests</h3>
           <div className="space-y-3">
             {data.leaves.filter(l => l.status === 'Pending').map(leave => {
               const emp = data.employees.find(e => e._id === leave.employeeId);
               return emp ? (
-                <div key={leave._id} className="flex items-center justify-between p-3 bg-amber-50 rounded-xl">
+                <div key={leave._id} className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
                   <div className="flex items-center gap-2">
                     <Avatar name={emp.name} size={8} />
-                    <div><p className="font-medium text-sm">{emp.name}</p><p className="text-xs text-gray-500">{leave.leaveType} · {leave.totalDays} day(s)</p></div>
+                    <div><p className="font-medium text-sm text-gray-900 dark:text-gray-100">{emp.name}</p><p className="text-xs text-gray-500 dark:text-gray-400">{leave.leaveType} · {leave.totalDays} day(s)</p></div>
                   </div>
                   <Badge status="Pending" />
                 </div>
               ) : null;
             })}
-            {data.leaves.filter(l => l.status === 'Pending').length === 0 && <p className="text-center text-gray-400 text-sm py-4">No pending leave requests</p>}
+            {data.leaves.filter(l => l.status === 'Pending').length === 0 && <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-4">No pending leave requests</p>}
           </div>
         </Card>
       </div>
@@ -791,19 +791,19 @@ const PrincipalDashboard = () => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Class-wise Students</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Class-wise Students</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={classes.map(c => ({ name: c.displayName.replace('Class ', 'C').replace('Jr. ', 'Jr.'), count: data.students.filter(s => s.classId === c._id && s.status === 'Approved').length }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" opacity={0.2} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="#9CA3AF" />
+              <YAxis tick={{ fontSize: 11 }} stroke="#9CA3AF" />
+              <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} />
               <Bar dataKey="count" fill="#6366F1" radius={[4, 4, 0, 0]} name="Students" />
             </BarChart>
           </ResponsiveContainer>
         </Card>
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Recent Leave Requests</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Recent Leave Requests</h3>
           <div className="space-y-3">
             {data.leaves.slice(0, 4).map(l => {
               const emp = data.employees.find(e => e._id === l.employeeId);
@@ -843,7 +843,7 @@ const TeacherDashboard = ({ currentUser }) => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Today's Timetable</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Today's Timetable</h3>
           {(() => {
             const today = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date().getDay()];
             const tt = data.timetable.find(t => myClasses.some(c => c._id === t.classId));
@@ -854,9 +854,9 @@ const TeacherDashboard = ({ currentUser }) => {
                   const sub = data.subjects.find(s => s._id === p.subjectId);
                   const cls = classes.find(c => c._id === tt.classId);
                   return (
-                    <div key={p.periodNo} className="flex items-center gap-3 p-3 bg-indigo-50 rounded-xl">
-                      <div className="text-center w-14"><p className="text-xs font-bold text-indigo-600">P{p.periodNo}</p><p className="text-xs text-gray-500">{p.startTime}</p></div>
-                      <div><p className="font-medium text-sm text-gray-900">{sub?.name}</p><p className="text-xs text-gray-500">{cls?.displayName}</p></div>
+                    <div key={p.periodNo} className="flex items-center gap-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl">
+                      <div className="text-center w-14"><p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">P{p.periodNo}</p><p className="text-xs text-gray-500 dark:text-gray-400">{p.startTime}</p></div>
+                      <div><p className="font-medium text-sm text-gray-900 dark:text-gray-100">{sub?.name}</p><p className="text-xs text-gray-500 dark:text-gray-400">{cls?.displayName}</p></div>
                     </div>
                   );
                 })}
@@ -865,10 +865,10 @@ const TeacherDashboard = ({ currentUser }) => {
           })()}
         </Card>
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Recent Notices</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Recent Notices</h3>
           <div className="space-y-3">
             {data.notices.filter(n => (n.targetRoles || []).includes('teacher')).slice(0, 3).map(n => (
-              <div key={n._id} className={`p-3 rounded-xl border-l-4 ${n.priority === 'Urgent' ? 'bg-red-50 border-red-400' : 'bg-amber-50 border-amber-400'}`}>
+              <div key={n._id} className={`p-3 rounded-xl border-l-4 ${n.priority === 'Urgent' ? 'bg-red-50 dark:bg-red-900/20 border-red-400' : 'bg-amber-50 dark:bg-amber-900/20 border-amber-400'}`}>
                 <p className="font-medium text-sm">{n.title}</p>
                 <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{n.content}</p>
               </div>
@@ -899,8 +899,8 @@ const ParentDashboard = ({ currentUser }) => {
             <div className="flex items-center gap-4">
               <Avatar name={`${myStudent.firstName} ${myStudent.lastName}`} size={14} />
               <div>
-                <h3 className="text-xl font-bold">{myStudent.firstName} {myStudent.middleName} {myStudent.lastName}</h3>
-                <p className="text-indigo-200">{cls?.displayName} · Roll No: {myStudent.rollNumber} · {myStudent.admissionNo}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{myStudent.firstName} {myStudent.middleName} {myStudent.lastName}</h3>
+                <p className="text-indigo-200 dark:text-indigo-300">{cls?.displayName} · Roll No: {myStudent.rollNumber} · {myStudent.admissionNo}</p>
                 <div className="mt-1"><Badge status={myStudent.status} /></div>
               </div>
             </div>
@@ -913,16 +913,16 @@ const ParentDashboard = ({ currentUser }) => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <Card className="p-5">
-              <h3 className="font-bold text-gray-900 mb-4">Recent Homework</h3>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Recent Homework</h3>
               <div className="space-y-3">
                 {data.homework.filter(hw => hw.classId === myStudent.classId).slice(0, 3).map(hw => {
                   const sub = data.subjects.find(s => s._id === hw.subjectId);
                   const overdue = new Date(hw.dueDate) < new Date();
                   return (
-                    <div key={hw._id} className={`p-3 rounded-xl ${overdue ? 'bg-red-50' : 'bg-gray-50'}`}>
+                    <div key={hw._id} className={`p-3 rounded-xl ${overdue ? 'bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-700'}`}>
                       <div className="flex items-center justify-between">
-                        <div><span className="text-xs px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full">{sub?.name}</span><p className="font-medium text-sm mt-1">{hw.title}</p></div>
-                        <div className="text-right"><p className="text-xs text-gray-400">Due</p><p className={`text-xs font-semibold ${overdue ? 'text-red-500' : 'text-gray-700'}`}>{fmt(hw.dueDate)}</p></div>
+                        <div><span className="text-xs px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full">{sub?.name}</span><p className="font-medium text-sm text-gray-900 dark:text-gray-100 mt-1">{hw.title}</p></div>
+                        <div className="text-right"><p className="text-xs text-gray-400 dark:text-gray-500">Due</p><p className={`text-xs font-semibold ${overdue ? 'text-red-500 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>{fmt(hw.dueDate)}</p></div>
                       </div>
                     </div>
                   );
@@ -930,17 +930,17 @@ const ParentDashboard = ({ currentUser }) => {
               </div>
             </Card>
             <Card className="p-5">
-              <h3 className="font-bold text-gray-900 mb-4">Recent Marks</h3>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Recent Marks</h3>
               <div className="space-y-3">
                 {data.marks.filter(m => m.studentId === myStudent._id).slice(0, 4).map(m => {
                   const sub = data.subjects.find(s => s._id === m.subjectId);
                   const exam = data.exams.find(e => e._id === m.examId);
                   return (
-                    <div key={m._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <div><p className="font-medium text-sm">{sub?.name}</p><p className="text-xs text-gray-500">{exam?.name}</p></div>
+                    <div key={m._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                      <div><p className="font-medium text-sm text-gray-900 dark:text-gray-100">{sub?.name}</p><p className="text-xs text-gray-500 dark:text-gray-400">{exam?.name}</p></div>
                       <div className="text-right">
-                        <p className="font-bold text-indigo-700">{m.isAbsent ? 'Absent' : `${m.marksObtained}/${exam?.totalMarks}`}</p>
-                        <p className={`text-xs font-bold ${m.grade === 'F' ? 'text-red-500' : m.grade?.includes('A') ? 'text-green-600' : 'text-amber-600'}`}>{m.grade}</p>
+                        <p className="font-bold text-indigo-700 dark:text-indigo-300">{m.isAbsent ? 'Absent' : `${m.marksObtained}/${exam?.totalMarks}`}</p>
+                        <p className={`text-xs font-bold ${m.grade === 'F' ? 'text-red-500 dark:text-red-400' : m.grade?.includes('A') ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>{m.grade}</p>
                       </div>
                     </div>
                   );
@@ -950,7 +950,7 @@ const ParentDashboard = ({ currentUser }) => {
           </div>
         </>
       ) : (
-        <Card className="p-8 text-center"><div className="text-4xl mb-3">📋</div><h3 className="text-lg font-bold text-gray-900 mb-2">No Active Student Found</h3><p className="text-gray-500 text-sm">Contact the school for more information.</p></Card>
+        <Card className="p-8 text-center"><div className="text-4xl mb-3">📋</div><h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">No Active Student Found</h3><p className="text-gray-500 dark:text-gray-400 text-sm">Contact the school for more information.</p></Card>
       )}
     </div>
   );
@@ -984,8 +984,8 @@ const EnquiriesView = ({ userRole }) => {
   };
 
   const columns = [
-    { header: "Enquiry ID", render: r => <span className="font-mono text-xs text-indigo-600 font-semibold">{r.enquiryId}</span> },
-    { header: "Child Name", render: r => <span className="font-medium text-gray-900">{r.childName}</span> },
+    { header: "Enquiry ID", render: r => <span className="font-mono text-xs text-indigo-600 dark:text-indigo-400 font-semibold">{r.enquiryId}</span> },
+    { header: "Child Name", render: r => <span className="font-medium text-gray-900 dark:text-gray-100">{r.childName}</span> },
     { header: "Class", render: r => { const c = classes.find(cl => cl._id === r.classApplying); return c?.displayName || "-"; } },
     { header: "Father Name", key: "fatherName" },
     { header: "Mobile", key: "mobileNo" },
@@ -994,8 +994,8 @@ const EnquiriesView = ({ userRole }) => {
     {
       header: "Actions", render: r => (
         <div className="flex items-center gap-1">
-          <button onClick={e => { e.stopPropagation(); setSelected(r); setEditData({ ...r }); setShowModal(true); }} className="p-1 text-indigo-600 hover:bg-indigo-50 rounded">✏️</button>
-          {r.status !== 'AdmissionDone' && <button onClick={e => { e.stopPropagation(); handleGeneratePassword(r); }} className="p-1 text-emerald-600 hover:bg-emerald-50 rounded text-xs font-medium">🔑</button>}
+          <button onClick={e => { e.stopPropagation(); setSelected(r); setEditData({ ...r }); setShowModal(true); }} className="p-1 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded">✏️</button>
+          {r.status !== 'AdmissionDone' && <button onClick={e => { e.stopPropagation(); handleGeneratePassword(r); }} className="p-1 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded text-xs font-medium">🔑</button>}
         </div>
       )
     },
@@ -1007,11 +1007,11 @@ const EnquiriesView = ({ userRole }) => {
       <Card className="p-4">
         <div className="flex flex-wrap gap-3">
           <div className="flex-1 min-w-48"><SearchBar value={search} onChange={setSearch} placeholder="Search by name, ID, mobile..." /></div>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
             <option value="">All Status</option>
             {["New", "Contacted", "AdmissionDone", "Cancelled", "PlanningFuture", "Other"].map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+          <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
             <option value="">All Classes</option>
             {classes.map(c => <option key={c._id} value={c._id}>{c.displayName}</option>)}
           </select>
@@ -1114,21 +1114,21 @@ const AdmissionsView = () => {
           <Card className="p-5">
             <div className="text-center">
               <Avatar name={`${selected.firstName} ${selected.lastName}`} size={20} />
-              <h3 className="font-bold text-gray-900 mt-3">{selected.firstName} {selected.middleName} {selected.lastName}</h3>
-              <p className="text-sm text-gray-500">{cls?.displayName}</p>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 mt-3">{selected.firstName} {selected.middleName} {selected.lastName}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{cls?.displayName}</p>
               <div className="mt-1"><Badge status={selected.status} /></div>
               <div className="mt-4 text-left space-y-2">
                 {[["Admission No", selected.admissionNo], ["DOB", fmt(selected.dateOfBirth)], ["Gender", selected.gender], ["Blood Group", selected.bloodGroup]].map(([k, v]) => (
-                  <div key={k} className="flex justify-between text-sm"><span className="text-gray-500">{k}</span><span className="font-medium">{v || '-'}</span></div>
+                  <div key={k} className="flex justify-between text-sm"><span className="text-gray-500 dark:text-gray-400">{k}</span><span className="font-medium text-gray-900 dark:text-gray-100">{v || '-'}</span></div>
                 ))}
               </div>
             </div>
           </Card>
           <Card className="p-5 lg:col-span-2">
-            <h4 className="font-bold text-gray-900 mb-4">Family Information</h4>
+            <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Family Information</h4>
             <div className="grid grid-cols-2 gap-3">
               {[["Father", selected.fatherName], ["Mother", selected.motherName], ["Father Phone", selected.fatherPhone], ["Mother Phone", selected.motherPhone], ["Father Email", selected.fatherEmail]].map(([k, v]) => (
-                <div key={k} className="space-y-0.5"><p className="text-xs text-gray-400">{k}</p><p className="text-sm font-medium text-gray-900">{v || '-'}</p></div>
+                <div key={k} className="space-y-0.5"><p className="text-xs text-gray-400 dark:text-gray-500">{k}</p><p className="text-sm font-medium text-gray-900 dark:text-gray-100">{v || '-'}</p></div>
               ))}
             </div>
           </Card>
@@ -1152,8 +1152,8 @@ const AdmissionsView = () => {
       <Card className="p-4"><SearchBar value={search} onChange={setSearch} placeholder="Search by name or admission no..." /></Card>
       <Card>
         <Table columns={[
-          { header: "Adm No", render: r => <span className="font-mono text-xs font-semibold text-indigo-600">{r.admissionNo}</span> },
-          { header: "Student", render: r => <div className="flex items-center gap-2"><Avatar name={`${r.firstName} ${r.lastName}`} size={8} /><span className="font-medium">{r.firstName} {r.lastName}</span></div> },
+          { header: "Adm No", render: r => <span className="font-mono text-xs font-semibold text-indigo-600 dark:text-indigo-400">{r.admissionNo}</span> },
+          { header: "Student", render: r => <div className="flex items-center gap-2"><Avatar name={`${r.firstName} ${r.lastName}`} size={8} /><span className="font-medium text-gray-900 dark:text-gray-100">{r.firstName} {r.lastName}</span></div> },
           { header: "Class", render: r => { const c = classes.find(cl => cl._id === r.classId); return c?.displayName || "-"; } },
           { header: "Father", key: "fatherName" },
           { header: "Status", render: r => <Badge status={r.status} /> },
@@ -1207,7 +1207,7 @@ const StudentsView = ({ userRole }) => {
           <Card className="p-5">
             <div className="text-center">
               <Avatar name={`${selected.firstName} ${selected.lastName}`} size={20} />
-              <h3 className="font-bold text-gray-900 mt-3 text-lg">{selected.firstName} {selected.middleName} {selected.lastName}</h3>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 mt-3 text-lg">{selected.firstName} {selected.middleName} {selected.lastName}</h3>
               <p className="text-sm text-gray-500 mb-2">{cls?.displayName} · Roll {selected.rollNumber || '-'}</p>
               <Badge status={selected.status} />
             </div>
@@ -1219,23 +1219,23 @@ const StudentsView = ({ userRole }) => {
           </Card>
           <div className="lg:col-span-3 space-y-4">
             <Tabs tabs={[{ value: 'info', label: 'Info' }, { value: 'family', label: 'Family' }, { value: 'fees', label: 'Fees' }, { value: 'marks', label: 'Marks' }, { value: 'attendance', label: 'Attendance' }]} activeTab={detailTab} onChange={setDetailTab} />
-            {detailTab === 'info' && <Card className="p-5"><h4 className="font-bold text-gray-900 mb-4">Student Information</h4><div className="grid grid-cols-2 gap-3 text-sm">{[["Place of Birth", selected.placeOfBirth], ["Religion", selected.religion], ["Caste", selected.caste], ["Mother Tongue", selected.motherTongue], ["PEN Number", selected.penNumber], ["Previous School", selected.previousSchoolName]].map(([k, v]) => <div key={k}><p className="text-xs text-gray-400">{k}</p><p className="font-medium text-gray-900">{v || '-'}</p></div>)}</div></Card>}
+            {detailTab === 'info' && <Card className="p-5"><h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Student Information</h4><div className="grid grid-cols-2 gap-3 text-sm">{[["Place of Birth", selected.placeOfBirth], ["Religion", selected.religion], ["Caste", selected.caste], ["Mother Tongue", selected.motherTongue], ["PEN Number", selected.penNumber], ["Previous School", selected.previousSchoolName]].map(([k, v]) => <div key={k}><p className="text-xs text-gray-400 dark:text-gray-500">{k}</p><p className="font-medium text-gray-900 dark:text-gray-100">{v || '-'}</p></div>)}</div></Card>}
             {detailTab === 'family' && (
               <Card className="p-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div><h4 className="font-bold text-gray-900 mb-3">👨 Father's Details</h4><div className="space-y-2 text-sm">{[["Name", selected.fatherName], ["Occupation", selected.fatherOccupation], ["Phone", selected.fatherPhone], ["Email", selected.fatherEmail]].map(([k, v]) => <div key={k}><p className="text-xs text-gray-400">{k}</p><p className="font-medium">{v || '-'}</p></div>)}</div></div>
-                  <div><h4 className="font-bold text-gray-900 mb-3">👩 Mother's Details</h4><div className="space-y-2 text-sm">{[["Name", selected.motherName], ["Occupation", selected.motherOccupation], ["Phone", selected.motherPhone], ["Email", selected.motherEmail]].map(([k, v]) => <div key={k}><p className="text-xs text-gray-400">{k}</p><p className="font-medium">{v || '-'}</p></div>)}</div></div>
+                  <div><h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3">👨 Father's Details</h4><div className="space-y-2 text-sm">{[["Name", selected.fatherName], ["Occupation", selected.fatherOccupation], ["Phone", selected.fatherPhone], ["Email", selected.fatherEmail]].map(([k, v]) => <div key={k}><p className="text-xs text-gray-400 dark:text-gray-500">{k}</p><p className="font-medium text-gray-900 dark:text-gray-100">{v || '-'}</p></div>)}</div></div>
+                  <div><h4 className="font-bold text-gray-900 dark:text-gray-100 mb-3">👩 Mother's Details</h4><div className="space-y-2 text-sm">{[["Name", selected.motherName], ["Occupation", selected.motherOccupation], ["Phone", selected.motherPhone], ["Email", selected.motherEmail]].map(([k, v]) => <div key={k}><p className="text-xs text-gray-400 dark:text-gray-500">{k}</p><p className="font-medium text-gray-900 dark:text-gray-100">{v || '-'}</p></div>)}</div></div>
                 </div>
               </Card>
             )}
-            {detailTab === 'fees' && <Card className="p-5"><h4 className="font-bold text-gray-900 mb-4">Fee History</h4><Table columns={[{ header: "Month", render: r => `${MONTHS[r.month - 1]} ${r.year}` }, { header: "Amount", render: r => fmtCurrency(r.finalAmount) }, { header: "Status", render: r => <Badge status={r.status} /> }, { header: "Due Date", render: r => fmt(r.dueDate) }]} data={studentFees} emptyMsg="No fee records" /></Card>}
-            {detailTab === 'marks' && <Card className="p-5"><h4 className="font-bold text-gray-900 mb-4">Marks & Results</h4><Table columns={[{ header: "Subject", render: r => { const s = data.subjects.find(s => s._id === r.subjectId); return s?.name || '-'; } }, { header: "Exam", render: r => { const e = data.exams.find(e => e._id === r.examId); return e?.name || '-'; } }, { header: "Marks", render: r => r.isAbsent ? <span className="text-red-500 font-medium">Absent</span> : `${r.marksObtained}/${data.exams.find(e => e._id === r.examId)?.totalMarks || '-'}` }, { header: "Grade", render: r => <span className={`font-bold ${r.grade === 'F' ? 'text-red-500' : r.grade?.includes('A') ? 'text-green-600' : 'text-amber-600'}`}>{r.grade}</span> }]} data={studentMarks} emptyMsg="No marks entered" /></Card>}
+            {detailTab === 'fees' && <Card className="p-5"><h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Fee History</h4><Table columns={[{ header: "Month", render: r => `${MONTHS[r.month - 1]} ${r.year}` }, { header: "Amount", render: r => fmtCurrency(r.finalAmount) }, { header: "Status", render: r => <Badge status={r.status} /> }, { header: "Due Date", render: r => fmt(r.dueDate) }]} data={studentFees} emptyMsg="No fee records" /></Card>}
+            {detailTab === 'marks' && <Card className="p-5"><h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Marks & Results</h4><Table columns={[{ header: "Subject", render: r => { const s = data.subjects.find(s => s._id === r.subjectId); return s?.name || '-'; } }, { header: "Exam", render: r => { const e = data.exams.find(e => e._id === r.examId); return e?.name || '-'; } }, { header: "Marks", render: r => r.isAbsent ? <span className="text-red-500 dark:text-red-400 font-medium">Absent</span> : `${r.marksObtained}/${data.exams.find(e => e._id === r.examId)?.totalMarks || '-'}` }, { header: "Grade", render: r => <span className={`font-bold ${r.grade === 'F' ? 'text-red-500 dark:text-red-400' : r.grade?.includes('A') ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>{r.grade}</span> }]} data={studentMarks} emptyMsg="No marks entered" /></Card>}
             {detailTab === 'attendance' && (
               <Card className="p-5">
-                <h4 className="font-bold text-gray-900 mb-4">Attendance Record</h4>
+                <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Attendance Record</h4>
                 <div className="grid grid-cols-4 gap-3 mb-4">
                   {[["Total Days", att.length], ["Present", present], ["Absent", att.filter(a => a.status === 'Absent').length], ["Attendance %", `${pct}%`]].map(([k, v]) => (
-                    <div key={k} className="text-center p-3 bg-gray-50 rounded-xl"><p className="text-2xl font-bold text-gray-900">{v}</p><p className="text-xs text-gray-500">{k}</p></div>
+                    <div key={k} className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-xl"><p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{v}</p><p className="text-xs text-gray-500 dark:text-gray-400">{k}</p></div>
                   ))}
                 </div>
                 <Table columns={[{ header: "Date", render: r => fmt(r.date) }, { header: "Status", render: r => <Badge status={r.status} /> }]} data={att} emptyMsg="No attendance records" />
@@ -1260,11 +1260,11 @@ const StudentsView = ({ userRole }) => {
       <Card className="p-4">
         <div className="flex flex-wrap gap-3">
           <div className="flex-1 min-w-48"><SearchBar value={search} onChange={setSearch} placeholder="Search students..." /></div>
-          <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+          <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
             <option value="">All Classes</option>
             {classes.map(c => <option key={c._id} value={c._id}>{c.displayName}</option>)}
           </select>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
             <option value="">All Status</option>
             {["UnderReview", "Approved", "Rejected", "OnHold", "Left"].map(s => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -1325,23 +1325,23 @@ const EmployeesView = () => {
           <Card className="p-5">
             <div className="text-center">
               <Avatar name={selected.name} size={20} />
-              <h3 className="font-bold text-gray-900 mt-3">{selected.name}</h3>
-              <p className="text-sm text-gray-500 capitalize">{selected.role}</p>
-              <p className="text-xs text-gray-400 font-mono mt-1">{selected.employeeId}</p>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100 mt-3">{selected.name}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">{selected.role}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-1">{selected.employeeId}</p>
               <div className="mt-2"><Badge status={selected.status} /></div>
             </div>
-            <div className="mt-4 space-y-2 pt-4 border-t border-gray-100">
+            <div className="mt-4 space-y-2 pt-4 border-t border-gray-100 dark:border-gray-700">
               {[["Mobile", selected.mobileNo], ["Email", selected.email], ["Salary", fmtCurrency(selected.monthlySalary)], ["Joined", fmt(selected.dateOfJoining)], ["Blood Group", selected.bloodGroup || '-']].map(([k, v]) => (
-                <div key={k} className="flex justify-between text-xs"><span className="text-gray-500">{k}</span><span className="font-medium text-gray-800">{v}</span></div>
+                <div key={k} className="flex justify-between text-xs"><span className="text-gray-500 dark:text-gray-400">{k}</span><span className="font-medium text-gray-800 dark:text-gray-200">{v}</span></div>
               ))}
             </div>
           </Card>
           <div className="lg:col-span-3 space-y-4">
             <Tabs tabs={[{ value: 'info', label: 'Personal' }, { value: 'classes', label: 'Classes' }, { value: 'payroll', label: 'Payroll' }, { value: 'leaves', label: 'Leaves' }]} activeTab={empTab} onChange={setEmpTab} />
-            {empTab === 'info' && <Card className="p-5"><div className="grid grid-cols-2 gap-3 text-sm">{[["Gender", selected.gender], ["DOB", fmt(selected.dateOfBirth)], ["Education", selected.education || '-'], ["Experience", selected.experience || '-'], ["Religion", selected.religion || '-'], ["Address", selected.homeAddress || '-']].map(([k, v]) => <div key={k}><p className="text-xs text-gray-400">{k}</p><p className="font-medium text-gray-900">{v}</p></div>)}</div></Card>}
-            {empTab === 'classes' && <Card className="p-5"><h4 className="font-bold text-gray-900 mb-4">Assigned Classes & Subjects</h4><div className="space-y-2">{empClasses.map(c => <div key={c._id} className="p-3 bg-indigo-50 rounded-xl text-sm font-medium text-indigo-700">🏫 Class Teacher: {c.displayName}</div>)}{empSubjects.map(s => { const c = classes.find(cl => cl._id === s.classId); return <div key={s._id} className="p-3 bg-emerald-50 rounded-xl text-sm font-medium text-emerald-700">📚 {s.name} — {c?.displayName}</div>; })}{empClasses.length + empSubjects.length === 0 && <p className="text-gray-400 text-sm">No assignments yet</p>}</div></Card>}
-            {empTab === 'payroll' && <Card className="p-5"><h4 className="font-bold text-gray-900 mb-4">Payroll History</h4><Table columns={[{ header: "Month", render: r => `${MONTHS[r.month - 1]} ${r.year}` }, { header: "Basic", render: r => fmtCurrency(r.basicSalary) }, { header: "Present", key: "daysPresent" }, { header: "Absent", key: "daysAbsent" }, { header: "Deductions", render: r => fmtCurrency(r.deductions) }, { header: "Net Salary", render: r => <span className="font-bold text-emerald-600">{fmtCurrency(r.netSalary)}</span> }, { header: "Status", render: r => <Badge status={r.status} /> }]} data={empPayroll} emptyMsg="No payroll records" /></Card>}
-            {empTab === 'leaves' && <Card className="p-5"><h4 className="font-bold text-gray-900 mb-4">Leave History</h4><Table columns={[{ header: "Type", key: "leaveType" }, { header: "From", render: r => fmt(r.fromDate) }, { header: "To", render: r => fmt(r.toDate) }, { header: "Days", key: "totalDays" }, { header: "Reason", key: "reason" }, { header: "Status", render: r => <Badge status={r.status} /> }]} data={empLeaves} emptyMsg="No leave records" /></Card>}
+            {empTab === 'info' && <Card className="p-5"><div className="grid grid-cols-2 gap-3 text-sm">{[["Gender", selected.gender], ["DOB", fmt(selected.dateOfBirth)], ["Education", selected.education || '-'], ["Experience", selected.experience || '-'], ["Religion", selected.religion || '-'], ["Address", selected.homeAddress || '-']].map(([k, v]) => <div key={k}><p className="text-xs text-gray-400 dark:text-gray-500">{k}</p><p className="font-medium text-gray-900 dark:text-gray-100">{v}</p></div>)}</div></Card>}
+            {empTab === 'classes' && <Card className="p-5"><h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Assigned Classes & Subjects</h4><div className="space-y-2">{empClasses.map(c => <div key={c._id} className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-sm font-medium text-indigo-700 dark:text-indigo-300">🏫 Class Teacher: {c.displayName}</div>)}{empSubjects.map(s => { const c = classes.find(cl => cl._id === s.classId); return <div key={s._id} className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-sm font-medium text-emerald-700 dark:text-emerald-300">📚 {s.name} — {c?.displayName}</div>; })}{empClasses.length + empSubjects.length === 0 && <p className="text-gray-400 dark:text-gray-500 text-sm">No assignments yet</p>}</div></Card>}
+            {empTab === 'payroll' && <Card className="p-5"><h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Payroll History</h4><Table columns={[{ header: "Month", render: r => `${MONTHS[r.month - 1]} ${r.year}` }, { header: "Basic", render: r => fmtCurrency(r.basicSalary) }, { header: "Present", key: "daysPresent" }, { header: "Absent", key: "daysAbsent" }, { header: "Deductions", render: r => fmtCurrency(r.deductions) }, { header: "Net Salary", render: r => <span className="font-bold text-emerald-600 dark:text-emerald-400">{fmtCurrency(r.netSalary)}</span> }, { header: "Status", render: r => <Badge status={r.status} /> }]} data={empPayroll} emptyMsg="No payroll records" /></Card>}
+            {empTab === 'leaves' && <Card className="p-5"><h4 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Leave History</h4><Table columns={[{ header: "Type", key: "leaveType" }, { header: "From", render: r => fmt(r.fromDate) }, { header: "To", render: r => fmt(r.toDate) }, { header: "Days", key: "totalDays" }, { header: "Reason", key: "reason" }, { header: "Status", render: r => <Badge status={r.status} /> }]} data={empLeaves} emptyMsg="No leave records" /></Card>}
           </div>
         </div>
       </div>
@@ -1355,7 +1355,7 @@ const EmployeesView = () => {
       <Card className="p-4">
         <div className="flex flex-wrap gap-3">
           <div className="flex-1 min-w-48"><SearchBar value={search} onChange={setSearch} placeholder="Search employees..." /></div>
-          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
             <option value="">All Roles</option>
             <option value="teacher">Teacher</option>
             <option value="principal">Principal</option>
@@ -1364,8 +1364,8 @@ const EmployeesView = () => {
       </Card>
       <Card>
         <Table columns={[
-          { header: "Employee", render: r => <div className="flex items-center gap-2"><Avatar name={r.name} size={8} /><div><p className="font-medium text-sm">{r.name}</p><p className="text-xs text-gray-400 font-mono">{r.employeeId}</p></div></div> },
-          { header: "Role", render: r => <span className="capitalize font-medium text-sm">{r.role}</span> },
+          { header: "Employee", render: r => <div className="flex items-center gap-2"><Avatar name={r.name} size={8} /><div><p className="font-medium text-sm text-gray-900 dark:text-gray-100">{r.name}</p><p className="text-xs text-gray-400 dark:text-gray-500 font-mono">{r.employeeId}</p></div></div> },
+          { header: "Role", render: r => <span className="capitalize font-medium text-sm text-gray-900 dark:text-gray-100">{r.role}</span> },
           { header: "Mobile", key: "mobileNo" },
           { header: "Joined", render: r => fmt(r.dateOfJoining) },
           { header: "Salary", render: r => fmtCurrency(r.monthlySalary) },
@@ -1435,16 +1435,16 @@ const ClassroomsView = () => {
           return (
             <Card key={cls._id} className="p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-xl">🏫</div>
+                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-xl">🏫</div>
                 <Badge status={cls.isActive ? 'active' : 'inactive'} label={cls.isActive ? 'Active' : 'Inactive'} />
               </div>
-              <h3 className="font-bold text-gray-900">{cls.displayName}</h3>
-              <p className="text-sm text-gray-500 mt-0.5">{teacher?.name || 'No class teacher'}</p>
-              <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2 text-xs">
-                <div><p className="text-gray-400">Students</p><p className="font-bold text-gray-900 text-sm">{studentCount}</p></div>
-                <div><p className="text-gray-400">Monthly Fee</p><p className="font-bold text-gray-900 text-sm">{fmtCurrency(cls.monthlyFees)}</p></div>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100">{cls.displayName}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{teacher?.name || 'No class teacher'}</p>
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 grid grid-cols-2 gap-2 text-xs">
+                <div><p className="text-gray-400 dark:text-gray-500">Students</p><p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{studentCount}</p></div>
+                <div><p className="text-gray-400 dark:text-gray-500">Monthly Fee</p><p className="font-bold text-gray-900 dark:text-gray-100 text-sm">{fmtCurrency(cls.monthlyFees)}</p></div>
               </div>
-              <button onClick={() => toggleActive(cls)} className={`mt-3 w-full text-xs py-1.5 rounded-lg border transition-colors ${cls.isActive ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'}`}>
+              <button onClick={() => toggleActive(cls)} className={`mt-3 w-full text-xs py-1.5 rounded-lg border transition-colors ${cls.isActive ? 'border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20' : 'border-green-200 dark:border-green-800 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'}`}>
                 {cls.isActive ? 'Deactivate' : 'Activate'}
               </button>
             </Card>
@@ -1495,21 +1495,21 @@ const SubjectsView = () => {
       <PageHeader title="Subjects" subtitle={`${filtered.length} subjects`} breadcrumbs={["Home", "Subjects"]}
         actions={<Button onClick={() => setShowModal(true)}>+ Assign Subjects</Button>} />
       <Card className="p-4">
-        <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+        <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
           <option value="">All Classes</option>
           {classes.map(c => <option key={c._id} value={c._id}>{c.displayName}</option>)}
         </select>
       </Card>
       <Card>
         <Table columns={[
-          { header: "Subject", render: r => <span className="font-semibold text-gray-900">{r.name}</span> },
+          { header: "Subject", render: r => <span className="font-semibold text-gray-900 dark:text-gray-100">{r.name}</span> },
           { header: "Class", render: r => { const c = classes.find(cl => cl._id === r.classId); return c?.displayName || '-'; } },
           { header: "Teacher", render: r => { const t = teachers.find(t => t._id === r.teacherId); return t?.name || 'Not assigned'; } },
-          { header: "Total Marks", render: r => <span className="font-bold text-indigo-600">{r.totalMarks}</span> },
+          { header: "Total Marks", render: r => <span className="font-bold text-indigo-600 dark:text-indigo-400">{r.totalMarks}</span> },
           { header: "Status", render: r => <Badge status={r.isActive ? 'active' : 'inactive'} label={r.isActive ? 'Active' : 'Inactive'} /> },
           {
             header: "Actions", render: r => (
-              <button onClick={() => { StorageAPI.update('subjects', r._id, { isActive: !r.isActive }); refreshData(); }} className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 text-gray-600">Toggle</button>
+              <button onClick={() => { StorageAPI.update('subjects', r._id, { isActive: !r.isActive }); refreshData(); }} className="text-xs px-2 py-1 rounded border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400">Toggle</button>
             )
           },
         ]} data={filtered} emptyMsg="No subjects found" />
@@ -1518,7 +1518,7 @@ const SubjectsView = () => {
         <div className="space-y-4">
           <Select label="Select Class *" value={selClass} onChange={e => setSelClass(e.target.value)} options={classes.map(c => ({ value: c._id, label: c.displayName }))} />
           <div className="space-y-3">
-            <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 uppercase">
+            <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
               <div className="col-span-5">Subject Name</div><div className="col-span-3">Total Marks</div><div className="col-span-3">Assign Teacher</div><div className="col-span-1"></div>
             </div>
             {rows.map((row, i) => (
@@ -1526,16 +1526,16 @@ const SubjectsView = () => {
                 <div className="col-span-5"><Input value={row.name} onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} placeholder="e.g. Mathematics" /></div>
                 <div className="col-span-3"><Input type="number" value={row.totalMarks} onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, totalMarks: e.target.value } : x))} /></div>
                 <div className="col-span-3">
-                  <select value={row.teacherId} onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, teacherId: e.target.value } : x))} className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  <select value={row.teacherId} onChange={e => setRows(r => r.map((x, j) => j === i ? { ...x, teacherId: e.target.value } : x))} className="w-full px-2 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                     <option value="">Select...</option>
                     {teachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
                   </select>
                 </div>
-                <div className="col-span-1 flex justify-center">{rows.length > 1 && <button onClick={() => setRows(r => r.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600">✕</button>}</div>
+                <div className="col-span-1 flex justify-center">{rows.length > 1 && <button onClick={() => setRows(r => r.filter((_, j) => j !== i))} className="text-red-400 dark:text-red-500 hover:text-red-600 dark:hover:text-red-400">✕</button>}</div>
               </div>
             ))}
           </div>
-          <button onClick={() => setRows(r => [...r, { name: "", totalMarks: "100", teacherId: "" }])} className="text-sm text-indigo-600 hover:underline">+ Add More</button>
+          <button onClick={() => setRows(r => [...r, { name: "", totalMarks: "100", teacherId: "" }])} className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">+ Add More</button>
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
             <Button onClick={handleAssign}>Assign Subjects</Button>
@@ -1620,11 +1620,11 @@ const ExamsView = ({ userRole }) => {
       {tab === 'exams' && (
         <Card>
           <Table columns={[
-            { header: "Exam Name", render: r => <span className="font-semibold">{r.name}</span> },
+            { header: "Exam Name", render: r => <span className="font-semibold text-gray-900 dark:text-gray-100">{r.name}</span> },
             { header: "Class", render: r => { const c = classes.find(cl => cl._id === r.classId); return c?.displayName || '-'; } },
             { header: "Subject", render: r => { const s = data.subjects.find(s => s._id === r.subjectId); return s?.name || '-'; } },
             { header: "Type", key: "examType" },
-            { header: "Total Marks", render: r => <span className="font-bold text-indigo-600">{r.totalMarks}</span> },
+            { header: "Total Marks", render: r => <span className="font-bold text-indigo-600 dark:text-indigo-400">{r.totalMarks}</span> },
             { header: "Date", render: r => fmt(r.examDate) },
           ]} data={data.exams} emptyMsg="No exams created yet" />
         </Card>
@@ -1634,15 +1634,15 @@ const ExamsView = ({ userRole }) => {
         <div className="space-y-4">
           <Card className="p-4">
             <div className="flex flex-wrap gap-3">
-              <select value={marksClass} onChange={e => { setMarksClass(e.target.value); setMarksSub(""); setMarksExam(""); setMarksData([]); }} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+              <select value={marksClass} onChange={e => { setMarksClass(e.target.value); setMarksSub(""); setMarksExam(""); setMarksData([]); }} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                 <option value="">Select Class</option>
                 {classes.map(c => <option key={c._id} value={c._id}>{c.displayName}</option>)}
               </select>
-              <select value={marksSub} onChange={e => { setMarksSub(e.target.value); setMarksExam(""); setMarksData([]); }} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+              <select value={marksSub} onChange={e => { setMarksSub(e.target.value); setMarksExam(""); setMarksData([]); }} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                 <option value="">Select Subject</option>
                 {marksSubjects.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
               </select>
-              <select value={marksExam} onChange={e => setMarksExam(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+              <select value={marksExam} onChange={e => setMarksExam(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                 <option value="">Select Exam</option>
                 {marksExams.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
               </select>
@@ -1651,8 +1651,8 @@ const ExamsView = ({ userRole }) => {
           </Card>
           {marksData.length > 0 && (
             <Card>
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <div><h4 className="font-bold text-gray-900">Enter Marks</h4><p className="text-xs text-gray-500">Out of {data.exams.find(e => e._id === marksExam)?.totalMarks} marks</p></div>
+              <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+                <div><h4 className="font-bold text-gray-900 dark:text-gray-100">Enter Marks</h4><p className="text-xs text-gray-500 dark:text-gray-400">Out of {data.exams.find(e => e._id === marksExam)?.totalMarks} marks</p></div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="secondary" onClick={() => setMarksData(m => m.map(x => ({ ...x, isAbsent: false })))}>All Present</Button>
                   <Button size="sm" onClick={saveMarks}>💾 Save Marks</Button>
@@ -1660,21 +1660,21 @@ const ExamsView = ({ userRole }) => {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead><tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Roll</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Student</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Marks</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Absent</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Remarks</th>
+                  <thead><tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Roll</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Student</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Marks</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Absent</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Remarks</th>
                   </tr></thead>
                   <tbody>
                     {marksData.map((m, i) => (
-                      <tr key={i} className="border-b border-gray-50">
-                        <td className="px-4 py-2 font-mono text-xs">{m.student.rollNumber}</td>
-                        <td className="px-4 py-2"><div className="flex items-center gap-2"><Avatar name={`${m.student.firstName} ${m.student.lastName}`} size={6} /><span className="font-medium">{m.student.firstName} {m.student.lastName}</span></div></td>
-                        <td className="px-4 py-2"><input type="number" value={m.marksObtained} disabled={m.isAbsent} onChange={e => setMarksData(d => d.map((x, j) => j === i ? { ...x, marksObtained: e.target.value } : x))} max={data.exams.find(e => e._id === marksExam)?.totalMarks} className="w-20 px-2 py-1 border border-gray-200 rounded text-center text-sm disabled:bg-gray-100" /></td>
+                      <tr key={i} className="border-b border-gray-50 dark:border-gray-700">
+                        <td className="px-4 py-2 font-mono text-xs text-gray-900 dark:text-gray-100">{m.student.rollNumber}</td>
+                        <td className="px-4 py-2"><div className="flex items-center gap-2"><Avatar name={`${m.student.firstName} ${m.student.lastName}`} size={6} /><span className="font-medium text-gray-900 dark:text-gray-100">{m.student.firstName} {m.student.lastName}</span></div></td>
+                        <td className="px-4 py-2"><input type="number" value={m.marksObtained} disabled={m.isAbsent} onChange={e => setMarksData(d => d.map((x, j) => j === i ? { ...x, marksObtained: e.target.value } : x))} max={data.exams.find(e => e._id === marksExam)?.totalMarks} className="w-20 px-2 py-1 border border-gray-200 dark:border-gray-600 rounded text-center text-sm disabled:bg-gray-100 dark:disabled:bg-gray-700 text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700" /></td>
                         <td className="px-4 py-2"><input type="checkbox" checked={m.isAbsent} onChange={e => setMarksData(d => d.map((x, j) => j === i ? { ...x, isAbsent: e.target.checked, marksObtained: e.target.checked ? '' : x.marksObtained } : x))} className="w-4 h-4" /></td>
-                        <td className="px-4 py-2"><input value={m.remarks} onChange={e => setMarksData(d => d.map((x, j) => j === i ? { ...x, remarks: e.target.value } : x))} className="w-32 px-2 py-1 border border-gray-200 rounded text-sm" placeholder="Optional" /></td>
+                        <td className="px-4 py-2"><input value={m.remarks} onChange={e => setMarksData(d => d.map((x, j) => j === i ? { ...x, remarks: e.target.value } : x))} className="w-32 px-2 py-1 border border-gray-200 dark:border-gray-600 rounded text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700" placeholder="Optional" /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -1687,7 +1687,7 @@ const ExamsView = ({ userRole }) => {
 
       {tab === 'results' && (
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Results Overview</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Results Overview</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {data.exams.slice(0, 6).map(exam => {
               const examMarks = data.marks.filter(m => m.examId === exam._id);
@@ -1695,12 +1695,12 @@ const ExamsView = ({ userRole }) => {
               const sub = data.subjects.find(s => s._id === exam.subjectId);
               const avg = examMarks.filter(m => !m.isAbsent).length > 0 ? Math.round(examMarks.filter(m => !m.isAbsent).reduce((s, m) => s + m.marksObtained, 0) / examMarks.filter(m => !m.isAbsent).length) : 0;
               return (
-                <div key={exam._id} className="p-4 border border-gray-100 rounded-xl">
-                  <p className="font-semibold text-sm text-gray-900">{exam.name}</p>
-                  <p className="text-xs text-gray-500">{cls?.displayName} · {sub?.name}</p>
+                <div key={exam._id} className="p-4 border border-gray-100 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800">
+                  <p className="font-semibold text-sm text-gray-900 dark:text-gray-100">{exam.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{cls?.displayName} · {sub?.name}</p>
                   <div className="mt-2 flex justify-between text-xs">
-                    <span className="text-gray-500">Students: {examMarks.length}</span>
-                    <span className="font-semibold text-indigo-600">Avg: {avg}/{exam.totalMarks}</span>
+                    <span className="text-gray-500 dark:text-gray-400">Students: {examMarks.length}</span>
+                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">Avg: {avg}/{exam.totalMarks}</span>
                   </div>
                 </div>
               );
@@ -1717,7 +1717,7 @@ const ExamsView = ({ userRole }) => {
           <Input label="Exam Name" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
           <div className="space-y-1">
             <Input label="Total Marks *" type="number" value={form.totalMarks} onChange={e => setForm(p => ({ ...p, totalMarks: e.target.value }))} />
-            {form.classId && form.subjectId && <p className="text-xs text-indigo-600">Available marks: {getAvailableMarks(form.classId, form.subjectId)}</p>}
+            {form.classId && form.subjectId && <p className="text-xs text-indigo-600 dark:text-indigo-400">Available marks: {getAvailableMarks(form.classId, form.subjectId)}</p>}
           </div>
           <Input label="Exam Date *" type="date" value={form.examDate} onChange={e => setForm(p => ({ ...p, examDate: e.target.value }))} />
           <div className="flex gap-3 justify-end">
@@ -1781,12 +1781,12 @@ const AttendanceView = ({ type = "student" }) => {
       <Card className="p-4">
         <div className="flex flex-wrap gap-3 items-end">
           {type === 'student' && (
-            <select value={selClass} onChange={e => setSelClass(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+            <select value={selClass} onChange={e => setSelClass(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
               <option value="">Select Class</option>
               {classes.map(c => <option key={c._id} value={c._id}>{c.displayName}</option>)}
             </select>
           )}
-          <input type="date" value={selDate} onChange={e => setSelDate(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="date" value={selDate} onChange={e => setSelDate(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" />
           <Button onClick={loadAttendance}>Load</Button>
           {attData.length > 0 && <>
             <Button variant="secondary" size="sm" onClick={() => setAttData(d => d.map(x => ({ ...x, status: 'Present' })))}>✅ All Present</Button>
@@ -1796,31 +1796,31 @@ const AttendanceView = ({ type = "student" }) => {
       </Card>
       {attData.length > 0 && (
         <Card>
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-            <div><h4 className="font-bold text-gray-900">Attendance for {fmt(selDate)}</h4><p className="text-xs text-gray-500">{attData.length} {type === 'student' ? 'students' : 'employees'} · Present: {attData.filter(a => a.status === 'Present').length}</p></div>
+          <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <div><h4 className="font-bold text-gray-900 dark:text-gray-100">Attendance for {fmt(selDate)}</h4><p className="text-xs text-gray-500 dark:text-gray-400">{attData.length} {type === 'student' ? 'students' : 'employees'} · Present: {attData.filter(a => a.status === 'Present').length}</p></div>
             <Button onClick={saveAttendance}>{saved ? '✓ Saved' : '💾 Save All'}</Button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="bg-gray-50 border-b border-gray-100">
-                {type === 'student' && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Roll</th>}
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Name</th>
-                {type === 'employee' && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Role</th>}
-                {STATUS_OPTS.map(s => <th key={s} className="px-3 py-3 text-center text-xs font-semibold text-gray-600">{s}</th>)}
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Remark</th>
+              <thead><tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+                {type === 'student' && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Roll</th>}
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Name</th>
+                {type === 'employee' && <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Role</th>}
+                {STATUS_OPTS.map(s => <th key={s} className="px-3 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-400">{s}</th>)}
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Remark</th>
               </tr></thead>
               <tbody>
                 {attData.map((a, i) => (
-                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                    {type === 'student' && <td className="px-4 py-2 font-mono text-xs text-gray-500">{a.rollNo}</td>}
-                    <td className="px-4 py-2 font-medium">{a.name}</td>
-                    {type === 'employee' && <td className="px-4 py-2 capitalize text-gray-500">{a.role}</td>}
+                  <tr key={i} className="border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    {type === 'student' && <td className="px-4 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">{a.rollNo}</td>}
+                    <td className="px-4 py-2 font-medium text-gray-900 dark:text-gray-100">{a.name}</td>
+                    {type === 'employee' && <td className="px-4 py-2 capitalize text-gray-500 dark:text-gray-400">{a.role}</td>}
                     {STATUS_OPTS.map(s => (
                       <td key={s} className="px-3 py-2 text-center">
                         <input type="radio" name={`att-${i}`} checked={a.status === s} onChange={() => setAttData(d => d.map((x, j) => j === i ? { ...x, status: s } : x))} className="w-4 h-4" />
                       </td>
                     ))}
-                    <td className="px-4 py-2"><input value={a.remark} onChange={e => setAttData(d => d.map((x, j) => j === i ? { ...x, remark: e.target.value } : x))} className="w-28 px-2 py-1 border border-gray-200 rounded text-xs" placeholder="Optional" /></td>
+                    <td className="px-4 py-2"><input value={a.remark} onChange={e => setAttData(d => d.map((x, j) => j === i ? { ...x, remark: e.target.value } : x))} className="w-28 px-2 py-1 border border-gray-200 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" placeholder="Optional" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -1897,15 +1897,15 @@ const FeesView = ({ userRole }) => {
           <Card className="p-4">
             <div className="flex flex-wrap gap-3">
               <div className="flex-1 min-w-40"><SearchBar value={search} onChange={setSearch} placeholder="Search student..." /></div>
-              <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+              <select value={classFilter} onChange={e => setClassFilter(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                 <option value="">All Classes</option>
                 {classes.map(c => <option key={c._id} value={c._id}>{c.displayName}</option>)}
               </select>
-              <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+              <select value={monthFilter} onChange={e => setMonthFilter(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                 <option value="">All Months</option>
                 {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
               </select>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                 <option value="">All Status</option>
                 {["Pending", "Paid", "Overdue", "PartiallyPaid"].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -1913,7 +1913,7 @@ const FeesView = ({ userRole }) => {
           </Card>
           <Card>
             <Table columns={[
-              { header: "Student", render: r => { const s = data.students.find(st => st._id === r.studentId); return s ? <div><p className="font-medium text-sm">{s.firstName} {s.lastName}</p><p className="text-xs text-gray-400">{s.admissionNo}</p></div> : '-'; } },
+              { header: "Student", render: r => { const s = data.students.find(st => st._id === r.studentId); return s ? <div><p className="font-medium text-sm text-gray-900 dark:text-gray-100">{s.firstName} {s.lastName}</p><p className="text-xs text-gray-400 dark:text-gray-500">{s.admissionNo}</p></div> : '-'; } },
               { header: "Class", render: r => { const c = classes.find(cl => cl._id === r.classId); return c?.displayName || '-'; } },
               { header: "Month", render: r => `${MONTHS[r.month - 1]} ${r.year}` },
               { header: "Amount", render: r => fmtCurrency(r.finalAmount) },
@@ -1936,12 +1936,12 @@ const FeesView = ({ userRole }) => {
 
       {tab === 'defaulters' && (
         <Card>
-          <div className="p-4 border-b border-gray-100"><h3 className="font-bold text-gray-900">Fee Defaulters</h3></div>
+          <div className="p-4 border-b border-gray-100 dark:border-gray-700"><h3 className="font-bold text-gray-900 dark:text-gray-100">Fee Defaulters</h3></div>
           <Table columns={[
             { header: "Student", render: r => { const s = data.students.find(st => st._id === r.studentId); return s ? `${s.firstName} ${s.lastName}` : '-'; } },
             { header: "Class", render: r => { const c = classes.find(cl => cl._id === r.classId); return c?.displayName || '-'; } },
             { header: "Month", render: r => `${MONTHS[r.month - 1]} ${r.year}` },
-            { header: "Amount Due", render: r => <span className="text-red-600 font-bold">{fmtCurrency(r.finalAmount)}</span> },
+            { header: "Amount Due", render: r => <span className="text-red-600 dark:text-red-400 font-bold">{fmtCurrency(r.finalAmount)}</span> },
             { header: "Status", render: r => <Badge status={r.status} /> },
           ]} data={data.fees.filter(f => f.status === 'Pending' || f.status === 'Overdue')} emptyMsg="No defaulters! All fees paid." />
         </Card>
@@ -1949,14 +1949,14 @@ const FeesView = ({ userRole }) => {
 
       {tab === 'reports' && (
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Monthly Collection Report</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Monthly Collection Report</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={MONTHS.map((m, i) => ({ month: m, collected: data.fees.filter(f => f.month === i + 1 && f.status === 'Paid').reduce((s, f) => s + f.finalAmount, 0), pending: data.fees.filter(f => f.month === i + 1 && f.status !== 'Paid').reduce((s, f) => s + f.finalAmount, 0) }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${v / 1000}k`} />
-              <Tooltip formatter={v => fmtCurrency(v)} />
-              <Legend />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" opacity={0.2} />
+              <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#9CA3AF" />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${v / 1000}k`} stroke="#9CA3AF" />
+              <Tooltip formatter={v => fmtCurrency(v)} contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} />
+              <Legend wrapperStyle={{ color: '#6B7280' }} />
               <Bar dataKey="collected" fill="#10B981" name="Collected" radius={[4, 4, 0, 0]} />
               <Bar dataKey="pending" fill="#EF4444" name="Pending" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -1967,11 +1967,11 @@ const FeesView = ({ userRole }) => {
       <Modal isOpen={showPayModal && !!selFee} onClose={() => setShowPayModal(false)} title="Collect Fee Payment" size="md">
         {selFee && (
           <div className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-xl space-y-2 text-sm">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-2 text-sm">
               {[["Tuition Fee", fmtCurrency(selFee.tuitionFee)], ["Transport Fee", fmtCurrency(selFee.transportFee)], ["Activity Fee", fmtCurrency(selFee.activityFee)], selFee.lateFine > 0 && ["Late Fine", fmtCurrency(selFee.lateFine)]].filter(Boolean).map(([k, v]) => (
-                <div key={k} className="flex justify-between"><span className="text-gray-600">{k}</span><span className="font-medium">{v}</span></div>
+                <div key={k} className="flex justify-between"><span className="text-gray-600 dark:text-gray-400">{k}</span><span className="font-medium text-gray-900 dark:text-gray-100">{v}</span></div>
               ))}
-              <div className="flex justify-between border-t border-gray-200 pt-2"><span className="font-bold text-gray-900">Total Due</span><span className="font-bold text-lg text-red-600">{fmtCurrency(selFee.finalAmount)}</span></div>
+              <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2"><span className="font-bold text-gray-900 dark:text-gray-100">Total Due</span><span className="font-bold text-lg text-red-600 dark:text-red-400">{fmtCurrency(selFee.finalAmount)}</span></div>
             </div>
             <Input label="Amount to Pay *" type="number" value={payForm.amountPaid} onChange={e => setPayForm(p => ({ ...p, amountPaid: e.target.value }))} />
             <Select label="Payment Mode" value={payForm.paymentMode} onChange={e => setPayForm(p => ({ ...p, paymentMode: e.target.value }))} options={["Cash", "Cheque", "Online", "UPI", "BankTransfer"].map(m => ({ value: m, label: m }))} />
@@ -2047,11 +2047,11 @@ const PayrollView = () => {
         actions={<Button onClick={() => setShowGenModal(true)}>+ Generate Payroll</Button>} />
       <Card className="p-4">
         <div className="flex flex-wrap gap-3">
-          <select value={selEmployee} onChange={e => setSelEmployee(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+          <select value={selEmployee} onChange={e => setSelEmployee(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
             <option value="">All Employees</option>
             {data.employees.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
           </select>
-          <select value={selMonth} onChange={e => setSelMonth(Number(e.target.value))} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+          <select value={selMonth} onChange={e => setSelMonth(Number(e.target.value))} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
             {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
         </div>
@@ -2114,22 +2114,22 @@ const HomeworkView = ({ userRole }) => {
             const sub = data.subjects.find(s => s._id === hw.subjectId);
             const isOverdue = new Date(hw.dueDate) < new Date();
             return (
-              <div key={hw._id} className={`p-4 rounded-xl border ${isOverdue ? 'border-red-100 bg-red-50' : 'border-gray-100 bg-white'}`}>
+              <div key={hw._id} className={`p-4 rounded-xl border ${isOverdue ? 'border-red-100 dark:border-red-800 bg-red-50 dark:bg-red-900/20' : 'border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
                 <div className="flex items-start justify-between flex-wrap gap-2">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">{sub?.name}</span>
-                      <span className="text-xs text-gray-400">{cls?.displayName}</span>
+                      <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-medium">{sub?.name}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{cls?.displayName}</span>
                     </div>
-                    <h4 className="font-semibold text-gray-900">{hw.title}</h4>
-                    {hw.description && <p className="text-sm text-gray-500 mt-0.5">{hw.description}</p>}
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{hw.title}</h4>
+                    {hw.description && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{hw.description}</p>}
                   </div>
-                  <div className="text-right text-xs"><p className="text-gray-400">Due Date</p><p className={`font-semibold ${isOverdue ? 'text-red-500' : 'text-gray-700'}`}>{fmt(hw.dueDate)}</p></div>
+                  <div className="text-right text-xs"><p className="text-gray-400 dark:text-gray-500">Due Date</p><p className={`font-semibold ${isOverdue ? 'text-red-500 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}>{fmt(hw.dueDate)}</p></div>
                 </div>
               </div>
             );
           })}
-          {sorted.length === 0 && <div className="text-center py-8 text-gray-400">📭 No homework assigned yet</div>}
+          {sorted.length === 0 && <div className="text-center py-8 text-gray-400 dark:text-gray-500">📭 No homework assigned yet</div>}
         </div>
       </Card>
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Assign Homework" size="md">
@@ -2161,7 +2161,7 @@ const TimetableView = () => {
     <div className="space-y-5">
       <PageHeader title="Timetable" breadcrumbs={["Home", "Timetable"]} />
       <Card className="p-4">
-        <select value={selClass} onChange={e => setSelClass(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+        <select value={selClass} onChange={e => setSelClass(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
           {classes.map(c => <option key={c._id} value={c._id}>{c.displayName}</option>)}
         </select>
       </Card>
@@ -2169,17 +2169,17 @@ const TimetableView = () => {
         <Card className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-indigo-600 text-white">
+              <tr className="bg-indigo-600 dark:bg-indigo-700 text-white">
                 <th className="px-4 py-3 text-left font-semibold">Period</th>
                 {DAYS.filter(d => tt.schedule.find(s => s.day === d)).map(d => <th key={d} className="px-4 py-3 font-semibold">{d}</th>)}
               </tr>
             </thead>
             <tbody>
               {[1, 2, 3, 4].map(p => (
-                <tr key={p} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">
+                <tr key={p} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-4 py-3 font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap">
                     <div>Period {p}</div>
-                    <div className="text-xs text-gray-400">{tt.schedule[0]?.periods.find(per => per.periodNo === p)?.startTime} - {tt.schedule[0]?.periods.find(per => per.periodNo === p)?.endTime}</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500">{tt.schedule[0]?.periods.find(per => per.periodNo === p)?.startTime} - {tt.schedule[0]?.periods.find(per => per.periodNo === p)?.endTime}</div>
                   </td>
                   {DAYS.filter(d => tt.schedule.find(s => s.day === d)).map(day => {
                     const daySchedule = tt.schedule.find(s => s.day === day);
@@ -2189,8 +2189,8 @@ const TimetableView = () => {
                     return (
                       <td key={day} className="px-4 py-3 text-center">
                         {sub ? (
-                          <div className="p-2 bg-indigo-50 rounded-lg"><p className="font-medium text-indigo-700 text-xs">{sub.name}</p><p className="text-xs text-gray-500">{teacher?.name?.split(' ')[0]}</p></div>
-                        ) : <span className="text-gray-300">—</span>}
+                          <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg"><p className="font-medium text-indigo-700 dark:text-indigo-300 text-xs">{sub.name}</p><p className="text-xs text-gray-500 dark:text-gray-400">{teacher?.name?.split(' ')[0]}</p></div>
+                        ) : <span className="text-gray-300 dark:text-gray-600">—</span>}
                       </td>
                     );
                   })}
@@ -2237,7 +2237,7 @@ const NoticesView = ({ userRole }) => {
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-bold text-gray-900">{n.title}</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100">{n.title}</h3>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${n.priority === 'Urgent' ? 'bg-red-100 text-red-700' : n.priority === 'Important' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{n.priority}</span>
                 </div>
                 <p className="text-sm text-gray-600">{n.content}</p>
@@ -2402,7 +2402,7 @@ const PromoteView = () => {
     <div className="space-y-5">
       <PageHeader title="Student Promotion" subtitle="Promote students to next academic class" breadcrumbs={["Home", "Promote Students"]} />
       <Card className="p-5">
-        <h3 className="font-bold text-gray-900 mb-4">Select Class to Promote</h3>
+        <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Select Class to Promote</h3>
         <div className="flex gap-3 items-end flex-wrap">
           <div className="flex-1 min-w-48"><Select label="From Class" value={selClass} onChange={e => setSelClass(e.target.value)} options={classes.map(c => ({ value: c._id, label: c.displayName }))} /></div>
           {selClass && nextClass && <div className="p-2 text-sm text-gray-500">→ <span className="font-semibold text-indigo-600">{nextClass.displayName}</span></div>}
@@ -2413,7 +2413,7 @@ const PromoteView = () => {
         <>
           <Card>
             <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-              <h4 className="font-bold text-gray-900">{students.length} Students</h4>
+              <h4 className="font-bold text-gray-900 dark:text-gray-100">{students.length} Students</h4>
               <div className="flex gap-2 text-xs">
                 <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full">Promoted: {students.filter(s => s.result === 'Promoted').length}</span>
                 <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full">Detained: {students.filter(s => s.result === 'Detained').length}</span>
@@ -2489,7 +2489,7 @@ const SettingsView = () => {
 
       {tab === 'school' && (
         <Card className="p-6">
-          <h3 className="font-bold text-gray-900 mb-4">School Information</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">School Information</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2"><Input label="School Name" value={form.name || ''} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></div>
             <div className="sm:col-span-2"><Textarea label="Address" value={form.address || ''} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} rows={2} /></div>
@@ -2506,12 +2506,12 @@ const SettingsView = () => {
 
       {tab === 'academic' && (
         <Card className="p-6">
-          <h3 className="font-bold text-gray-900 mb-4">Academic Years</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Academic Years</h3>
           <div className="space-y-3">
             {data.academicYears.map(ay => (
-              <div key={ay._id} className={`flex items-center justify-between p-4 rounded-xl border ${ay.isCurrent ? 'border-indigo-200 bg-indigo-50' : 'border-gray-100'}`}>
-                <div><p className="font-semibold text-gray-900">{ay.name}</p><p className="text-xs text-gray-500">{fmt(ay.startDate)} — {fmt(ay.endDate)}</p></div>
-                {ay.isCurrent ? <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full font-medium">✓ Current</span> : <Button size="sm" variant="outline">Set Current</Button>}
+              <div key={ay._id} className={`flex items-center justify-between p-4 rounded-xl border ${ay.isCurrent ? 'border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950' : 'border-gray-100 dark:border-gray-700 dark:bg-gray-800'}`}>
+                <div><p className="font-semibold text-gray-900 dark:text-gray-100">{ay.name}</p><p className="text-xs text-gray-500 dark:text-gray-400">{fmt(ay.startDate)} — {fmt(ay.endDate)}</p></div>
+                {ay.isCurrent ? <span className="text-xs px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 rounded-full font-medium">✓ Current</span> : <Button size="sm" variant="outline">Set Current</Button>}
               </div>
             ))}
           </div>
@@ -2520,7 +2520,7 @@ const SettingsView = () => {
 
       {tab === 'fees' && (
         <Card className="p-6">
-          <h3 className="font-bold text-gray-900 mb-4">Fee Settings</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Fee Settings</h3>
           <div className="grid grid-cols-2 gap-4">
             <Input label="Late Fine Per Day (₹)" type="number" value={form.lateFinePer || 10} onChange={e => setForm(p => ({ ...p, lateFinePer: Number(e.target.value) }))} />
             <Input label="Fee Due Day (of each month)" type="number" value={form.feeDueDay || 10} onChange={e => setForm(p => ({ ...p, feeDueDay: Number(e.target.value) }))} min={1} max={31} />
@@ -2567,26 +2567,26 @@ const ReportsView = () => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Class-wise Student Count</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Class-wise Student Count</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={classwiseData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="class" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" opacity={0.2} />
+              <XAxis dataKey="class" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} stroke="#9CA3AF" />
+              <YAxis tick={{ fontSize: 11 }} stroke="#9CA3AF" />
+              <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} />
               <Bar dataKey="students" fill="#6366F1" radius={[4, 4, 0, 0]} name="Students" />
             </BarChart>
           </ResponsiveContainer>
         </Card>
         <Card className="p-5">
-          <h3 className="font-bold text-gray-900 mb-4">Monthly Fee Summary</h3>
+          <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">Monthly Fee Summary</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={feeMonthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${v / 1000}k`} />
-              <Tooltip formatter={v => fmtCurrency(v)} />
-              <Legend />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" opacity={0.2} />
+              <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="#9CA3AF" />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₹${v / 1000}k`} stroke="#9CA3AF" />
+              <Tooltip formatter={v => fmtCurrency(v)} contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#F3F4F6' }} />
+              <Legend wrapperStyle={{ color: '#6B7280' }} />
               <Bar dataKey="collected" fill="#10B981" name="Collected" radius={[4, 4, 0, 0]} />
               <Bar dataKey="pending" fill="#EF4444" name="Pending" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -2719,29 +2719,29 @@ export default function SchoolManagementSystem() {
     </AppContext.Provider>
   );
 
-  const ROLE_COLORS = { admin: 'text-indigo-600 bg-indigo-50', principal: 'text-purple-600 bg-purple-50', teacher: 'text-emerald-600 bg-emerald-50', parent: 'text-amber-600 bg-amber-50' };
+  const ROLE_COLORS = { admin: 'text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-900/20', principal: 'text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-900/20', teacher: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20', parent: 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20' };
 
   return (
     <AppContext.Provider value={contextValue}>
       <Toast toasts={toasts} removeToast={id => setToasts(t => t.filter(x => x.id !== id))} />
-      <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
+      <div className="flex h-screen bg-gray-50 dark:bg-gray-900 font-sans overflow-hidden text-gray-900 dark:text-gray-100">
         {sidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
         {/* Sidebar */}
-        <aside className={`fixed lg:relative z-40 h-full w-64 bg-white border-r border-gray-100 shadow-sm flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-          <div className="p-5 border-b border-gray-100">
+        <aside className={`fixed lg:relative z-40 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 shadow-sm flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+          <div className="p-5 border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-lg shadow-md shadow-indigo-200 flex-shrink-0">🌅</div>
-              <div className="min-w-0"><p className="font-bold text-gray-900 text-sm leading-tight truncate">{data.schoolSettings?.name || 'School'}</p><p className="text-xs text-gray-400 truncate">Management System</p></div>
+              <div className="min-w-0"><p className="font-bold text-gray-900 dark:text-gray-100 text-sm leading-tight truncate">{data.schoolSettings?.name || 'School'}</p><p className="text-xs text-gray-400 dark:text-gray-500 truncate">Management System</p></div>
             </div>
           </div>
           <nav className="flex-1 overflow-y-auto p-3 space-y-1">
             {navConfig.map(section => (
               <div key={section.section} className="mb-2">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-3 py-2">{section.section}</p>
+                <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider px-3 py-2">{section.section}</p>
                 {section.items.map(item => (
                   <button key={item.id} onClick={() => { setCurrentPage(item.id); setSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${currentPage === item.id ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' : 'text-gray-600 hover:bg-gray-100'}`}>
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${currentPage === item.id ? 'bg-indigo-600 dark:bg-indigo-700 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
                     <span className="text-base">{item.icon}</span>
                     <span>{item.label}</span>
                   </button>
@@ -2749,15 +2749,15 @@ export default function SchoolManagementSystem() {
               </div>
             ))}
           </nav>
-          <div className="p-4 border-t border-gray-100">
+          <div className="p-4 border-t border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-3 mb-3">
               <Avatar name={user.name || user.email} size={9} />
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-sm text-gray-900 truncate">{user.name || user.email}</p>
-                <span className={`text-xs px-1.5 py-0.5 rounded font-medium capitalize ${ROLE_COLORS[user.role] || 'text-gray-600 bg-gray-100'}`}>{user.role}</span>
+                <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">{user.name || user.email}</p>
+                <span className={`text-xs px-1.5 py-0.5 rounded font-medium capitalize ${ROLE_COLORS[user.role] || 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700'}`}>{user.role}</span>
               </div>
             </div>
-            <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 transition-colors">
+            <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
               <span>🚪</span> <span>Logout</span>
             </button>
           </div>
@@ -2765,30 +2765,30 @@ export default function SchoolManagementSystem() {
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between flex-shrink-0">
+          <header className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 py-3 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
-              <button className="lg:hidden p-2 rounded-lg hover:bg-gray-100" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                <div className="w-5 h-0.5 bg-gray-600 mb-1"></div><div className="w-5 h-0.5 bg-gray-600 mb-1"></div><div className="w-5 h-0.5 bg-gray-600"></div>
+              <button className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                <div className="w-5 h-0.5 bg-gray-600 dark:bg-gray-400 mb-1"></div><div className="w-5 h-0.5 bg-gray-600 dark:bg-gray-400 mb-1"></div><div className="w-5 h-0.5 bg-gray-600 dark:bg-gray-400"></div>
               </button>
-              <div><h2 className="font-bold text-gray-900 capitalize text-sm">{currentPage.replace(/-/g, ' ')}</h2><p className="text-xs text-gray-400">{data.schoolSettings?.name}</p></div>
+              <div><h2 className="font-bold text-gray-900 dark:text-gray-100 capitalize text-sm">{currentPage.replace(/-/g, ' ')}</h2><p className="text-xs text-gray-400 dark:text-gray-500">{data.schoolSettings?.name}</p></div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-gray-100">
+              <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-gray-100 dark:border-gray-700">
                 <Avatar name={user.name || user.email} size={8} />
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{user.name || user.email}</p>
-                  <p className={`text-xs capitalize font-medium ${ROLE_COLORS[user.role]?.split(' ')[0] || 'text-gray-500'}`}>{user.role}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user.name || user.email}</p>
+                  <p className={`text-xs capitalize font-medium ${ROLE_COLORS[user.role]?.split(' ')[0] || 'text-gray-500 dark:text-gray-400'}`}>{user.role}</p>
                 </div>
               </div>
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-gray-50 dark:bg-gray-900">
             {renderPage()}
           </main>
           {/* Mobile bottom nav */}
-          <nav className="lg:hidden bg-white border-t border-gray-100 px-2 py-1 flex justify-around flex-shrink-0">
+          <nav className="lg:hidden bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 px-2 py-1 flex justify-around flex-shrink-0">
             {(navConfig[0]?.items?.slice(0, 1) || []).concat(navConfig.slice(1, 4).map(s => s.items[0]).filter(Boolean)).slice(0, 5).map((item, i) => (
-              <button key={item?.id || i} onClick={() => item && setCurrentPage(item.id)} className={`flex flex-col items-center p-2 rounded-xl min-w-0 ${currentPage === item?.id ? 'text-indigo-600' : 'text-gray-400'}`}>
+              <button key={item?.id || i} onClick={() => item && setCurrentPage(item.id)} className={`flex flex-col items-center p-2 rounded-xl min-w-0 ${currentPage === item?.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`}>
                 <span className="text-xl">{item?.icon}</span>
                 <span className="text-xs mt-0.5 truncate max-w-14">{item?.label?.split(' ')[0]}</span>
               </button>
