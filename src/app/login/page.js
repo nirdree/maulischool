@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Eye, EyeOff, GraduationCap, Loader2 } from 'lucide-react';
@@ -20,6 +20,14 @@ const DEMO_CREDS = [
 ];
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const { login, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
