@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
       const stored = localStorage.getItem('sms_user');
       if (stored) setUser(JSON.parse(stored));
     } catch (e) {
-      console.error('Failed to parse user');
+      console.log('Failed to parse user');
     } finally {
       setInitialized(true);
     }
