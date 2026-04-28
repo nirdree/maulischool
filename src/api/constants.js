@@ -1,46 +1,44 @@
 
 
-export const BASE_URL = 'http://localhost:5000';
-
 export const API = {
 
   // ── 🔐 Auth ──────────────────────────────────────────────
   AUTH: {
-    REGISTER: `${BASE_URL}/api/auth/register`,
-    LOGIN: `${BASE_URL}/api/auth/login`,
-    ME: `${BASE_URL}/api/auth/me`,
-    CHANGE_PASSWORD: `${BASE_URL}/api/auth/change-password`,
+    REGISTER: `/api/auth/register`,
+    LOGIN: `/api/auth/login`,
+    ME: `/api/auth/me`,
+    CHANGE_PASSWORD: `/api/auth/change-password`,
   },
 
   // ── 📅 Academic Years ─────────────────────────────────────
   ACADEMIC_YEARS: {
-    BASE: `${BASE_URL}/api/academic-years`,
-    CURRENT: `${BASE_URL}/api/academic-years/current`,
-    BY_ID: (id) => `${BASE_URL}/api/academic-years/${id}`,
-    SET_CURRENT: (id) => `${BASE_URL}/api/academic-years/${id}/set-current`,
+    BASE: `/api/academic-years`,
+    CURRENT: `/api/academic-years/current`,
+    BY_ID: (id) => `/api/academic-years/${id}`,
+    SET_CURRENT: (id) => `/api/academic-years/${id}/set-current`,
   },
 
   // ── 🏫 Classrooms ─────────────────────────────────────────
   CLASSROOMS: {
-    BASE: `${BASE_URL}/api/classrooms`,
-    BY_ID: (id) => `${BASE_URL}/api/classrooms/${id}`,
-    TOGGLE: (id) => `${BASE_URL}/api/classrooms/${id}/toggle`,
+    BASE: `/api/classrooms`,
+    BY_ID: (id) => `/api/classrooms/${id}`,
+    TOGGLE: (id) => `/api/classrooms/${id}/toggle`,
   },
 
   // ── 👨‍🏫 Employees ─────────────────────────────────────────
   EMPLOYEES: {
-    BASE: `${BASE_URL}/api/employees`,
-    BY_ID: (id) => `${BASE_URL}/api/employees/${id}`,
-    STATUS: (id) => `${BASE_URL}/api/employees/${id}/status`,
+    BASE: `/api/employees`,
+    BY_ID: (id) => `/api/employees/${id}`,
+    STATUS: (id) => `/api/employees/${id}/status`,
     PASSWORD: (id) => `/api/employees/${id}/password`,
   },
 
   // ── 🎓 Students ───────────────────────────────────────────
   STUDENTS: {
-    BASE: `${BASE_URL}/api/students`,
-    BY_ID: (id) => `${BASE_URL}/api/students/${id}`,
+    BASE: `/api/students`,
+    BY_ID: (id) => `/api/students/${id}`,
     LINK_PARENT: (id) => `/api/students/${id}/link-parent`,
-    STATUS: (id) => `${BASE_URL}/api/students/${id}/status`,
+    STATUS: (id) => `/api/students/${id}/status`,
     BLOCK_PARENT: (id) => `/api/students/${id}/block-parent`,
     PARENT_PASSWORD: (id) => `/api/students/${id}/parent-password`,
       OVERVIEW:          (id) => `/api/students/${id}/overview`,
@@ -52,104 +50,104 @@ export const API = {
 
   // ── 📚 Subjects ───────────────────────────────────────────
   SUBJECTS: {
-    BASE: `${BASE_URL}/api/subjects`,
-    BY_ID: (id) => `${BASE_URL}/api/subjects/${id}`,
-    TOGGLE: (id) => `${BASE_URL}/api/subjects/${id}/toggle`,
+    BASE: `/api/subjects`,
+    BY_ID: (id) => `/api/subjects/${id}`,
+    TOGGLE: (id) => `/api/subjects/${id}/toggle`,
   },
 
   // ── 📝 Enquiries ──────────────────────────────────────────
   ENQUIRIES: {
-    BASE: `${BASE_URL}/api/enquiries`,         // POST is public (no auth)
-    BY_ID: (id) => `${BASE_URL}/api/enquiries/${id}`,
+    BASE: `/api/enquiries`,         // POST is public (no auth)
+    BY_ID: (id) => `/api/enquiries/${id}`,
   },
 
   // ── ✅ Attendance ─────────────────────────────────────────
   ATTENDANCE: {
-    STUDENTS: `${BASE_URL}/api/attendance/students`,
-    STUDENTS_SUMMARY: `${BASE_URL}/api/attendance/students/summary`,
-    EMPLOYEES: `${BASE_URL}/api/attendance/employees`,
+    STUDENTS: `/api/attendance/students`,
+    STUDENTS_SUMMARY: `/api/attendance/students/summary`,
+    EMPLOYEES: `/api/attendance/employees`,
   },
 
   // ── 📊 Exams & Marks ──────────────────────────────────────
   EXAMS: {
-    BASE: `${BASE_URL}/api/exams`,
-    BY_ID: (id) => `${BASE_URL}/api/exams/${id}`,
-    MARKS: (examId) => `${BASE_URL}/api/exams/${examId}/marks`,
+    BASE: `/api/exams`,
+    BY_ID: (id) => `/api/exams/${id}`,
+    MARKS: (examId) => `/api/exams/${examId}/marks`,
   },
   MARKS: {
-    BASE: `${BASE_URL}/api/marks`,
-    BY_ID: (id) => `${BASE_URL}/api/marks/${id}`,
+    BASE: `/api/marks`,
+    BY_ID: (id) => `/api/marks/${id}`,
   },
 
   // ── 💰 Fees ───────────────────────────────────────────────
   FEES: {
-    BASE: `${BASE_URL}/api/fees`,
-    BY_ID: (id) => `${BASE_URL}/api/fees/${id}`,
-    PAY: (id) => `${BASE_URL}/api/fees/${id}/pay`,
-    PAYMENTS: (id) => `${BASE_URL}/api/fees/${id}/payments`,
-    RECEIPTS: `${BASE_URL}/api/fees/receipts/all`,
+    BASE: `/api/fees`,
+    BY_ID: (id) => `/api/fees/${id}`,
+    PAY: (id) => `/api/fees/${id}/pay`,
+    PAYMENTS: (id) => `/api/fees/${id}/payments`,
+    RECEIPTS: `/api/fees/receipts/all`,
   },
 
   // ── 💼 Payroll ────────────────────────────────────────────
   PAYROLL: {
-    BASE: `${BASE_URL}/api/payroll`,
-    BY_ID: (id) => `${BASE_URL}/api/payroll/${id}`,
-    PAY: (id) => `${BASE_URL}/api/payroll/${id}/pay`,
+    BASE: `/api/payroll`,
+    BY_ID: (id) => `/api/payroll/${id}`,
+    PAY: (id) => `/api/payroll/${id}/pay`,
   },
 
   // ── 🏖 Leaves ─────────────────────────────────────────────
   LEAVES: {
-    BASE: `${BASE_URL}/api/leaves`,
-    BY_ID: (id) => `${BASE_URL}/api/leaves/${id}`,
-    ACTION: (id) => `${BASE_URL}/api/leaves/${id}/action`,
+    BASE: `/api/leaves`,
+    BY_ID: (id) => `/api/leaves/${id}`,
+    ACTION: (id) => `/api/leaves/${id}/action`,
   },
 
   // ── 📓 Homework ───────────────────────────────────────────
   HOMEWORK: {
-    BASE: `${BASE_URL}/api/homework`,
-    BY_ID: (id) => `${BASE_URL}/api/homework/${id}`,
+    BASE: `/api/homework`,
+    BY_ID: (id) => `/api/homework/${id}`,
   },
 
   // ── 📢 Notices ────────────────────────────────────────────
   NOTICES: {
-    BASE: `${BASE_URL}/api/notices`,
-    BY_ID: (id) => `${BASE_URL}/api/notices/${id}`,
+    BASE: `/api/notices`,
+    BY_ID: (id) => `/api/notices/${id}`,
   },
 
   // ── 🗓 Timetable ──────────────────────────────────────────
   TIMETABLE: {
-    BASE: `${BASE_URL}/api/timetable`,
-    BY_CLASS: (classId) => `${BASE_URL}/api/timetable/${classId}`,
-    BY_ID: (id) => `${BASE_URL}/api/timetable/${id}`,
+    BASE: `/api/timetable`,
+    BY_CLASS: (classId) => `/api/timetable/${classId}`,
+    BY_ID: (id) => `/api/timetable/${id}`,
   },
 
   // ── 📈 Promote ────────────────────────────────────────────
   PROMOTE: {
-    PREVIEW: `${BASE_URL}/api/promote/preview`,
-    EXECUTE: `${BASE_URL}/api/promote`,
+    PREVIEW: `/api/promote/preview`,
+    EXECUTE: `/api/promote`,
   },
 
   // ── ⚙️ Settings ───────────────────────────────────────────
   SETTINGS: {
-    BASE: `${BASE_URL}/api/settings`,
+    BASE: `/api/settings`,
   },
 
   // ── 📊 Reports ────────────────────────────────────────────
   REPORTS: {
-    OVERVIEW: `${BASE_URL}/api/reports/overview`,
-    FEE_COLLECTION: `${BASE_URL}/api/reports/fee-collection`,
-    FEE_DEFAULTERS: `${BASE_URL}/api/reports/fee-defaulters`,
-    ATTENDANCE_SUMMARY: `${BASE_URL}/api/reports/attendance-summary`,
-    LOW_ATTENDANCE: `${BASE_URL}/api/reports/low-attendance`,
-    EXAM_RESULTS: `${BASE_URL}/api/reports/exam-results`,
-    STUDENT_RESULT_CARD: `${BASE_URL}/api/reports/student-result-card`,
-    PAYROLL_SUMMARY: `${BASE_URL}/api/reports/payroll-summary`,
-    CLASSWISE_STUDENTS: `${BASE_URL}/api/reports/classwise-students`,
-    EMPLOYEE_ATTENDANCE_SUMMARY: `${BASE_URL}/api/reports/employee-attendance-summary`,
+    OVERVIEW: `/api/reports/overview`,
+    FEE_COLLECTION: `/api/reports/fee-collection`,
+    FEE_DEFAULTERS: `/api/reports/fee-defaulters`,
+    ATTENDANCE_SUMMARY: `/api/reports/attendance-summary`,
+    LOW_ATTENDANCE: `/api/reports/low-attendance`,
+    EXAM_RESULTS: `/api/reports/exam-results`,
+    STUDENT_RESULT_CARD: `/api/reports/student-result-card`,
+    PAYROLL_SUMMARY: `/api/reports/payroll-summary`,
+    CLASSWISE_STUDENTS: `/api/reports/classwise-students`,
+    EMPLOYEE_ATTENDANCE_SUMMARY: `/api/reports/employee-attendance-summary`,
   },
 
   // ── ❤️ Health ─────────────────────────────────────────────
-  HEALTH: `${BASE_URL}/api/health`,
+  HEALTH: `/api/health`,
 };
 
 // ─────────────────────────────────────────────────────────────

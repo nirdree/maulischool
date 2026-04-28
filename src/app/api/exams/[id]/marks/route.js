@@ -6,7 +6,7 @@ import { protect, authorize } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const marks = await Marks.find({ exam: params.examId })
+    const marks = await Marks.find({ exam: params.id })
       .populate('student', 'firstName lastName rollNumber admissionNo')
       .populate('subject', 'name')
       .sort({ 'student.rollNumber': 1 });
@@ -23,39 +23,36 @@ export const POST = authorize('admin', 'principal', 'teacher')(async (request, {
     if (!Array.isArray(marks) || marks.length === 0)
       return r.badRequest('marks array is required');
 
-    const exam = await Exam.findById(params.examId);
+    const exam = await Exam.findById(params.id);
     if (!exam) return r.notFound('Exam not found');
 
     const calcGrade = (obtained, total) => {
       const pct = (obtained / total) * 100;
-      if (pct >= 90) return 'A+'; if (pct >= 80) return 'A';
-      if (pct >= 70) return 'B+'; if (pct >= 60) return 'B';
-      if (pct >= 50) return 'C';  if (pct >= 40) return 'D';
+      if (pct >= 90) return 'A+';
+      if (pct >= 80) return 'A';
+      if (pct >= 70) return 'B+';
+      if (pct >= 60) return 'B';
+      if (pct >= 50) return 'C';
+      if (pct >= 40) return 'D';
       return 'F';
     };
 
-    const ops = marks.map(m => ({
+    const bulkOps = marks.map(m => ({
       updateOne: {
-        filter: { exam: exam._id, student: m.student },
+        filter: { exam: params.id, student: m.studentId },
         update: {
           $set: {
-            exam:          exam._id,
-            student:       m.student,
-            subject:       exam.subject,
-            classroom:     exam.classroom,
-            marksObtained: m.isAbsent ? 0 : Number(m.marksObtained),
-            isAbsent:      m.isAbsent || false,
-            grade:         m.isAbsent ? 'F' : calcGrade(Number(m.marksObtained), exam.totalMarks),
-            remarks:       m.remarks || '',
-            academicYear:  exam.academicYear,
-          },
+            obtainedMarks: m.obtainedMarks,
+            grade: calcGrade(m.obtainedMarks, exam.totalMarks),
+            updatedAt: new Date()
+          }
         },
-        upsert: true,
-      },
+        upsert: true
+      }
     }));
 
-    await Marks.bulkWrite(ops);
-    return r.ok(null, `${marks.length} mark(s) saved`);
+    await Marks.bulkWrite(bulkOps);
+    return r.ok({ message: 'Marks saved successfully' });
   } catch (err) {
     return r.serverError(err.message);
   }
