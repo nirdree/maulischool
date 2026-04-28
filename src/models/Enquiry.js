@@ -1,5 +1,5 @@
 // models/Enquiry.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const enquirySchema = new mongoose.Schema({
   enquiryId:             { type: String, unique: true },
@@ -45,4 +45,4 @@ enquirySchema.pre('save', async function () {
   }
 });
 
-module.exports = mongoose.models.Enquiry || mongoose.model('Enquiry', enquirySchema);
+export default mongoose.models.Enquiry || mongoose.model('Enquiry', enquirySchema);

@@ -1,5 +1,5 @@
 // models/Academicyear.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const academicYearSchema = new mongoose.Schema({
   name:      { type: String, required: true, trim: true },   // e.g. "2024-2025"
@@ -18,4 +18,4 @@ academicYearSchema.pre('save', async function () {
   }
 });
 
-module.exports = mongoose.models.AcademicYear || mongoose.model('AcademicYear', academicYearSchema);
+export default mongoose.models.AcademicYear || mongoose.model('AcademicYear', academicYearSchema);

@@ -1,5 +1,5 @@
 // models/Subject.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const subjectSchema = new mongoose.Schema({
   name:         { type: String, required: true, trim: true },
@@ -12,4 +12,4 @@ const subjectSchema = new mongoose.Schema({
 
 subjectSchema.index({ name: 1, classroom: 1, academicYear: 1 }, { unique: true });
 
-module.exports = mongoose.models.Subject || mongoose.model('Subject', subjectSchema);
+export default mongoose.models.Subject || mongoose.model('Subject', subjectSchema);

@@ -1,5 +1,5 @@
 // models/Classroom.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const classroomSchema = new mongoose.Schema({
   className:      { type: String, required: true, trim: true },
@@ -15,4 +15,4 @@ const classroomSchema = new mongoose.Schema({
 
 classroomSchema.index({ className: 1, section: 1, academicYear: 1 }, { unique: true });
 
-module.exports = mongoose.models.Classroom || mongoose.model('Classroom', classroomSchema);
+export default mongoose.models.Classroom || mongoose.model('Classroom', classroomSchema);

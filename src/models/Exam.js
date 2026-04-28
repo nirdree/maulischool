@@ -1,5 +1,5 @@
 // models/Exam.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // ── Exam ────────────────────────────────────────────────────
 const examSchema = new mongoose.Schema({
@@ -56,7 +56,5 @@ marksSchema.pre('save', async function () {
   }
 });
 
-const Exam  = mongoose.models.Exam  || mongoose.model('Exam',  examSchema);
-const Marks = mongoose.models.Marks || mongoose.model('Marks', marksSchema);
-
-module.exports = { Exam, Marks };
+export const Exam  = mongoose.models.Exam  || mongoose.model('Exam',  examSchema);
+export const Marks = mongoose.models.Marks || mongoose.model('Marks', marksSchema);

@@ -1,5 +1,5 @@
 // models/Student.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const studentSchema = new mongoose.Schema({
   admissionNo:        { type: String, unique: true },
@@ -69,4 +69,4 @@ studentSchema.pre('save', async function () {
   }
 });
 
-module.exports = mongoose.models.Student || mongoose.model('Student', studentSchema);
+export default mongoose.models.Student || mongoose.model('Student', studentSchema);

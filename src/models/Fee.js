@@ -1,5 +1,5 @@
 // models/Fee.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // ── Fee Record ───────────────────────────────────────────────
 const feeSchema = new mongoose.Schema({
@@ -64,7 +64,5 @@ feePaymentSchema.pre('save', async function () {
   }
 });
 
-const Fee        = mongoose.models.Fee        || mongoose.model('Fee',        feeSchema);
-const FeePayment = mongoose.models.FeePayment || mongoose.model('FeePayment', feePaymentSchema);
-
-module.exports = { Fee, FeePayment };
+export const Fee        = mongoose.models.Fee        || mongoose.model('Fee',        feeSchema);
+export const FeePayment = mongoose.models.FeePayment || mongoose.model('FeePayment', feePaymentSchema);

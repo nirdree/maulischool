@@ -1,5 +1,5 @@
 // models/Employee.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const employeeSchema = new mongoose.Schema({
   employeeId:   { type: String, unique: true },
@@ -42,4 +42,4 @@ employeeSchema.pre('save', async function () {
   }
 });
 
-module.exports = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);
+export default mongoose.models.Employee || mongoose.model('Employee', employeeSchema);

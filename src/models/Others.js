@@ -1,5 +1,5 @@
 // models/Others.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // ── Payroll ──────────────────────────────────────────────────
 const payrollSchema = new mongoose.Schema({
@@ -127,11 +127,9 @@ const schoolSettingsSchema = new mongoose.Schema({
   minAttendance: { type: Number, default: 75 },
 }, { timestamps: true });
 
-module.exports = {
-  Payroll:        mongoose.models.Payroll        || mongoose.model('Payroll',        payrollSchema),
-  Leave:          mongoose.models.Leave          || mongoose.model('Leave',          leaveSchema),
-  Homework:       mongoose.models.Homework       || mongoose.model('Homework',       homeworkSchema),
-  Notice:         mongoose.models.Notice         || mongoose.model('Notice',         noticeSchema),
-  Timetable:      mongoose.models.Timetable      || mongoose.model('Timetable',      timetableSchema),
-  SchoolSettings: mongoose.models.SchoolSettings || mongoose.model('SchoolSettings', schoolSettingsSchema),
-};
+export const Payroll        = mongoose.models.Payroll        || mongoose.model('Payroll',        payrollSchema);
+export const Leave          = mongoose.models.Leave          || mongoose.model('Leave',          leaveSchema);
+export const Homework       = mongoose.models.Homework       || mongoose.model('Homework',       homeworkSchema);
+export const Notice         = mongoose.models.Notice         || mongoose.model('Notice',         noticeSchema);
+export const Timetable      = mongoose.models.Timetable      || mongoose.model('Timetable',      timetableSchema);
+export const SchoolSettings = mongoose.models.SchoolSettings || mongoose.model('SchoolSettings', schoolSettingsSchema);

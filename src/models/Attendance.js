@@ -1,5 +1,5 @@
 // models/Attendance.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // ── Student Attendance ───────────────────────────────────────
 const attendanceSchema = new mongoose.Schema({
@@ -33,7 +33,5 @@ const employeeAttendanceSchema = new mongoose.Schema({
 
 employeeAttendanceSchema.index({ employee: 1, date: 1 }, { unique: true });
 
-const Attendance         = mongoose.models.Attendance         || mongoose.model('Attendance',         attendanceSchema);
-const EmployeeAttendance = mongoose.models.EmployeeAttendance || mongoose.model('EmployeeAttendance', employeeAttendanceSchema);
-
-module.exports = { Attendance, EmployeeAttendance };
+export const Attendance         = mongoose.models.Attendance         || mongoose.model('Attendance',         attendanceSchema);
+export const EmployeeAttendance = mongoose.models.EmployeeAttendance || mongoose.model('EmployeeAttendance', employeeAttendanceSchema);
