@@ -2,766 +2,851 @@
 
 import { useState, useEffect, useRef } from "react";
 import {
-  Menu, X, Phone, Mail, MapPin, Star, Check, Cctv,
-  BookOpen, Activity, Monitor, Gamepad2, Trophy,
-  Music2, Users, Bus, ArrowRight, Send, GraduationCap,
-  Shield, Heart, ChevronUp
+  GraduationCap, Shield, Heart, Camera, Target, Monitor,
+  Music, Gamepad2, CircleDot, Star, Theater, Bus,
+  Phone, Mail, MapPin, Clock, Send, CheckCircle2,
+  Menu, X, ChevronUp, Loader2, LogIn, Flame,
 } from "lucide-react";
 
-// ─── SECTION WRAPPER ──────────────────────────────────────────────────────────
-function Section({ id, className = "", children }) {
+/* ─────────────────── hooks ─────────────────── */
+function useInView(threshold = 0.1) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.1 }
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.unobserve(el); } },
+      { threshold }
     );
-    if (ref.current) obs.observe(ref.current);
+    obs.observe(el);
     return () => obs.disconnect();
   }, []);
+  return [ref, visible];
+}
+
+function Reveal({ children, delay = 0, style: outerStyle = {}, className = "" }) {
+  const [ref, visible] = useInView();
   return (
-    <section
-      id={id}
+    <div
       ref={ref}
       style={{
-        transition: "opacity 0.7s, transform 0.7s",
+        transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(2rem)",
+        transform: visible ? "translateY(0)" : "translateY(28px)",
+        ...outerStyle,
       }}
       className={className}
     >
       {children}
-    </section>
+    </div>
   );
 }
 
-// ─── BADGE ────────────────────────────────────────────────────────────────────
-function Badge({ children, color = "orange" }) {
-  const styles = {
-    orange: { background: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa" },
-    red: { background: "#fff1f2", color: "#be123c", border: "1px solid #fecdd3" },
-    yellow: { background: "#fefce8", color: "#a16207", border: "1px solid #fef08a" },
-    green: { background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0" },
+/* ─────────────────── data ─────────────────── */
+const NAV_LINKS = ["home","about","facilities","classes","gallery","admission","contact"];
+
+const FACILITIES = [
+  { Icon: Camera,    label: "CCTV Surveillance", desc: "24/7 campus monitoring"       },
+  { Icon: Target,    label: "Activity Room",     desc: "Creative play-based space"    },
+  { Icon: Monitor,   label: "Smart Desks",       desc: "Modern ergonomic furniture"   },
+  { Icon: Music,     label: "Audio/Video Room",  desc: "Digital multimedia lab"       },
+  { Icon: Gamepad2,  label: "Playground",        desc: "Slides, swings & play area"   },
+  { Icon: CircleDot, label: "Basketball Court",  desc: "Full-size sports court"       },
+  { Icon: Star,      label: "Learning Toys",     desc: "Educational early toys"       },
+  { Icon: Theater,   label: "Cultural Hall",     desc: "Events & performances"        },
+  { Icon: Bus,       label: "Transport",         desc: "Safe school bus service"      },
+];
+
+const CLASSES = [
+  { emoji:"🍼", name:"Playgroup", age:"2+ Years" },
+  { emoji:"🌱", name:"Nursery",   age:"3+ Years" },
+  { emoji:"🎨", name:"Jr. KG",   age:"4 Years"  },
+  { emoji:"⭐", name:"Sr. KG",   age:"5 Years"  },
+  { emoji:"📚", name:"Class 1–4",age:"6–9 Yrs"  },
+  { emoji:"🎓", name:"Class 5–8",age:"10+ Yrs"  },
+];
+
+const GALLERY = [
+  { emoji:"🎨", label:"Classroom Activities", bg:"#140d2e" },
+  { emoji:"🏀", label:"Sports Day",           bg:"#0b1a2e" },
+  { emoji:"🎭", label:"Cultural Program",     bg:"#2a1008" },
+  { emoji:"🏆", label:"Annual Day",           bg:"#1a0a2e" },
+  { emoji:"🔬", label:"Science Expo",         bg:"#062618" },
+  { emoji:"🎠", label:"Playground Fun",       bg:"#1a1208" },
+];
+
+/* ── shared styles ── */
+const S = {
+  amber: "#f59e0b",
+  amberDim: "rgba(245,158,11,0.12)",
+  amberBorder: "rgba(245,158,11,0.18)",
+  bg0: "#09090b",
+  bg1: "#0c0c0f",
+  bg2: "#111113",
+  card: "rgba(255,255,255,0.025)",
+  border: "rgba(255,255,255,0.06)",
+  text: "#f4f4f5",
+  muted: "#71717a",
+  dim: "#52525b",
+  sora: "'Sora', sans-serif",
+  dm: "'DM Sans', sans-serif",
+};
+
+const cardBase = {
+  background: `linear-gradient(160deg, ${S.card} 0%, rgba(9,9,11,0.9) 100%)`,
+  border: `1px solid ${S.border}`,
+  borderRadius: 20,
+};
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════════════════════ */
+export default function MauliSchoolPage() {
+  const [menuOpen,   setMenuOpen]   = useState(false);
+  const [scrolled,   setScrolled]   = useState(false);
+  const [showTop,    setShowTop]    = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted,  setSubmitted]  = useState(false);
+  const [formError,  setFormError]  = useState("");
+
+  const blankForm = {
+    childName:"", fatherName:"", residentialAddress:"",
+    pinCode:"", phoneNo:"", mobileNo:"", email:"",
+    gender:"", age:"", dateOfBirth:"",
+    preferredAdmissionDate:"", remark:"",
+    classApplying:"", academicYear:"",
   };
-  return (
-    <span style={{
-      ...styles[color],
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "6px",
-      padding: "4px 12px",
-      borderRadius: "9999px",
-      fontSize: "12px",
-      fontWeight: 700,
-    }}>
-      {children}
-    </span>
-  );
-}
+  const [form, setForm] = useState(blankForm);
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
 
-// ─── NAVBAR ───────────────────────────────────────────────────────────────────
-function Navbar() {
-  const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 30);
+    const fn = () => { setScrolled(window.scrollY > 40); setShowTop(window.scrollY > 500); };
     window.addEventListener("scroll", fn);
     return () => window.removeEventListener("scroll", fn);
   }, []);
-  const links = ["Home", "About", "Facilities", "Classes", "Admission", "Contact"];
+
+  async function submitEnquiry(e) {
+    e.preventDefault();
+    setFormError(""); setSubmitting(true);
+    try {
+      const res = await fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form, age: Number(form.age),
+          dateOfBirth: form.dateOfBirth ? new Date(form.dateOfBirth).toISOString() : undefined,
+          preferredAdmissionDate: form.preferredAdmissionDate
+            ? new Date(form.preferredAdmissionDate).toISOString() : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || "Submission failed");
+      setSubmitted(true);
+      setForm(blankForm);
+      setTimeout(() => setSubmitted(false), 6000);
+    } catch (err) {
+      setFormError(err.message);
+    } finally { setSubmitting(false); }
+  }
+
+  /* ── nav hover helpers ── */
+  const hoverAmber = (e) => { e.currentTarget.style.color = S.amber; e.currentTarget.style.background = S.amberDim; };
+  const leaveGray  = (e) => { e.currentTarget.style.color = S.muted;  e.currentTarget.style.background = "transparent"; };
+
   return (
-    <nav style={{
-      position: "fixed",
-      inset: "0 0 auto 0",
-      zIndex: 50,
-      background: scrolled ? "rgba(255,255,255,0.97)" : "rgba(255,255,255,0.92)",
-      backdropFilter: "blur(12px)",
-      boxShadow: scrolled ? "0 2px 20px rgba(249,115,22,0.12)" : "none",
-      transition: "all 0.3s",
-    }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
-        {/* Logo */}
-        <a href="#home" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: "linear-gradient(135deg, #f97316, #dc2626)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
-          }}>
-            <GraduationCap size={18} color="white" />
-          </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 900, color: "#ea580c", letterSpacing: "0.05em", lineHeight: 1.2 }}>MAULI SCHOOL</div>
-            <div style={{ fontSize: 9, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>CBSE Pattern</div>
-          </div>
-        </a>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&display=swap');
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        html{scroll-behavior:smooth}
+        body{font-family:'DM Sans',sans-serif;background:#09090b;color:#d4d4d8}
+        h1,h2,h3,h4{font-family:'Sora',sans-serif}
+        a{text-decoration:none;color:inherit}
+        ::-webkit-scrollbar{width:3px}
+        ::-webkit-scrollbar-thumb{background:rgba(245,158,11,0.3);border-radius:4px}
 
-        {/* Desktop links */}
-        <div style={{ display: "flex", alignItems: "center", gap: 2 }} className="hidden-mobile">
-          {links.map((l) => (
-            <a key={l} href={`#${l.toLowerCase()}`} style={{
-              padding: "8px 12px", fontSize: 13, fontWeight: 600, color: "#4b5563",
-              borderRadius: 8, textDecoration: "none", transition: "all 0.2s",
-            }}
-              onMouseEnter={e => { e.target.style.color = "#ea580c"; e.target.style.background = "#fff7ed"; }}
-              onMouseLeave={e => { e.target.style.color = "#4b5563"; e.target.style.background = "transparent"; }}>
-              {l}
-            </a>
-          ))}
-          <a href="#admission" style={{
-            marginLeft: 8, padding: "8px 20px",
-            background: "linear-gradient(135deg, #f97316, #dc2626)",
-            color: "white", fontSize: 13, fontWeight: 700,
-            borderRadius: 9999, textDecoration: "none",
-            boxShadow: "0 4px 12px rgba(249,115,22,0.35)",
-            transition: "all 0.2s",
-          }}>Apply Now</a>
-        </div>
+        @keyframes heroUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        @keyframes shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
+        @keyframes ring{0%{box-shadow:0 0 0 0 rgba(245,158,11,0.5)}70%{box-shadow:0 0 0 10px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+        @keyframes spin{to{transform:rotate(360deg)}}
 
-        {/* Mobile toggle */}
-        <button onClick={() => setOpen(v => !v)} style={{
-          width: 36, height: 36, border: "none", background: "transparent",
-          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-          borderRadius: 8, color: "#374151",
-        }} className="show-mobile">
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
-      </div>
+        .hero-up{animation:heroUp 0.9s cubic-bezier(.16,1,.3,1) both}
+        .hero-up-2{animation:heroUp 0.9s 0.18s cubic-bezier(.16,1,.3,1) both}
+        .card-float{animation:float 4.5s ease-in-out infinite}
+        .fire-text{
+          background:linear-gradient(90deg,#f59e0b,#fb923c,#f87171,#fb923c,#f59e0b);
+          background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+          animation:shimmer 5s linear infinite}
+        .ring{animation:ring 2.2s ease infinite}
+        .spin{animation:spin 1s linear infinite}
 
-      {/* Mobile drawer */}
-      <div style={{
-        overflow: "hidden",
-        maxHeight: open ? 320 : 0,
-        transition: "max-height 0.3s",
-        background: "white",
-        borderTop: open ? "1px solid #fed7aa" : "none",
-      }} className="show-mobile">
-        <div style={{ padding: "8px 16px 12px" }}>
-          {links.map((l) => (
-            <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setOpen(false)} style={{
-              display: "block", padding: "10px 12px", fontSize: 14, fontWeight: 600,
-              color: "#4b5563", textDecoration: "none", borderRadius: 8,
-            }}>
-              {l}
-            </a>
-          ))}
-          <a href="#admission" onClick={() => setOpen(false)} style={{
-            display: "block", marginTop: 4, padding: "10px 12px",
-            background: "linear-gradient(135deg, #f97316, #dc2626)",
-            color: "white", fontSize: 14, fontWeight: 700,
-            borderRadius: 12, textDecoration: "none", textAlign: "center",
-          }}>Apply Now</a>
-        </div>
-      </div>
-    </nav>
-  );
-}
+        .fac-card:hover{transform:translateY(-4px)!important;border-color:rgba(245,158,11,0.22)!important;box-shadow:0 12px 40px rgba(0,0,0,0.45)!important}
+        .cls-card:hover{transform:translateY(-8px)!important;border-color:rgba(245,158,11,0.28)!important;box-shadow:0 16px 44px rgba(0,0,0,0.55)!important}
+        .gal-card:hover{transform:scale(1.03)!important;box-shadow:0 20px 50px rgba(0,0,0,0.7)!important}
+        .gal-card:hover .gal-label{transform:translateY(0)!important}
+        .about-card:hover{border-color:rgba(245,158,11,0.22)!important;box-shadow:0 8px 32px rgba(245,158,11,0.07)!important}
+        .info-link:hover{border-color:rgba(245,158,11,0.22)!important;box-shadow:0 4px 20px rgba(245,158,11,0.07)!important}
+        .fd-input:focus{border-color:rgba(245,158,11,0.55)!important;background:#131315!important}
 
-// ─── HERO ─────────────────────────────────────────────────────────────────────
-function Hero() {
-  return (
-    <section id="home" style={{
-      position: "relative",
-      minHeight: "100vh",
-      display: "flex",
-      alignItems: "center",
-      overflow: "hidden",
-      background: "linear-gradient(135deg, #fffbeb 0%, #fff7ed 50%, #fef2f2 100%)",
-      paddingTop: 64,
-    }}>
-      <div style={{
-        position: "absolute", top: -128, right: -128,
-        width: 500, height: 500,
-        background: "radial-gradient(circle, rgba(251,146,60,0.2), rgba(239,68,68,0.15))",
-        borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none",
-      }} />
-      <div style={{
-        position: "absolute", bottom: -128, left: -128,
-        width: 400, height: 400,
-        background: "radial-gradient(circle, rgba(253,224,71,0.15), rgba(249,115,22,0.15))",
-        borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none",
-      }} />
+        @media(max-width:768px){
+          .hero-grid{grid-template-columns:1fr!important}
+          .hero-card-col{display:none}
+          .adm-grid{grid-template-columns:1fr!important}
+          .contact-grid{grid-template-columns:1fr!important}
+          .nav-desktop{display:none!important}
+          .nav-mobile-btn{display:flex!important}
+        }
+        @media(min-width:769px){
+          .nav-mobile-btn{display:none!important}
+          .mobile-menu-panel{display:none!important}
+        }
+      `}</style>
 
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "80px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center", width: "100%" }} className="hero-grid">
-        {/* Text */}
-        <div style={{ textAlign: "left" }} className="hero-text">
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            background: "#fff7ed", color: "#c2410c", fontSize: 12,
-            fontWeight: 700, padding: "6px 16px", borderRadius: 9999,
-            border: "1px solid #fed7aa", marginBottom: 24,
-          }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f97316", display: "inline-block", animation: "pulse 2s infinite" }} />
-            Admissions Open 2025–26
-          </div>
-          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, color: "#111827", lineHeight: 1.1, margin: "0 0 16px" }}>
-            <span style={{ display: "block", background: "linear-gradient(135deg, #ea580c, #dc2626, #e11d48)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>MAULI</span>
-            <span style={{ display: "block" }}>English Medium</span>
-            <span style={{ display: "block", fontSize: "clamp(1.4rem, 3.5vw, 2.2rem)", fontWeight: 700, color: "#6b7280" }}>School & College</span>
-          </h1>
-          <p style={{ fontSize: 15, color: "#6b7280", fontWeight: 500, marginBottom: 24, lineHeight: 1.6 }}>
-            <strong style={{ color: "#ea580c" }}>CBSE Pattern</strong> · Sanvid Pratishthan Sanchalit<br />
-            Somatane Phata, Talegaon Dabhade, Pune
-          </p>
+      <div style={{ background: S.bg0, minHeight:"100vh" }}>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
-            <Badge color="green">✅ No Donation</Badge>
-            <Badge color="orange">🎉 50% Discount</Badge>
-            <Badge color="red">👶 Pre-Primary & Primary</Badge>
-          </div>
+        {/* ══════ NAV ══════ */}
+        <nav style={{
+          position:"fixed", inset:"0 0 auto", zIndex:50,
+          background: scrolled ? "rgba(9,9,11,0.97)" : "rgba(9,9,11,0.82)",
+          backdropFilter:"blur(20px) saturate(1.5)",
+          borderBottom: `1px solid ${scrolled ? S.amberBorder : "rgba(255,255,255,0.04)"}`,
+          boxShadow: scrolled ? "0 2px 32px rgba(245,158,11,0.07)" : "none",
+          transition:"all 0.35s",
+        }}>
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"0 24px", height:64,
+            display:"flex", alignItems:"center", justifyContent:"space-between" }}>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <a href="#admission" style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "12px 28px",
-              background: "linear-gradient(135deg, #f97316, #dc2626)",
-              color: "white", fontWeight: 700, borderRadius: 16,
-              textDecoration: "none", fontSize: 14,
-              boxShadow: "0 8px 24px rgba(249,115,22,0.35)",
-              transition: "all 0.2s",
-            }}>
-              Apply Now <ArrowRight size={16} />
-            </a>
-            <a href="#contact" style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "12px 28px",
-              background: "white", color: "#ea580c", fontWeight: 700,
-              borderRadius: 16, border: "2px solid #fed7aa",
-              textDecoration: "none", fontSize: 14,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-            }}>
-              <Phone size={16} /> Call Us
-            </a>
-          </div>
-        </div>
-
-        {/* Visual card */}
-        <div style={{ display: "flex", justifyContent: "flex-end" }} className="hero-card-wrap">
-          <div style={{ position: "relative", width: "100%", maxWidth: 360 }}>
-            <div style={{
-              background: "white", borderRadius: 24,
-              boxShadow: "0 24px 64px rgba(249,115,22,0.15)",
-              padding: 32, border: "1px solid #fed7aa",
-            }}>
+            <a href="#home" style={{ display:"flex", alignItems:"center", gap:12 }}>
               <div style={{
-                width: 80, height: 80, margin: "0 auto 16px",
-                borderRadius: 20,
-                background: "linear-gradient(135deg, #fb923c, #dc2626)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 8px 24px rgba(249,115,22,0.4)",
+                width:38, height:38, borderRadius:12,
+                background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                boxShadow:"0 4px 16px rgba(245,158,11,0.3)",
               }}>
-                <GraduationCap size={40} color="white" />
+                <Flame size={18} color="white"/>
               </div>
-              <h3 style={{ textAlign: "center", fontWeight: 900, fontSize: 20, color: "#111827", margin: "0 0 4px" }}>Mauli School</h3>
-              <p style={{ textAlign: "center", fontSize: 13, color: "#9ca3af", fontWeight: 500, margin: "0 0 20px" }}>Nurturing young minds since day one</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {["Caring & Qualified Teachers", "Safe & Secure Campus", "CBSE Curriculum", "Activity-Based Learning"].map((item) => (
-                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#374151" }}>
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <Check size={12} color="#16a34a" />
+              <div>
+                <div style={{ fontFamily:S.sora, fontSize:13, fontWeight:900, color:S.amber, letterSpacing:"0.06em", lineHeight:1 }}>MAULI SCHOOL</div>
+                <div style={{ fontSize:9, color:"#3f3f46", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase" }}>CBSE Pattern</div>
+              </div>
+            </a>
+
+            {/* desktop */}
+            <div className="nav-desktop" style={{ display:"flex", alignItems:"center", gap:2 }}>
+              {NAV_LINKS.map(l => (
+                <a key={l} href={`#${l}`}
+                  onMouseEnter={hoverAmber} onMouseLeave={leaveGray}
+                  style={{ padding:"8px 13px", fontSize:13, fontWeight:600, color:S.muted,
+                    borderRadius:10, textTransform:"capitalize", transition:"all 0.2s" }}>
+                  {l}
+                </a>
+              ))}
+              <a href="/login"
+                style={{ marginLeft:8, display:"flex", alignItems:"center", gap:6,
+                  padding:"7px 16px", fontSize:13, fontWeight:700, color:"#a1a1aa",
+                  background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
+                  borderRadius:9999, transition:"all 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.color="#fff"; e.currentTarget.style.background="rgba(255,255,255,0.09)"; }}
+                onMouseLeave={e => { e.currentTarget.style.color="#a1a1aa"; e.currentTarget.style.background="rgba(255,255,255,0.04)"; }}>
+                <LogIn size={13}/> Login
+              </a>
+              <a href="#admission" style={{
+                marginLeft:6, padding:"8px 22px", fontSize:13, fontWeight:700, color:"white",
+                borderRadius:9999, background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                boxShadow:"0 4px 16px rgba(245,158,11,0.3)",
+              }}>Apply Now</a>
+            </div>
+
+            {/* mobile toggle */}
+            <button className="nav-mobile-btn"
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{ width:36, height:36, background:"rgba(255,255,255,0.04)",
+                border:"1px solid rgba(255,255,255,0.07)", borderRadius:8,
+                cursor:"pointer", color:S.muted, alignItems:"center", justifyContent:"center" }}>
+              {menuOpen ? <X size={18}/> : <Menu size={18}/>}
+            </button>
+          </div>
+
+          {menuOpen && (
+            <div className="mobile-menu-panel" style={{ background:S.bg0, borderTop:`1px solid ${S.amberBorder}` }}>
+              {NAV_LINKS.map(l => (
+                <a key={l} href={`#${l}`} onClick={() => setMenuOpen(false)}
+                  style={{ display:"block", padding:"12px 24px", fontSize:14, fontWeight:600,
+                    color:S.muted, textTransform:"capitalize" }}>{l}</a>
+              ))}
+              <a href="/login" onClick={() => setMenuOpen(false)}
+                style={{ display:"flex", alignItems:"center", gap:6, margin:"6px 16px",
+                  padding:"10px 16px", fontSize:14, fontWeight:700, color:"#a1a1aa",
+                  background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)",
+                  borderRadius:12 }}>
+                <LogIn size={14}/> Login
+              </a>
+              <a href="#admission" onClick={() => setMenuOpen(false)}
+                style={{ display:"block", margin:"6px 16px 14px", padding:"10px 16px",
+                  textAlign:"center", fontSize:14, fontWeight:700, color:"white", borderRadius:12,
+                  background:"linear-gradient(135deg,#f59e0b,#ef4444)" }}>
+                Apply Now
+              </a>
+            </div>
+          )}
+        </nav>
+
+        {/* ══════ HERO ══════ */}
+        <section id="home" style={{
+          position:"relative", minHeight:"100vh", display:"flex", alignItems:"center",
+          paddingTop:64, overflow:"hidden",
+          background:"linear-gradient(150deg,#09090b 0%,#0f0c08 45%,#130f06 70%,#09090b 100%)",
+        }}>
+          <div style={{ position:"absolute", top:-120, right:-120, width:640, height:640, borderRadius:"50%",
+            background:"radial-gradient(circle,rgba(245,158,11,0.13) 0%,transparent 65%)", filter:"blur(50px)", pointerEvents:"none" }}/>
+          <div style={{ position:"absolute", bottom:-100, left:-100, width:520, height:520, borderRadius:"50%",
+            background:"radial-gradient(circle,rgba(239,68,68,0.07) 0%,transparent 65%)", filter:"blur(40px)", pointerEvents:"none" }}/>
+          <div style={{ position:"absolute", inset:0, pointerEvents:"none", opacity:0.025,
+            backgroundImage:"linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)",
+            backgroundSize:"80px 80px" }}/>
+
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"80px 24px", width:"100%" }}>
+            <div className="hero-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:56, alignItems:"center" }}>
+
+              {/* left */}
+              <div className="hero-up">
+                <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"5px 15px",
+                  borderRadius:9999, background:S.amberDim, border:`1px solid ${S.amberBorder}`, marginBottom:24 }}>
+                  <span className="ring" style={{ width:8, height:8, borderRadius:"50%", background:S.amber, display:"inline-block" }}/>
+                  <span style={{ fontSize:12, fontWeight:700, color:S.amber }}>Admissions Open 2025–26</span>
+                </div>
+
+                <h1 style={{ lineHeight:1.05, marginBottom:16 }}>
+                  <span className="fire-text" style={{ display:"block", fontSize:"clamp(3rem,6vw,4.5rem)", fontWeight:900 }}>MAULI</span>
+                  <span style={{ display:"block", fontSize:"clamp(2rem,4vw,3rem)", fontWeight:800, color:S.text }}>English Medium</span>
+                  <span style={{ display:"block", fontSize:"clamp(1.2rem,2.5vw,1.7rem)", fontWeight:600, color:S.dim }}>School &amp; College</span>
+                </h1>
+
+                <p style={{ fontSize:14, color:S.dim, marginBottom:24, lineHeight:1.7 }}>
+                  <strong style={{ color:S.amber }}>CBSE Pattern</strong> · Sanvid Pratishthan Sanchalit<br/>
+                  Somatane Phata, Talegaon Dabhade, Pune
+                </p>
+
+                <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:28 }}>
+                  {[
+                    ["✅ No Donation",           "rgba(16,185,129,0.1)","rgba(16,185,129,0.25)","#34d399"],
+                    ["🎉 50% Discount",          "rgba(245,158,11,0.1)","rgba(245,158,11,0.25)",S.amber],
+                    ["👶 Pre-Primary & Primary", "rgba(239,68,68,0.1)", "rgba(239,68,68,0.25)","#f87171"],
+                  ].map(([t,bg,br,tc]) => (
+                    <span key={t} style={{ padding:"4px 13px", borderRadius:9999, fontSize:12, fontWeight:700,
+                      background:bg, border:`1px solid ${br}`, color:tc }}>{t}</span>
+                  ))}
+                </div>
+
+                <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                  <a href="#admission" style={{ display:"inline-flex", alignItems:"center", gap:8,
+                    padding:"12px 28px", background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                    color:"white", fontWeight:700, borderRadius:16, fontSize:14,
+                    boxShadow:"0 8px 28px rgba(245,158,11,0.28)" }}>Apply Now →</a>
+                  <a href="tel:9130415350" style={{ display:"inline-flex", alignItems:"center", gap:8,
+                    padding:"12px 28px", background:"rgba(255,255,255,0.03)",
+                    border:`1px solid ${S.amberBorder}`, color:S.amber,
+                    fontWeight:700, borderRadius:16, fontSize:14 }}>
+                    <Phone size={14}/> Call Us
+                  </a>
+                </div>
+              </div>
+
+              {/* right card */}
+              <div className="hero-card-col" style={{ display:"flex", justifyContent:"flex-end" }}>
+                <div className="card-float hero-up-2" style={{ position:"relative", width:"100%", maxWidth:340 }}>
+                  <div style={{
+                    background:"linear-gradient(160deg,rgba(245,158,11,0.05) 0%,rgba(9,9,11,0.97) 100%)",
+                    border:`1px solid ${S.amberBorder}`, borderRadius:28, padding:32,
+                    boxShadow:"0 32px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.04)",
+                  }}>
+                    <div style={{ width:78, height:78, margin:"0 auto 16px", borderRadius:22,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                      boxShadow:"0 8px 32px rgba(245,158,11,0.35)" }}>
+                      <GraduationCap size={38} color="white"/>
                     </div>
-                    {item}
+                    <h3 style={{ textAlign:"center", fontWeight:900, fontSize:20, color:S.text, marginBottom:4 }}>Mauli School</h3>
+                    <p style={{ textAlign:"center", fontSize:13, color:S.dim, marginBottom:24 }}>Nurturing young minds since day one</p>
+                    {["Caring & Qualified Teachers","Safe & Secure Campus","CBSE Curriculum","Activity-Based Learning"].map(t => (
+                      <div key={t} style={{ display:"flex", alignItems:"center", gap:10, fontSize:14, color:"#a1a1aa", marginBottom:12 }}>
+                        <div style={{ width:20, height:20, borderRadius:"50%",
+                          background:"rgba(16,185,129,0.1)", border:"1px solid rgba(16,185,129,0.2)",
+                          display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                          <CheckCircle2 size={11} color="#34d399"/>
+                        </div>
+                        {t}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ position:"absolute", top:-16, left:-20,
+                    background:"linear-gradient(135deg,#f59e0b,#ef4444)", color:"white",
+                    fontSize:12, fontWeight:700, padding:"8px 14px", borderRadius:12,
+                    boxShadow:"0 4px 16px rgba(245,158,11,0.4)" }}>🏆 Best School</div>
+                  <div style={{ position:"absolute", bottom:-16, right:-16,
+                    background:"rgba(9,9,11,0.95)", border:`1px solid ${S.amberBorder}`,
+                    color:S.amber, fontSize:12, fontWeight:700, padding:"8px 14px", borderRadius:12,
+                    boxShadow:"0 4px 20px rgba(0,0,0,0.5)" }}>50% Discount 🎉</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ══════ ABOUT ══════ */}
+        <section id="about" style={{ background:S.bg0, padding:"80px 0" }}>
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"0 24px" }}>
+            <Reveal style={{ textAlign:"center", marginBottom:48 }}>
+              <SectionHeader chip="About Us" chipColor="amber"
+                title={<>Why Choose <span className="fire-text">Mauli School?</span></>}
+                desc={<>Established under <strong style={{ color:"#a1a1aa" }}>Sanvid Pratishthan Sanchalit</strong>, we provide quality CBSE-pattern education from Pre-Primary to Class 8.</>}/>
+            </Reveal>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:20 }}>
+              {[
+                { Icon:GraduationCap, title:"Caring Teachers",   desc:"Experienced educators who nurture every child individually.",   bg:"rgba(245,158,11,0.1)",  ic:S.amber },
+                { Icon:Shield,        title:"Safe Environment",  desc:"CCTV-monitored, child-safe campus with secure atmosphere.",     bg:"rgba(139,92,246,0.1)",  ic:"#a78bfa" },
+                { Icon:Heart,         title:"Holistic Growth",   desc:"Academics paired with sports, arts, and cultural activities.",  bg:"rgba(16,185,129,0.1)",  ic:"#34d399" },
+              ].map(({Icon,title,desc,bg,ic}, i) => (
+                <Reveal key={title} delay={i*100}>
+                  <div className="about-card" style={{ ...cardBase, padding:24, transition:"all 0.3s", cursor:"default" }}>
+                    <div style={{ width:48, height:48, borderRadius:14, background:bg,
+                      display:"flex", alignItems:"center", justifyContent:"center", marginBottom:16 }}>
+                      <Icon size={22} color={ic}/>
+                    </div>
+                    <h3 style={{ fontWeight:700, color:S.text, marginBottom:8, fontSize:16 }}>{title}</h3>
+                    <p style={{ fontSize:14, color:S.dim, lineHeight:1.6 }}>{desc}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════ FACILITIES ══════ */}
+        <section id="facilities" style={{ background:S.bg1, padding:"80px 0" }}>
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"0 24px" }}>
+            <Reveal style={{ textAlign:"center", marginBottom:48 }}>
+              <SectionHeader chip="Our Facilities" chipColor="red"
+                title={<>World-Class <span className="fire-text">Infrastructure</span></>}
+                desc="Everything a child needs to learn, play, and grow."/>
+            </Reveal>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(185px,1fr))", gap:14 }}>
+              {FACILITIES.map(({Icon,label,desc}, i) => (
+                <Reveal key={label} delay={(i%5)*60}>
+                  <div className="fac-card" style={{ ...cardBase, padding:20, cursor:"default", transition:"all 0.3s" }}>
+                    <div style={{ width:42, height:42, borderRadius:12,
+                      background:S.amberDim, border:`1px solid ${S.amberBorder}`,
+                      display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12 }}>
+                      <Icon size={19} color={S.amber}/>
+                    </div>
+                    <h3 style={{ fontWeight:700, color:"#e4e4e7", fontSize:13, marginBottom:4 }}>{label}</h3>
+                    <p style={{ fontSize:11, color:S.dim, lineHeight:1.5 }}>{desc}</p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════ CLASSES ══════ */}
+        <section id="classes" style={{ background:S.bg0, padding:"80px 0" }}>
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"0 24px" }}>
+            <Reveal style={{ textAlign:"center", marginBottom:48 }}>
+              <SectionHeader chip="Classes Offered" chipColor="yellow"
+                title={<>Programs <span className="fire-text">We Offer</span></>}
+                desc="From playgroup to Class 8 — every stage of your child's early education."/>
+            </Reveal>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(155px,1fr))", gap:14 }}>
+              {CLASSES.map(({emoji,name,age}, i) => (
+                <Reveal key={name} delay={i*80}>
+                  <div className="cls-card" style={{
+                    background:`linear-gradient(160deg,rgba(245,158,11,0.04) 0%,rgba(9,9,11,0.95) 100%)`,
+                    border:`1px solid rgba(245,158,11,0.1)`,
+                    borderRadius:20, padding:"22px 16px", textAlign:"center",
+                    cursor:"default", transition:"all 0.3s",
+                  }}>
+                    <div style={{ fontSize:40, marginBottom:12 }}>{emoji}</div>
+                    <div style={{ fontWeight:900, fontSize:15, color:S.text }}>{name}</div>
+                    <div style={{ fontSize:12, color:S.dim, marginTop:4 }}>{age}</div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════ GALLERY ══════ */}
+        <section id="gallery" style={{ background:S.bg1, padding:"80px 0" }}>
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"0 24px" }}>
+            <Reveal style={{ textAlign:"center", marginBottom:48 }}>
+              <SectionHeader chip="Gallery" chipColor="amber"
+                title={<>Life at <span className="fire-text">Mauli School</span></>}/>
+            </Reveal>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:14 }}>
+              {GALLERY.map(({emoji,label,bg}, i) => (
+                <Reveal key={label} delay={(i%3)*80}>
+                  <div className="gal-card" style={{
+                    position:"relative", height:200, borderRadius:20, overflow:"hidden",
+                    background:bg, border:`1px solid ${S.border}`,
+                    cursor:"pointer", transition:"all 0.3s",
+                  }}>
+                    <div style={{ position:"absolute", inset:0, display:"flex",
+                      alignItems:"center", justifyContent:"center", fontSize:54 }}>{emoji}</div>
+                    <div className="gal-label" style={{
+                      position:"absolute", inset:"auto 0 0",
+                      background:"linear-gradient(to top,rgba(0,0,0,0.85),transparent)",
+                      padding:"12px", textAlign:"center",
+                      transform:"translateY(100%)", transition:"transform 0.3s",
+                    }}>
+                      <p style={{ color:"white", fontSize:13, fontWeight:700, margin:0 }}>{label}</p>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ══════ ADMISSION ══════ */}
+        <section id="admission" style={{ background:S.bg0, padding:"80px 0" }}>
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"0 24px" }}>
+            <Reveal>
+              <div style={{
+                position:"relative", overflow:"hidden",
+                background:"linear-gradient(135deg,#140c00,#0f0a00 50%,#0a0608)",
+                border:`1px solid rgba(245,158,11,0.15)`,
+                borderRadius:28, padding:"48px 40px",
+                boxShadow:"0 24px 80px rgba(0,0,0,0.55)",
+              }}>
+                <div style={{ position:"absolute", top:-80, right:-80, width:320, height:320, borderRadius:"50%",
+                  background:"radial-gradient(circle,rgba(245,158,11,0.1),transparent)", filter:"blur(40px)" }}/>
+                <div style={{ position:"absolute", bottom:-60, left:-60, width:240, height:240, borderRadius:"50%",
+                  background:"radial-gradient(circle,rgba(239,68,68,0.06),transparent)", filter:"blur(30px)" }}/>
+                <div className="adm-grid" style={{ position:"relative", zIndex:1,
+                  display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center" }}>
+                  <div>
+                    <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"5px 14px",
+                      borderRadius:9999, background:S.amberDim, border:`1px solid ${S.amberBorder}`, marginBottom:16 }}>
+                      <span style={{ width:8, height:8, background:"#fbbf24", borderRadius:"50%", display:"inline-block" }}/>
+                      <span style={{ fontSize:12, fontWeight:700, color:S.amber }}>Admissions Now Open</span>
+                    </div>
+                    <h2 style={{ fontSize:"clamp(1.6rem,3.5vw,2.2rem)", fontWeight:900,
+                      color:S.text, lineHeight:1.2, marginBottom:12 }}>
+                      Secure Your Child's<br/>Future Today
+                    </h2>
+                    <p style={{ color:S.dim, fontSize:14, marginBottom:24, lineHeight:1.6 }}>
+                      Limited seats available for 2025–26. Apply early to avail special discounts.
+                    </p>
+                    <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
+                      <a href="#contact" style={{ display:"inline-flex", alignItems:"center", gap:8,
+                        padding:"10px 24px", background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                        color:"white", fontWeight:700, borderRadius:12, fontSize:14,
+                        boxShadow:"0 4px 20px rgba(245,158,11,0.25)" }}>Apply Now →</a>
+                      <a href="tel:9130415350" style={{ display:"inline-flex", alignItems:"center", gap:8,
+                        padding:"10px 24px", background:"rgba(255,255,255,0.04)",
+                        border:"1px solid rgba(255,255,255,0.08)",
+                        color:"#a1a1aa", fontWeight:700, borderRadius:12, fontSize:14 }}>
+                        <Phone size={14}/> Call Now
+                      </a>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    {[
+                      "No Donation — Zero hidden charges",
+                      "50% Discount on fees for deserving students",
+                      "Trained & caring staff for all classes",
+                      "CBSE pattern curriculum",
+                      "Safe, CCTV-monitored campus",
+                      "Transport facility available",
+                    ].map(b => (
+                      <div key={b} style={{ display:"flex", alignItems:"flex-start", gap:10,
+                        background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.05)",
+                        borderRadius:12, padding:"10px 16px" }}>
+                        <CheckCircle2 size={14} color="#fbbf24" style={{ flexShrink:0, marginTop:2 }}/>
+                        <span style={{ fontSize:13, color:"#a1a1aa" }}>{b}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ══════ CONTACT + FORM ══════ */}
+        <section id="contact" style={{ background:S.bg1, padding:"80px 0" }}>
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"0 24px" }}>
+            <Reveal style={{ textAlign:"center", marginBottom:48 }}>
+              <SectionHeader chip="Contact Us" chipColor="red"
+                title={<>Get in <span className="fire-text">Touch</span></>}
+                desc="We'd love to hear from you. Reach out for admissions or any enquiries."/>
+            </Reveal>
+
+            <div className="contact-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1.4fr", gap:24, alignItems:"start" }}>
+
+              {/* info */}
+              <Reveal>
+                <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                  {[
+                    { Icon:Phone, label:"Phone",   value:"9130415350 / 8180993047", href:"tel:9130415350" },
+                    { Icon:Mail,  label:"Email",   value:"erakidmauli@gmail.com",    href:"mailto:erakidmauli@gmail.com" },
+                    { Icon:MapPin,label:"Address", value:"Somatane Phata, Talegaon Dabhade, Pune", href:null },
+                  ].map(({Icon,label,value,href}) => {
+                    const inner = <>
+                      <div style={{ width:44, height:44, borderRadius:12, flexShrink:0,
+                        background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        boxShadow:"0 4px 12px rgba(245,158,11,0.25)" }}>
+                        <Icon size={18} color="white"/>
+                      </div>
+                      <div>
+                        <div style={{ fontSize:10, fontWeight:700, color:S.dim,
+                          textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:2 }}>{label}</div>
+                        <div style={{ fontSize:14, fontWeight:600, color:"#e4e4e7" }}>{value}</div>
+                      </div>
+                    </>;
+                    const sh = { display:"flex", alignItems:"flex-start", gap:14, padding:"16px 20px",
+                      background:"rgba(255,255,255,0.02)", border:`1px solid ${S.border}`,
+                      borderRadius:18, transition:"all 0.25s" };
+                    return href
+                      ? <a key={label} href={href} className="info-link" style={sh}>{inner}</a>
+                      : <div key={label} style={sh}>{inner}</div>;
+                  })}
+                  <div style={{ padding:"18px 20px", background:"rgba(245,158,11,0.04)",
+                    border:`1px solid rgba(245,158,11,0.12)`, borderRadius:18 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6 }}>
+                      <Clock size={13} color={S.amber}/>
+                      <span style={{ fontSize:13, fontWeight:700, color:S.amber }}>School Hours</span>
+                    </div>
+                    <p style={{ fontSize:14, color:S.muted }}>Mon – Sat: 8:00 AM – 2:00 PM</p>
+                    <p style={{ fontSize:12, color:S.dim, marginTop:2 }}>Admission office open till 4:00 PM</p>
+                  </div>
+                </div>
+              </Reveal>
+
+              {/* ── enquiry form ── */}
+              <Reveal delay={120}>
+                <form onSubmit={submitEnquiry} style={{
+                  background:`linear-gradient(160deg,rgba(245,158,11,0.03) 0%,rgba(9,9,11,0.98) 100%)`,
+                  border:`1px solid rgba(245,158,11,0.1)`,
+                  borderRadius:24, padding:28,
+                  boxShadow:"0 20px 60px rgba(0,0,0,0.45)",
+                }}>
+                  <h3 style={{ fontWeight:900, color:S.text, fontSize:20, marginBottom:22 }}>Send an Enquiry</h3>
+
+                  <Row>
+                    <FInput label="Child's Name" required placeholder="Full name"
+                      type="text" value={form.childName} onChange={set("childName")}/>
+                    <FInput label="Father's Name" required placeholder="Father's name"
+                      type="text" value={form.fatherName} onChange={set("fatherName")}/>
+                  </Row>
+                  <FInput label="Residential Address" required placeholder="Full residential address"
+                    type="text" value={form.residentialAddress} onChange={set("residentialAddress")} style={{ marginBottom:12 }}/>
+                  <Row>
+                    <FInput label="Pin Code" required placeholder="411001"
+                      type="text" value={form.pinCode} onChange={set("pinCode")}/>
+                    {/* gender */}
+                    <div>
+                      <label style={{ display:"block", fontSize:10, fontWeight:700, color:S.dim,
+                        textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:6 }}>
+                        Gender<span style={{ color:S.amber }}>*</span>
+                      </label>
+                      <select value={form.gender} onChange={set("gender")} required style={{
+                        width:"100%", padding:"10px 14px", borderRadius:10,
+                        border:"1px solid #27272a", background:S.bg2,
+                        color: form.gender ? S.text : S.dim, fontSize:13,
+                        outline:"none", fontFamily:S.dm,
+                      }}>
+                        <option value="" style={{ background:S.bg2 }}>Select</option>
+                        {["Male","Female","Other"].map(g=>(
+                          <option key={g} value={g} style={{ background:S.bg2 }}>{g}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </Row>
+                  <Row>
+                    <FInput label="Phone No" required placeholder="Landline"
+                      type="tel" value={form.phoneNo} onChange={set("phoneNo")}/>
+                    <FInput label="Mobile No" required placeholder="10-digit mobile"
+                      type="tel" value={form.mobileNo} onChange={set("mobileNo")}/>
+                  </Row>
+                  <FInput label="Email" required placeholder="parent@email.com"
+                    type="email" value={form.email} onChange={set("email")} style={{ marginBottom:12 }}/>
+                  <Row>
+                    <FInput label="Age" required placeholder="Years" type="number" min={1} max={20}
+                      value={form.age} onChange={set("age")}/>
+                    <FInput label="Date of Birth" required type="date"
+                      value={form.dateOfBirth} onChange={set("dateOfBirth")}/>
+                  </Row>
+                  <FInput label="Preferred Admission Date" type="date"
+                    value={form.preferredAdmissionDate} onChange={set("preferredAdmissionDate")} style={{ marginBottom:12 }}/>
+                  <div style={{ marginBottom:16 }}>
+                    <label style={{ display:"block", fontSize:10, fontWeight:700, color:S.dim,
+                      textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:6 }}>Remark</label>
+                    <textarea rows={3} placeholder="Any message or queries..."
+                      value={form.remark} onChange={set("remark")}
+                      className="fd-input"
+                      style={{ width:"100%", padding:"10px 14px", borderRadius:10,
+                        border:"1px solid #27272a", background:S.bg2, color:S.text,
+                        fontSize:13, resize:"none", outline:"none", fontFamily:S.dm,
+                        transition:"border-color 0.2s, background 0.2s" }}/>
+                  </div>
+
+                  {formError && (
+                    <div style={{ marginBottom:14, padding:"10px 14px", borderRadius:12,
+                      background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)",
+                      color:"#f87171", fontSize:13 }}>{formError}</div>
+                  )}
+
+                  <button type="submit" disabled={submitting} style={{
+                    width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+                    padding:"13px 0",
+                    background: submitted
+                      ? "linear-gradient(135deg,#059669,#10b981)"
+                      : "linear-gradient(135deg,#f59e0b,#ef4444)",
+                    color:"white", fontWeight:700, borderRadius:14, border:"none",
+                    cursor: submitting ? "not-allowed" : "pointer",
+                    fontSize:14, fontFamily:S.sora,
+                    boxShadow: submitted ? "0 4px 20px rgba(16,185,129,0.3)" : "0 4px 20px rgba(245,158,11,0.28)",
+                    opacity: submitting ? 0.7 : 1, transition:"all 0.3s",
+                  }}>
+                    {submitting
+                      ? <><Loader2 size={16} className="spin"/> Sending…</>
+                      : submitted
+                      ? <><CheckCircle2 size={16}/> Enquiry Submitted!</>
+                      : <><Send size={14}/> Send Enquiry</>}
+                  </button>
+                </form>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* ══════ FOOTER ══════ */}
+        <footer style={{ background:"#050507", borderTop:"1px solid rgba(255,255,255,0.03)" }}>
+          <div style={{ maxWidth:1152, margin:"0 auto", padding:"48px 24px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:32, marginBottom:32 }}>
+              <div>
+                <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+                  <div style={{ width:36, height:36, borderRadius:10,
+                    background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                    display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    <Flame size={16} color="white"/>
+                  </div>
+                  <div>
+                    <div style={{ fontFamily:S.sora, fontSize:13, fontWeight:900, color:S.amber }}>MAULI SCHOOL</div>
+                    <div style={{ fontSize:9, color:"#3f3f46", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase" }}>CBSE Pattern</div>
+                  </div>
+                </div>
+                <p style={{ fontSize:12, color:"#3f3f46", lineHeight:1.7 }}>
+                  Sanvid Pratishthan Sanchalit<br/>
+                  Quality education from Pre-Primary to Class 8.
+                </p>
+              </div>
+              <div>
+                <h4 style={{ color:S.dim, fontWeight:700, fontSize:12, marginBottom:12,
+                  textTransform:"uppercase", letterSpacing:"0.06em" }}>Quick Links</h4>
+                {NAV_LINKS.map(l => (
+                  <a key={l} href={`#${l}`}
+                    style={{ display:"block", fontSize:12, color:"#3f3f46", marginBottom:6,
+                      textTransform:"capitalize", transition:"color 0.2s" }}
+                    onMouseEnter={e=>e.target.style.color=S.amber}
+                    onMouseLeave={e=>e.target.style.color="#3f3f46"}>{l}</a>
+                ))}
+              </div>
+              <div>
+                <h4 style={{ color:S.dim, fontWeight:700, fontSize:12, marginBottom:12,
+                  textTransform:"uppercase", letterSpacing:"0.06em" }}>Contact</h4>
+                {[["📞","9130415350 / 8180993047"],["✉️","erakidmauli@gmail.com"],
+                  ["📍","Somatane Phata, Talegaon Dabhade, Pune"]].map(([i,t])=>(
+                  <div key={t} style={{ display:"flex", alignItems:"flex-start", gap:8,
+                    fontSize:12, color:"#3f3f46", marginBottom:8 }}>
+                    <span>{i}</span><span>{t}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <div style={{
-              position: "absolute", top: -16, left: -24,
-              background: "#f97316", color: "white",
-              fontSize: 12, fontWeight: 700,
-              padding: "8px 12px", borderRadius: 12,
-              boxShadow: "0 4px 12px rgba(249,115,22,0.4)",
-            }}>🏆 Best School</div>
-            <div style={{
-              position: "absolute", bottom: -16, right: -16,
-              background: "white", border: "1px solid #fed7aa",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-              borderRadius: 12, padding: "8px 12px",
-              fontSize: 12, fontWeight: 700, color: "#ea580c",
-            }}>50% Discount 🎉</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ─── ABOUT ────────────────────────────────────────────────────────────────────
-function About() {
-  const points = [
-    { icon: <Users size={22} />, title: "Caring Teachers", desc: "Experienced, trained educators who nurture every child individually.", bg: "#fff7ed", color: "#ea580c" },
-    { icon: <Shield size={22} />, title: "Safe Environment", desc: "CCTV-monitored, child-safe campus with a secure and friendly atmosphere.", bg: "#fff1f2", color: "#be123c" },
-    { icon: <Heart size={22} />, title: "Holistic Growth", desc: "Academic excellence paired with sports, arts, and cultural activities.", bg: "#fefce8", color: "#a16207" },
-  ];
-  return (
-    <Section id="about" style={{ padding: "80px 0", background: "white" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <Badge color="orange">About Us</Badge>
-          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
-            Why Choose <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Mauli School?</span>
-          </h2>
-          <p style={{ marginTop: 12, color: "#6b7280", maxWidth: 480, margin: "12px auto 0", fontSize: 14, lineHeight: 1.7 }}>
-            Established under <strong style={{ color: "#374151" }}>Sanvid Pratishthan Sanchalit</strong>, we provide quality CBSE-pattern education with a focus on character building and academic excellence for students from Pre-Primary to Class 8.
-          </p>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24 }}>
-          {points.map((p) => (
-            <div key={p.title} style={{
-              background: "linear-gradient(180deg, #f9fafb, white)",
-              borderRadius: 20, padding: 24,
-              border: "1px solid #f3f4f6",
-              transition: "all 0.3s",
-              cursor: "default",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "#fed7aa"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(249,115,22,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "#f3f4f6"; e.currentTarget.style.boxShadow = "none"; }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: p.bg, color: p.color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-                {p.icon}
-              </div>
-              <h3 style={{ fontWeight: 700, color: "#111827", marginBottom: 8, fontSize: 16 }}>{p.title}</h3>
-              <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6 }}>{p.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-// ─── FACILITIES ───────────────────────────────────────────────────────────────
-function Facilities() {
-  const items = [
-    { icon: <Cctv size={20} color="white" />, title: "CCTV Surveillance", desc: "Complete 24/7 campus monitoring", grad: "linear-gradient(135deg,#f97316,#eab308)" },
-    { icon: <Activity size={20} color="white" />, title: "Activity Room", desc: "Creative & play-based learning space", grad: "linear-gradient(135deg,#ef4444,#f43f5e)" },
-    { icon: <Monitor size={20} color="white" />, title: "Smart Desks", desc: "Modern ergonomic classroom furniture", grad: "linear-gradient(135deg,#f59e0b,#fcd34d)" },
-    { icon: <Music2 size={20} color="white" />, title: "Audio / Video Room", desc: "Digital multimedia learning lab", grad: "linear-gradient(135deg,#ea580c,#ef4444)" },
-    { icon: <Gamepad2 size={20} color="white" />, title: "Playground", desc: "Slides, swings & outdoor play area", grad: "linear-gradient(135deg,#f43f5e,#fb7185)" },
-    { icon: <Trophy size={20} color="white" />, title: "Basketball Court", desc: "Full-size court for sports activities", grad: "linear-gradient(135deg,#f97316,#ef4444)" },
-    { icon: <Star size={20} color="white" />, title: "Learning Toys", desc: "Educational toys for early learners", grad: "linear-gradient(135deg,#eab308,#f97316)" },
-    { icon: <BookOpen size={20} color="white" />, title: "Cultural Hall", desc: "Events, performances & ceremonies", grad: "linear-gradient(135deg,#f97316,#dc2626)" },
-    { icon: <Bus size={20} color="white" />, title: "Transport", desc: "Safe school bus facility available", grad: "linear-gradient(135deg,#fbbf24,#f97316)" },
-  ];
-  return (
-    <Section id="facilities" style={{ padding: "80px 0", background: "linear-gradient(180deg, rgba(255,247,237,0.6), white)" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <Badge color="red">Our Facilities</Badge>
-          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
-            World-Class <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Infrastructure</span>
-          </h2>
-          <p style={{ marginTop: 12, color: "#6b7280", maxWidth: 440, margin: "12px auto 0", fontSize: 14 }}>Everything a child needs to learn, play, and grow in a safe and stimulating environment.</p>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
-          {items.map((item) => (
-            <div key={item.title} style={{
-              background: "white", borderRadius: 20, padding: 20,
-              border: "1px solid #f3f4f6", cursor: "default",
-              transition: "all 0.3s",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "#fed7aa"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(249,115,22,0.15)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "#f3f4f6"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 14,
-                background: item.grad,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                marginBottom: 12, boxShadow: "0 4px 12px rgba(249,115,22,0.25)",
-              }}>
-                {item.icon}
-              </div>
-              <h3 style={{ fontWeight: 700, color: "#111827", fontSize: 14, marginBottom: 4 }}>{item.title}</h3>
-              <p style={{ fontSize: 12, color: "#9ca3af", lineHeight: 1.5 }}>{item.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-// ─── CLASSES ─────────────────────────────────────────────────────────────────
-function Classes() {
-  const classes = [
-    { name: "Playgroup", age: "2+ Years", emoji: "🍼", bg: "#fefce8", border: "#fef08a", color: "#a16207" },
-    { name: "Nursery", age: "3+ Years", emoji: "🌱", bg: "#f0fdf4", border: "#bbf7d0", color: "#15803d" },
-    { name: "Jr. KG", age: "4 Years", emoji: "🎨", bg: "#eff6ff", border: "#bfdbfe", color: "#1d4ed8" },
-    { name: "Sr. KG", age: "5 Years", emoji: "⭐", bg: "#faf5ff", border: "#e9d5ff", color: "#7c3aed" },
-    { name: "Class 1–4", age: "6–9 Years", emoji: "📚", bg: "#fff7ed", border: "#fed7aa", color: "#c2410c" },
-    { name: "Class 5–8", age: "10+ Years", emoji: "🎓", bg: "#fff1f2", border: "#fecdd3", color: "#be123c" },
-  ];
-  return (
-    <Section id="classes" style={{ padding: "80px 0", background: "white" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <Badge color="yellow">Classes Offered</Badge>
-          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
-            Programs <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>We Offer</span>
-          </h2>
-          <p style={{ marginTop: 12, color: "#6b7280", maxWidth: 400, margin: "12px auto 0", fontSize: 14 }}>From playgroup to Class 8 — we shape every stage of your child's early education journey.</p>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 16 }}>
-          {classes.map((cls) => (
-            <div key={cls.name} style={{
-              background: cls.bg, borderRadius: 20,
-              border: `2px solid ${cls.border}`,
-              color: cls.color, textAlign: "center",
-              padding: 20, cursor: "default",
-              transition: "all 0.3s",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>{cls.emoji}</div>
-              <div style={{ fontWeight: 900, fontSize: 15 }}>{cls.name}</div>
-              <div style={{ fontSize: 12, fontWeight: 500, opacity: 0.7, marginTop: 4 }}>{cls.age}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-// ─── GALLERY ─────────────────────────────────────────────────────────────────
-function Gallery() {
-  const photos = [
-    { bg: "linear-gradient(135deg,#fb923c,#fbbf24)", label: "Classroom Activities", emoji: "🎨" },
-    { bg: "linear-gradient(135deg,#f87171,#f43f5e)", label: "Sports Day", emoji: "🏀" },
-    { bg: "linear-gradient(135deg,#fcd34d,#f97316)", label: "Cultural Program", emoji: "🎭" },
-    { bg: "linear-gradient(135deg,#fbbf24,#ef4444)", label: "Annual Day", emoji: "🏆" },
-    { bg: "linear-gradient(135deg,#f97316,#dc2626)", label: "Science Expo", emoji: "🔬" },
-    { bg: "linear-gradient(135deg,#fca5a5,#f97316)", label: "Playground Fun", emoji: "🎠" },
-  ];
-  return (
-    <Section id="gallery" style={{ padding: "80px 0", background: "linear-gradient(180deg, rgba(255,247,237,0.4), white)" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <Badge color="orange">Gallery</Badge>
-          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
-            Life at <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Mauli School</span>
-          </h2>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {photos.map((p, i) => (
-            <div key={i} style={{
-              position: "relative", height: 200, borderRadius: 20,
-              background: p.bg, overflow: "hidden", cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
-              transition: "all 0.3s",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.2)"; e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.querySelector(".label").style.transform = "translateY(0)"; }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)"; e.currentTarget.style.transform = "scale(1)"; e.currentTarget.querySelector(".label").style.transform = "translateY(100%)"; }}>
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 56 }}>{p.emoji}</div>
-              <div className="label" style={{
-                position: "absolute", inset: "auto 0 0",
-                background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)",
-                padding: 12, textAlign: "center",
-                transform: "translateY(100%)",
-                transition: "transform 0.3s",
-              }}>
-                <p style={{ color: "white", fontSize: 13, fontWeight: 700, margin: 0 }}>{p.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-// ─── ADMISSION ────────────────────────────────────────────────────────────────
-function Admission() {
-  const benefits = [
-    "No Donation — Zero hidden charges",
-    "50% Discount on fees for deserving students",
-    "Trained & caring staff for all classes",
-    "CBSE pattern curriculum",
-    "Safe, CCTV-monitored campus",
-    "Transport facility available",
-  ];
-  return (
-    <Section id="admission" style={{ padding: "80px 0" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{
-          position: "relative",
-          background: "linear-gradient(135deg, #f97316, #dc2626, #e11d48)",
-          borderRadius: 28, padding: "48px 40px",
-          overflow: "hidden", color: "white",
-          boxShadow: "0 20px 60px rgba(249,115,22,0.4)",
-        }}>
-          <div style={{ position: "absolute", top: -64, right: -64, width: 256, height: 256, background: "rgba(255,255,255,0.08)", borderRadius: "50%" }} />
-          <div style={{ position: "absolute", bottom: -40, left: -40, width: 192, height: 192, background: "rgba(255,255,255,0.08)", borderRadius: "50%" }} />
-          <div style={{ position: "relative", zIndex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "center" }} className="admission-grid">
-            <div>
-              <div style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                background: "rgba(255,255,255,0.2)", color: "white",
-                fontSize: 12, fontWeight: 700, padding: "6px 14px",
-                borderRadius: 9999, marginBottom: 16,
-              }}>
-                <span style={{ width: 8, height: 8, background: "#fde047", borderRadius: "50%", display: "inline-block" }} />
-                Admissions Now Open
-              </div>
-              <h2 style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)", fontWeight: 900, margin: "0 0 12px", lineHeight: 1.2 }}>Secure Your Child's<br />Future Today</h2>
-              <p style={{ color: "rgba(255,237,213,0.9)", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>Limited seats available for the academic year 2025–26. Apply early to avail special discounts.</p>
-              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                <a href="#contact" style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "10px 24px", background: "white", color: "#ea580c",
-                  fontWeight: 700, borderRadius: 12, textDecoration: "none", fontSize: 14,
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-                }}>
-                  Apply Now <ArrowRight size={16} />
-                </a>
-                <a href="tel:9130415350" style={{
-                  display: "inline-flex", alignItems: "center", gap: 8,
-                  padding: "10px 24px", background: "rgba(255,255,255,0.2)",
-                  color: "white", fontWeight: 700, borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.3)", textDecoration: "none", fontSize: 14,
-                }}>
-                  <Phone size={15} /> Call Now
-                </a>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {benefits.map((b) => (
-                <div key={b} style={{
-                  display: "flex", alignItems: "flex-start", gap: 10,
-                  background: "rgba(255,255,255,0.15)", borderRadius: 14,
-                  padding: "10px 16px",
-                }}>
-                  <Check size={16} color="#fde047" style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span style={{ fontSize: 14, fontWeight: 500 }}>{b}</span>
-                </div>
-              ))}
+            <div style={{ borderTop:"1px solid rgba(255,255,255,0.03)", paddingTop:20,
+              display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:8,
+              fontSize:12, color:"#27272a" }}>
+              <p>© 2025 Mauli English Medium School &amp; College. All rights reserved.</p>
+              <p>Admissions Open · CBSE Pattern · No Donation</p>
             </div>
           </div>
-        </div>
+        </footer>
+
+        {/* scroll top */}
+        {showTop && (
+          <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
+            style={{ position:"fixed", bottom:24, right:24, zIndex:50,
+              width:44, height:44, borderRadius:"50%",
+              background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+              color:"white", border:"none", cursor:"pointer",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              boxShadow:"0 4px 20px rgba(245,158,11,0.4)", transition:"transform 0.2s" }}
+            onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
+            onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+            <ChevronUp size={20}/>
+          </button>
+        )}
       </div>
-    </Section>
+    </>
   );
 }
 
-// ─── CONTACT ──────────────────────────────────────────────────────────────────
-function Contact() {
-  const [form, setForm] = useState({ name: "", phone: "", message: "" });
-  const [sent, setSent] = useState(false);
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setSent(true);
-    setTimeout(() => setSent(false), 4000);
-    setForm({ name: "", phone: "", message: "" });
+/* ── sub-components ── */
+function SectionHeader({ chip, chipColor="amber", title, desc }) {
+  const chipMap = {
+    amber: { bg:"rgba(245,158,11,0.1)",  border:"rgba(245,158,11,0.2)",  color:"#f59e0b" },
+    red:   { bg:"rgba(239,68,68,0.1)",   border:"rgba(239,68,68,0.2)",   color:"#f87171" },
+    yellow:{ bg:"rgba(234,179,8,0.1)",   border:"rgba(234,179,8,0.2)",   color:"#fbbf24" },
   };
-  const info = [
-    { icon: <Phone size={18} color="white" />, label: "Phone", value: "9130415350 / 8180993047", href: "tel:9130415350" },
-    { icon: <Mail size={18} color="white" />, label: "Email", value: "erakidmauli@gmail.com", href: "mailto:erakidmauli@gmail.com" },
-    { icon: <MapPin size={18} color="white" />, label: "Address", value: "Somatane Phata, Talegaon Dabhade, Pune", href: "#" },
-  ];
-  const inputStyle = {
-    width: "100%", padding: "10px 16px", borderRadius: 12,
-    border: "1.5px solid #e5e7eb", outline: "none",
-    fontSize: 14, fontFamily: "inherit", boxSizing: "border-box",
-    transition: "border-color 0.2s",
-  };
-  return (
-    <Section id="contact" style={{ padding: "80px 0", background: "linear-gradient(180deg, rgba(255,247,237,0.4), white)" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <Badge color="red">Contact Us</Badge>
-          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
-            Get in <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Touch</span>
-          </h2>
-          <p style={{ marginTop: 12, color: "#6b7280", fontSize: 14 }}>We'd love to hear from you. Reach out for admissions or any enquiries.</p>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }} className="contact-grid">
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {info.map((item) => (
-              <a key={item.label} href={item.href} style={{
-                display: "flex", alignItems: "flex-start", gap: 16,
-                padding: 20, background: "white", borderRadius: 20,
-                border: "1px solid #f3f4f6", textDecoration: "none",
-                transition: "all 0.3s",
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#fed7aa"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(249,115,22,0.1)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "#f3f4f6"; e.currentTarget.style.boxShadow = "none"; }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 14, flexShrink: 0,
-                  background: "linear-gradient(135deg, #f97316, #dc2626)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
-                }}>{item.icon}</div>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>{item.label}</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{item.value}</div>
-                </div>
-              </a>
-            ))}
-            <div style={{ padding: 20, background: "linear-gradient(135deg, #fff7ed, #fefce8)", borderRadius: 20, border: "1px solid #fed7aa" }}>
-              <p style={{ fontSize: 14, fontWeight: 700, color: "#c2410c", margin: "0 0 4px" }}>School Hours</p>
-              <p style={{ fontSize: 14, color: "#374151", margin: "0 0 4px" }}>Mon – Sat: 8:00 AM – 2:00 PM</p>
-              <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>Admission office open till 4:00 PM</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} style={{ background: "white", borderRadius: 20, border: "1px solid #f3f4f6", padding: 24, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
-            <h3 style={{ fontWeight: 900, color: "#111827", fontSize: 20, margin: "0 0 20px" }}>Send an Enquiry</h3>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Your Name</label>
-              <input type="text" required value={form.name} onChange={e => setForm(v => ({ ...v, name: e.target.value }))}
-                placeholder="Parent / Guardian Name" style={inputStyle}
-                onFocus={e => e.target.style.borderColor = "#f97316"}
-                onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Phone Number</label>
-              <input type="tel" required value={form.phone} onChange={e => setForm(v => ({ ...v, phone: e.target.value }))}
-                placeholder="10-digit mobile number" style={inputStyle}
-                onFocus={e => e.target.style.borderColor = "#f97316"}
-                onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-            </div>
-            <div style={{ marginBottom: 20 }}>
-              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Message</label>
-              <textarea rows={4} value={form.message} onChange={e => setForm(v => ({ ...v, message: e.target.value }))}
-                placeholder="Your enquiry or message..." style={{ ...inputStyle, resize: "none" }}
-                onFocus={e => e.target.style.borderColor = "#f97316"}
-                onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
-            </div>
-            <button type="submit" style={{
-              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              padding: "12px 0", background: "linear-gradient(135deg, #f97316, #dc2626)",
-              color: "white", fontWeight: 700, borderRadius: 14, border: "none",
-              cursor: "pointer", fontSize: 14, fontFamily: "inherit",
-              boxShadow: "0 4px 16px rgba(249,115,22,0.35)",
-              transition: "all 0.2s",
-            }}>
-              {sent ? "✅ Message Sent!" : <><Send size={16} /> Send Message</>}
-            </button>
-          </form>
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-// ─── FOOTER ───────────────────────────────────────────────────────────────────
-function Footer() {
-  return (
-    <footer style={{ background: "#030712", color: "#9ca3af" }}>
-      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "48px 24px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #f97316, #dc2626)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <GraduationCap size={18} color="white" />
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 900, color: "white", letterSpacing: "0.05em" }}>MAULI SCHOOL</div>
-                <div style={{ fontSize: 9, color: "#4b5563", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>CBSE Pattern</div>
-              </div>
-            </div>
-            <p style={{ fontSize: 12, color: "#4b5563", lineHeight: 1.7, margin: 0 }}>
-              Sanvid Pratishthan Sanchalit<br />Quality education from Pre-Primary to Class 8.
-            </p>
-          </div>
-          <div>
-            <h4 style={{ color: "white", fontWeight: 700, fontSize: 13, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>Quick Links</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {["Home", "About", "Facilities", "Classes", "Admission", "Contact"].map((l) => (
-                <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: 12, color: "#4b5563", textDecoration: "none", transition: "color 0.2s" }}
-                  onMouseEnter={e => e.target.style.color = "#fb923c"}
-                  onMouseLeave={e => e.target.style.color = "#4b5563"}>{l}</a>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h4 style={{ color: "white", fontWeight: 700, fontSize: 13, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>Contact</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <a href="tel:9130415350" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#4b5563", textDecoration: "none" }}><Phone size={13} /> 9130415350 / 8180993047</a>
-              <a href="mailto:erakidmauli@gmail.com" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#4b5563", textDecoration: "none" }}><Mail size={13} /> erakidmauli@gmail.com</a>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#4b5563" }}><MapPin size={13} style={{ flexShrink: 0, marginTop: 1 }} /> Somatane Phata, Talegaon Dabhade, Pune</div>
-            </div>
-          </div>
-        </div>
-        <div style={{ borderTop: "1px solid #111827", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 12, color: "#374151" }}>
-          <p style={{ margin: 0 }}>© {new Date().getFullYear()} Mauli English Medium School & College. All rights reserved.</p>
-          <p style={{ margin: 0 }}>Admissions Open · CBSE Pattern · No Donation</p>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-// ─── SCROLL TO TOP ────────────────────────────────────────────────────────────
-function ScrollTop() {
-  const [show, setShow] = useState(false);
-  useEffect(() => {
-    const fn = () => setShow(window.scrollY > 400);
-    window.addEventListener("scroll", fn);
-    return () => window.removeEventListener("scroll", fn);
-  }, []);
-  if (!show) return null;
-  return (
-    <button
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      style={{
-        position: "fixed", bottom: 24, right: 24, zIndex: 50,
-        width: 44, height: 44, borderRadius: "50%",
-        background: "linear-gradient(135deg, #f97316, #dc2626)",
-        color: "white", border: "none", cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 16px rgba(249,115,22,0.5)",
-        transition: "transform 0.2s",
-      }}
-      onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-      onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-    >
-      <ChevronUp size={20} />
-    </button>
-  );
-}
-
-// ─── PAGE ─────────────────────────────────────────────────────────────────────
-export default function Page() {
+  const c = chipMap[chipColor] || chipMap.amber;
   return (
     <>
-      <style>{`
-        html { scroll-behavior: smooth; }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-        /* Responsive */
-        .hidden-mobile { display: flex; }
-        .show-mobile { display: none; }
-        .hero-grid { grid-template-columns: 1fr 1fr; }
-        .hero-text { text-align: left; }
-        .hero-card-wrap { display: flex; }
-        .admission-grid { grid-template-columns: 1fr 1fr; }
-        .contact-grid { grid-template-columns: 1fr 1fr; }
-        @media (max-width: 768px) {
-          .hidden-mobile { display: none !important; }
-          .show-mobile { display: flex !important; }
-          .hero-grid { grid-template-columns: 1fr !important; }
-          .hero-text { text-align: center !important; }
-          .hero-card-wrap { justify-content: center !important; }
-          .admission-grid { grid-template-columns: 1fr !important; }
-          .contact-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-      <Navbar />
-      <main>
-        <Hero />
-        <About />
-        <Facilities />
-        <Classes />
-        <Gallery />
-        <Admission />
-        <Contact />
-      </main>
-      <Footer />
-      <ScrollTop />
+      <span style={{ display:"inline-flex", alignItems:"center", padding:"4px 12px",
+        borderRadius:9999, fontSize:11, fontWeight:700,
+        background:c.bg, border:`1px solid ${c.border}`, color:c.color }}>
+        {chip}
+      </span>
+      <h2 style={{ fontFamily:"'Sora',sans-serif", fontSize:"clamp(1.8rem,4vw,2.5rem)",
+        fontWeight:900, color:"#f4f4f5", margin:"12px 0 10px" }}>
+        {title}
+      </h2>
+      {desc && <p style={{ color:"#52525b", fontSize:14, maxWidth:440, margin:"0 auto", lineHeight:1.7 }}>{desc}</p>}
     </>
+  );
+}
+
+function Row({ children }) {
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+      {children}
+    </div>
+  );
+}
+
+function FInput({ label, required, style: outerStyle = {}, ...props }) {
+  return (
+    <div style={outerStyle}>
+      <label style={{ display:"block", fontSize:10, fontWeight:700, color:"#52525b",
+        textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:6 }}>
+        {label}{required && <span style={{ color:"#f59e0b", marginLeft:2 }}>*</span>}
+      </label>
+      <input
+        {...props}
+        required={required}
+        className="fd-input"
+        style={{
+          width:"100%", padding:"10px 14px", borderRadius:10,
+          border:"1px solid #27272a", background:"#111113",
+          color:"#f4f4f5", fontSize:13, outline:"none",
+          fontFamily:"'DM Sans',sans-serif",
+          transition:"border-color 0.2s, background 0.2s",
+        }}
+      />
+    </div>
   );
 }
