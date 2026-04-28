@@ -6,11 +6,12 @@ import { authorize } from '@/lib/auth';
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id, sid } = await params;
     const body = await request.json();
     if (!body.teacher) delete body.teacher;
 
     const subject = await Subject.findOneAndUpdate(
-      { _id: params.sid, classroom: params.id }, body, { new: true, runValidators: true }
+      { _id: sid, classroom: id }, body, { new: true, runValidators: true }
     ).populate('teacher', 'name employeeId');
 
     if (!subject) return r.notFound('Subject not found');
@@ -24,7 +25,8 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const subject = await Subject.findOneAndDelete({ _id: params.sid, classroom: params.id });
+    const { id, sid } = await params;
+    const subject = await Subject.findOneAndDelete({ _id: sid, classroom: id });
     if (!subject) return r.notFound('Subject not found');
     return r.noContent();
   } catch (err) {

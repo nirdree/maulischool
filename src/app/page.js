@@ -1,46 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-
-// ─── ICONS (inline SVG, no external dep needed) ───────────────────────────────
-const Icon = ({ d, size = 22, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d={d} />
-  </svg>
-);
-
-const ICONS = {
-  menu: "M3 12h18M3 6h18M3 18h18",
-  close: "M6 18L18 6M6 6l12 12",
-  phone: "M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z",
-  mail: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm16 2l-8 5-8-5m0 12h16V9l-8 5-8-5v9z",
-  location: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z",
-  star: "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z",
-  check: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z",
-  cctv: "M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z",
-  book: "M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z",
-  activity: "M22 12h-4l-3 9L9 3l-3 9H2",
-  desk: "M20 6H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-9 7H5v-2h6v2zm8 0h-2v-2h2v2zm0-4H5V8h14v1z",
-  audio: "M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm6 12H6v-1c0-2 4-3.1 6-3.1S18 15 18 17v1z",
-  playground: "M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 10c-4.42 0-8 1.79-8 4v2h16v-2c0-2.21-3.58-4-8-4z",
-  basketball: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4.07 13H7.1c.15 1.56.6 3.02 1.31 4.27A8.01 8.01 0 0 1 4.07 13zm0-2A8.01 8.01 0 0 1 8.41 6.73C7.7 7.98 7.25 9.44 7.1 11H4.07zm7.93 8.93c-.67-.98-1.41-2.5-1.75-4.93h3.5c-.34 2.43-1.08 3.95-1.75 4.93zm0-6.93H9.27c.16-1.38.59-2.74 1.22-3.85.41-.72.87-1.27 1.51-1.56.64.29 1.1.84 1.51 1.56.63 1.11 1.06 2.47 1.22 3.85zm5.9 0h-3.03c-.15-1.56-.6-3.02-1.31-4.27A8.01 8.01 0 0 1 19.9 11h.03zM12.55 4.07c.67.98 1.41 2.5 1.75 4.93h-3.5c.34-2.43 1.08-3.95 1.75-4.93zM15.59 17.27C16.3 16.02 16.75 14.56 16.9 13h3.03a8.01 8.01 0 0 1-4.34 4.27z",
-  toy: "M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2zm1 14.5h-2v-2h2v2zm0-4h-2c0-3.25 3-3 3-5 0-1.1-.9-2-2-2s-2 .9-2 2h-2c0-2.21 1.79-4 4-4s4 1.79 4 4c0 2.5-3 2.75-3 5z",
-  culture: "M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z",
-  bus: "M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z",
-  arrow: "M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z",
-  grad: "M12 3L1 9l4 2.18V16c0 1.1 3.13 3 7 3 3.86 0 7-1.9 7-3v-4.82L23 9 12 3zm6 12.91c-.93.55-3.02 1.09-6 1.09s-5.08-.54-6-1.09V12.3l6 3.27 6-3.27v3.61zM12 13.73L4.39 9.73 12 5.81l7.61 3.92L12 13.73z",
-  heart: "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
-  shield: "M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z",
-  users: "M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z",
-  send: "M2.01 21L23 12 2.01 3 2 10l15 2-15 2z",
-};
-
-// SVG path for hamburger / close (stroke-based)
-const LineIcon = ({ paths, size = 22 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-    {paths.map((d, i) => <path key={i} d={d} />)}
-  </svg>
-);
+import {
+  Menu, X, Phone, Mail, MapPin, Star, Check, Cctv,
+  BookOpen, Activity, Monitor, Gamepad2, Trophy,
+  Music2, Users, Bus, ArrowRight, Send, GraduationCap,
+  Shield, Heart, ChevronUp
+} from "lucide-react";
 
 // ─── SECTION WRAPPER ──────────────────────────────────────────────────────────
 function Section({ id, className = "", children }) {
@@ -58,7 +24,12 @@ function Section({ id, className = "", children }) {
     <section
       id={id}
       ref={ref}
-      className={`transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} ${className}`}
+      style={{
+        transition: "opacity 0.7s, transform 0.7s",
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(2rem)",
+      }}
+      className={className}
     >
       {children}
     </section>
@@ -67,14 +38,23 @@ function Section({ id, className = "", children }) {
 
 // ─── BADGE ────────────────────────────────────────────────────────────────────
 function Badge({ children, color = "orange" }) {
-  const colors = {
-    orange: "bg-orange-100 text-orange-700 border-orange-200",
-    red: "bg-red-100 text-red-700 border-red-200",
-    yellow: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    green: "bg-green-100 text-green-700 border-green-200",
+  const styles = {
+    orange: { background: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa" },
+    red: { background: "#fff1f2", color: "#be123c", border: "1px solid #fecdd3" },
+    yellow: { background: "#fefce8", color: "#a16207", border: "1px solid #fef08a" },
+    green: { background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0" },
   };
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${colors[color]}`}>
+    <span style={{
+      ...styles[color],
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "6px",
+      padding: "4px 12px",
+      borderRadius: "9999px",
+      fontSize: "12px",
+      fontWeight: 700,
+    }}>
       {children}
     </span>
   );
@@ -91,52 +71,87 @@ function Navbar() {
   }, []);
   const links = ["Home", "About", "Facilities", "Classes", "Admission", "Contact"];
   return (
-    <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 backdrop-blur shadow-md shadow-orange-100/60" : "bg-white/90 backdrop-blur-sm"}`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 md:h-18">
+    <nav style={{
+      position: "fixed",
+      inset: "0 0 auto 0",
+      zIndex: 50,
+      background: scrolled ? "rgba(255,255,255,0.97)" : "rgba(255,255,255,0.92)",
+      backdropFilter: "blur(12px)",
+      boxShadow: scrolled ? "0 2px 20px rgba(249,115,22,0.12)" : "none",
+      transition: "all 0.3s",
+    }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
         {/* Logo */}
-        <a href="#home" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 flex items-center justify-center shadow-md group-hover:shadow-orange-300 transition-all group-hover:scale-105">
-            <Icon d={ICONS.grad} size={18} className="text-white" />
+        <a href="#home" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: "linear-gradient(135deg, #f97316, #dc2626)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
+          }}>
+            <GraduationCap size={18} color="white" />
           </div>
           <div>
-            <div className="text-[13px] font-black text-orange-600 leading-tight tracking-wide">MAULI SCHOOL</div>
-            <div className="text-[9px] text-gray-400 font-semibold tracking-widest uppercase leading-none">CBSE Pattern</div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: "#ea580c", letterSpacing: "0.05em", lineHeight: 1.2 }}>MAULI SCHOOL</div>
+            <div style={{ fontSize: 9, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>CBSE Pattern</div>
           </div>
         </a>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-0.5">
+        <div style={{ display: "flex", alignItems: "center", gap: 2 }} className="hidden-mobile">
           {links.map((l) => (
-            <a key={l} href={`#${l.toLowerCase()}`} className="px-3 py-2 text-[13px] font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all">
+            <a key={l} href={`#${l.toLowerCase()}`} style={{
+              padding: "8px 12px", fontSize: 13, fontWeight: 600, color: "#4b5563",
+              borderRadius: 8, textDecoration: "none", transition: "all 0.2s",
+            }}
+              onMouseEnter={e => { e.target.style.color = "#ea580c"; e.target.style.background = "#fff7ed"; }}
+              onMouseLeave={e => { e.target.style.color = "#4b5563"; e.target.style.background = "transparent"; }}>
               {l}
             </a>
           ))}
-          <a href="#admission" className="ml-2 px-5 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[13px] font-bold rounded-full shadow hover:shadow-orange-300 hover:scale-105 transition-all">
-            Apply Now
-          </a>
+          <a href="#admission" style={{
+            marginLeft: 8, padding: "8px 20px",
+            background: "linear-gradient(135deg, #f97316, #dc2626)",
+            color: "white", fontSize: 13, fontWeight: 700,
+            borderRadius: 9999, textDecoration: "none",
+            boxShadow: "0 4px 12px rgba(249,115,22,0.35)",
+            transition: "all 0.2s",
+          }}>Apply Now</a>
         </div>
 
         {/* Mobile toggle */}
-        <button onClick={() => setOpen(v => !v)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-orange-50 text-gray-600">
-          {open
-            ? <LineIcon paths={["M6 18L18 6", "M6 6l12 12"]} />
-            : <LineIcon paths={["M3 12h18", "M3 6h18", "M3 18h18"]} />}
+        <button onClick={() => setOpen(v => !v)} style={{
+          width: 36, height: 36, border: "none", background: "transparent",
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          borderRadius: 8, color: "#374151",
+        }} className="show-mobile">
+          {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
       {/* Mobile drawer */}
-      <div className={`md:hidden overflow-hidden transition-all duration-300 ${open ? "max-h-80" : "max-h-0"}`}>
-        <div className="bg-white border-t border-orange-100 px-4 py-2 space-y-0.5">
+      <div style={{
+        overflow: "hidden",
+        maxHeight: open ? 320 : 0,
+        transition: "max-height 0.3s",
+        background: "white",
+        borderTop: open ? "1px solid #fed7aa" : "none",
+      }} className="show-mobile">
+        <div style={{ padding: "8px 16px 12px" }}>
           {links.map((l) => (
-            <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setOpen(false)}
-              className="block px-3 py-2.5 text-sm font-semibold text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-all">
+            <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setOpen(false)} style={{
+              display: "block", padding: "10px 12px", fontSize: 14, fontWeight: 600,
+              color: "#4b5563", textDecoration: "none", borderRadius: 8,
+            }}>
               {l}
             </a>
           ))}
-          <a href="#admission" onClick={() => setOpen(false)}
-            className="block mt-1 px-3 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-bold rounded-xl text-center">
-            Apply Now
-          </a>
+          <a href="#admission" onClick={() => setOpen(false)} style={{
+            display: "block", marginTop: 4, padding: "10px 12px",
+            background: "linear-gradient(135deg, #f97316, #dc2626)",
+            color: "white", fontSize: 14, fontWeight: 700,
+            borderRadius: 12, textDecoration: "none", textAlign: "center",
+          }}>Apply Now</a>
         </div>
       </div>
     </nav>
@@ -146,82 +161,125 @@ function Navbar() {
 // ─── HERO ─────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section id="home" className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 pt-16">
-      {/* Decorative blobs */}
-      <div className="absolute -top-32 -right-32 w-[500px] h-[500px] bg-gradient-to-br from-orange-300/25 to-red-300/25 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -left-32 w-[400px] h-[400px] bg-gradient-to-tr from-yellow-300/20 to-orange-300/20 rounded-full blur-3xl pointer-events-none" />
-      {/* Floating shapes */}
-      <div className="absolute top-24 left-10 w-4 h-4 rounded-full bg-orange-400/40 animate-bounce" style={{ animationDelay: "0s", animationDuration: "3s" }} />
-      <div className="absolute top-40 right-20 w-3 h-3 rounded-full bg-red-400/40 animate-bounce" style={{ animationDelay: "1s", animationDuration: "2.5s" }} />
-      <div className="absolute bottom-40 left-20 w-5 h-5 rounded-full bg-yellow-400/50 animate-bounce" style={{ animationDelay: "0.5s", animationDuration: "3.5s" }} />
+    <section id="home" style={{
+      position: "relative",
+      minHeight: "100vh",
+      display: "flex",
+      alignItems: "center",
+      overflow: "hidden",
+      background: "linear-gradient(135deg, #fffbeb 0%, #fff7ed 50%, #fef2f2 100%)",
+      paddingTop: 64,
+    }}>
+      <div style={{
+        position: "absolute", top: -128, right: -128,
+        width: 500, height: 500,
+        background: "radial-gradient(circle, rgba(251,146,60,0.2), rgba(239,68,68,0.15))",
+        borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "absolute", bottom: -128, left: -128,
+        width: 400, height: 400,
+        background: "radial-gradient(circle, rgba(253,224,71,0.15), rgba(249,115,22,0.15))",
+        borderRadius: "50%", filter: "blur(60px)", pointerEvents: "none",
+      }} />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 grid md:grid-cols-2 gap-12 items-center w-full">
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "80px 24px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center", width: "100%" }} className="hero-grid">
         {/* Text */}
-        <div className="text-center md:text-left space-y-6">
-          <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full border border-orange-200">
-            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+        <div style={{ textAlign: "left" }} className="hero-text">
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 8,
+            background: "#fff7ed", color: "#c2410c", fontSize: 12,
+            fontWeight: 700, padding: "6px 16px", borderRadius: 9999,
+            border: "1px solid #fed7aa", marginBottom: 24,
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#f97316", display: "inline-block", animation: "pulse 2s infinite" }} />
             Admissions Open 2025–26
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 leading-tight">
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-orange-600 via-red-500 to-rose-600">MAULI</span>
-            <span className="block">English Medium</span>
-            <span className="block text-2xl sm:text-3xl font-bold text-gray-600">School & College</span>
+          <h1 style={{ fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 900, color: "#111827", lineHeight: 1.1, margin: "0 0 16px" }}>
+            <span style={{ display: "block", background: "linear-gradient(135deg, #ea580c, #dc2626, #e11d48)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>MAULI</span>
+            <span style={{ display: "block" }}>English Medium</span>
+            <span style={{ display: "block", fontSize: "clamp(1.4rem, 3.5vw, 2.2rem)", fontWeight: 700, color: "#6b7280" }}>School & College</span>
           </h1>
-          <p className="text-base text-gray-500 font-medium">
-            <span className="text-orange-600 font-bold">CBSE Pattern</span> · Sanvid Pratishthan Sanchalit<br />
+          <p style={{ fontSize: 15, color: "#6b7280", fontWeight: 500, marginBottom: 24, lineHeight: 1.6 }}>
+            <strong style={{ color: "#ea580c" }}>CBSE Pattern</strong> · Sanvid Pratishthan Sanchalit<br />
             Somatane Phata, Talegaon Dabhade, Pune
           </p>
 
-          {/* Badges */}
-          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 28 }}>
             <Badge color="green">✅ No Donation</Badge>
             <Badge color="orange">🎉 50% Discount</Badge>
             <Badge color="red">👶 Pre-Primary & Primary</Badge>
           </div>
 
-          {/* CTA */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-            <a href="#admission"
-              className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-2xl shadow-lg shadow-orange-200 hover:shadow-orange-300 hover:scale-105 transition-all text-sm">
-              Apply Now
-              <Icon d={ICONS.arrow} size={18} className="group-hover:translate-x-1 transition-transform" />
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <a href="#admission" style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "12px 28px",
+              background: "linear-gradient(135deg, #f97316, #dc2626)",
+              color: "white", fontWeight: 700, borderRadius: 16,
+              textDecoration: "none", fontSize: 14,
+              boxShadow: "0 8px 24px rgba(249,115,22,0.35)",
+              transition: "all 0.2s",
+            }}>
+              Apply Now <ArrowRight size={16} />
             </a>
-            <a href="#contact"
-              className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white text-orange-600 font-bold rounded-2xl border-2 border-orange-200 hover:border-orange-400 hover:bg-orange-50 transition-all text-sm shadow">
-              <Icon d={ICONS.phone} size={16} />
-              Call Us
+            <a href="#contact" style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              padding: "12px 28px",
+              background: "white", color: "#ea580c", fontWeight: 700,
+              borderRadius: 16, border: "2px solid #fed7aa",
+              textDecoration: "none", fontSize: 14,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+            }}>
+              <Phone size={16} /> Call Us
             </a>
           </div>
         </div>
 
         {/* Visual card */}
-        <div className="relative flex justify-center md:justify-end">
-          <div className="relative w-full max-w-sm">
-            {/* Main card */}
-            <div className="bg-white rounded-3xl shadow-2xl shadow-orange-100 p-8 border border-orange-100">
-              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-lg">
-                <Icon d={ICONS.grad} size={40} className="text-white" />
+        <div style={{ display: "flex", justifyContent: "flex-end" }} className="hero-card-wrap">
+          <div style={{ position: "relative", width: "100%", maxWidth: 360 }}>
+            <div style={{
+              background: "white", borderRadius: 24,
+              boxShadow: "0 24px 64px rgba(249,115,22,0.15)",
+              padding: 32, border: "1px solid #fed7aa",
+            }}>
+              <div style={{
+                width: 80, height: 80, margin: "0 auto 16px",
+                borderRadius: 20,
+                background: "linear-gradient(135deg, #fb923c, #dc2626)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 8px 24px rgba(249,115,22,0.4)",
+              }}>
+                <GraduationCap size={40} color="white" />
               </div>
-              <h3 className="text-center font-black text-xl text-gray-900 mb-1">Mauli School</h3>
-              <p className="text-center text-sm text-gray-400 font-medium mb-5">Nurturing young minds since day one</p>
-              <div className="space-y-2">
+              <h3 style={{ textAlign: "center", fontWeight: 900, fontSize: 20, color: "#111827", margin: "0 0 4px" }}>Mauli School</h3>
+              <p style={{ textAlign: "center", fontSize: 13, color: "#9ca3af", fontWeight: 500, margin: "0 0 20px" }}>Nurturing young minds since day one</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {["Caring & Qualified Teachers", "Safe & Secure Campus", "CBSE Curriculum", "Activity-Based Learning"].map((item) => (
-                  <div key={item} className="flex items-center gap-2.5 text-sm text-gray-600">
-                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                      <Icon d={ICONS.check} size={12} className="text-green-600" />
+                  <div key={item} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: "#374151" }}>
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Check size={12} color="#16a34a" />
                     </div>
                     {item}
                   </div>
                 ))}
               </div>
             </div>
-            {/* Floating stat cards */}
-            <div className="absolute -top-4 -left-6 bg-orange-500 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-lg">
-              🏆 Best School
-            </div>
-            <div className="absolute -bottom-4 -right-4 bg-white border border-orange-100 shadow-lg rounded-xl px-3 py-2 text-xs font-bold text-orange-600">
-              50% Discount 🎉
-            </div>
+            <div style={{
+              position: "absolute", top: -16, left: -24,
+              background: "#f97316", color: "white",
+              fontSize: 12, fontWeight: 700,
+              padding: "8px 12px", borderRadius: 12,
+              boxShadow: "0 4px 12px rgba(249,115,22,0.4)",
+            }}>🏆 Best School</div>
+            <div style={{
+              position: "absolute", bottom: -16, right: -16,
+              background: "white", border: "1px solid #fed7aa",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+              borderRadius: 12, padding: "8px 12px",
+              fontSize: 12, fontWeight: 700, color: "#ea580c",
+            }}>50% Discount 🎉</div>
           </div>
         </div>
       </div>
@@ -232,29 +290,38 @@ function Hero() {
 // ─── ABOUT ────────────────────────────────────────────────────────────────────
 function About() {
   const points = [
-    { icon: ICONS.users, title: "Caring Teachers", desc: "Experienced, trained educators who nurture every child individually.", color: "orange" },
-    { icon: ICONS.shield, title: "Safe Environment", desc: "CCTV-monitored, child-safe campus with a secure and friendly atmosphere.", color: "red" },
-    { icon: ICONS.heart, title: "Holistic Growth", desc: "Academic excellence paired with sports, arts, and cultural activities.", color: "yellow" },
+    { icon: <Users size={22} />, title: "Caring Teachers", desc: "Experienced, trained educators who nurture every child individually.", bg: "#fff7ed", color: "#ea580c" },
+    { icon: <Shield size={22} />, title: "Safe Environment", desc: "CCTV-monitored, child-safe campus with a secure and friendly atmosphere.", bg: "#fff1f2", color: "#be123c" },
+    { icon: <Heart size={22} />, title: "Holistic Growth", desc: "Academic excellence paired with sports, arts, and cultural activities.", bg: "#fefce8", color: "#a16207" },
   ];
-  const clr = { orange: "bg-orange-100 text-orange-600", red: "bg-red-100 text-red-600", yellow: "bg-amber-100 text-amber-600" };
   return (
-    <Section id="about" className="py-20 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
+    <Section id="about" style={{ padding: "80px 0", background: "white" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
           <Badge color="orange">About Us</Badge>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black text-gray-900">Why Choose <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Mauli School?</span></h2>
-          <p className="mt-3 text-gray-500 max-w-xl mx-auto text-sm leading-relaxed">
-            Established under <strong className="text-gray-700">Sanvid Pratishthan Sanchalit</strong>, we provide quality CBSE-pattern education with a focus on character building and academic excellence for students from Pre-Primary to Class 8.
+          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
+            Why Choose <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Mauli School?</span>
+          </h2>
+          <p style={{ marginTop: 12, color: "#6b7280", maxWidth: 480, margin: "12px auto 0", fontSize: 14, lineHeight: 1.7 }}>
+            Established under <strong style={{ color: "#374151" }}>Sanvid Pratishthan Sanchalit</strong>, we provide quality CBSE-pattern education with a focus on character building and academic excellence for students from Pre-Primary to Class 8.
           </p>
         </div>
-        <div className="grid sm:grid-cols-3 gap-6">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 24 }}>
           {points.map((p) => (
-            <div key={p.title} className="group bg-gradient-to-b from-gray-50 to-white rounded-2xl p-6 border border-gray-100 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-50 transition-all duration-300">
-              <div className={`w-12 h-12 rounded-xl ${clr[p.color]} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                <Icon d={p.icon} size={22} />
+            <div key={p.title} style={{
+              background: "linear-gradient(180deg, #f9fafb, white)",
+              borderRadius: 20, padding: 24,
+              border: "1px solid #f3f4f6",
+              transition: "all 0.3s",
+              cursor: "default",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#fed7aa"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(249,115,22,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "#f3f4f6"; e.currentTarget.style.boxShadow = "none"; }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: p.bg, color: p.color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                {p.icon}
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">{p.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{p.desc}</p>
+              <h3 style={{ fontWeight: 700, color: "#111827", marginBottom: 8, fontSize: 16 }}>{p.title}</h3>
+              <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6 }}>{p.desc}</p>
             </div>
           ))}
         </div>
@@ -266,44 +333,45 @@ function About() {
 // ─── FACILITIES ───────────────────────────────────────────────────────────────
 function Facilities() {
   const items = [
-    { icon: ICONS.cctv, title: "CCTV Surveillance", desc: "Complete 24/7 campus monitoring" },
-    { icon: ICONS.activity, title: "Activity Room", desc: "Creative & play-based learning space" },
-    { icon: ICONS.desk, title: "Smart Desks", desc: "Modern ergonomic classroom furniture" },
-    { icon: ICONS.audio, title: "Audio / Video Room", desc: "Digital multimedia learning lab" },
-    { icon: ICONS.playground, title: "Playground", desc: "Slides, swings & outdoor play area" },
-    { icon: ICONS.basketball, title: "Basketball Court", desc: "Full-size court for sports activities" },
-    { icon: ICONS.toy, title: "Learning Toys", desc: "Educational toys for early learners" },
-    { icon: ICONS.culture, title: "Cultural Hall", desc: "Events, performances & ceremonies" },
-    { icon: ICONS.bus, title: "Transport", desc: "Safe school bus facility available" },
-  ];
-  const colors = [
-    "from-orange-500 to-amber-500",
-    "from-red-500 to-rose-500",
-    "from-amber-500 to-yellow-400",
-    "from-orange-600 to-red-500",
-    "from-rose-500 to-pink-500",
-    "from-red-400 to-orange-500",
-    "from-yellow-500 to-orange-400",
-    "from-orange-500 to-red-600",
-    "from-amber-400 to-orange-500",
+    { icon: <Cctv size={20} color="white" />, title: "CCTV Surveillance", desc: "Complete 24/7 campus monitoring", grad: "linear-gradient(135deg,#f97316,#eab308)" },
+    { icon: <Activity size={20} color="white" />, title: "Activity Room", desc: "Creative & play-based learning space", grad: "linear-gradient(135deg,#ef4444,#f43f5e)" },
+    { icon: <Monitor size={20} color="white" />, title: "Smart Desks", desc: "Modern ergonomic classroom furniture", grad: "linear-gradient(135deg,#f59e0b,#fcd34d)" },
+    { icon: <Music2 size={20} color="white" />, title: "Audio / Video Room", desc: "Digital multimedia learning lab", grad: "linear-gradient(135deg,#ea580c,#ef4444)" },
+    { icon: <Gamepad2 size={20} color="white" />, title: "Playground", desc: "Slides, swings & outdoor play area", grad: "linear-gradient(135deg,#f43f5e,#fb7185)" },
+    { icon: <Trophy size={20} color="white" />, title: "Basketball Court", desc: "Full-size court for sports activities", grad: "linear-gradient(135deg,#f97316,#ef4444)" },
+    { icon: <Star size={20} color="white" />, title: "Learning Toys", desc: "Educational toys for early learners", grad: "linear-gradient(135deg,#eab308,#f97316)" },
+    { icon: <BookOpen size={20} color="white" />, title: "Cultural Hall", desc: "Events, performances & ceremonies", grad: "linear-gradient(135deg,#f97316,#dc2626)" },
+    { icon: <Bus size={20} color="white" />, title: "Transport", desc: "Safe school bus facility available", grad: "linear-gradient(135deg,#fbbf24,#f97316)" },
   ];
   return (
-    <Section id="facilities" className="py-20 bg-gradient-to-b from-orange-50/60 to-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
+    <Section id="facilities" style={{ padding: "80px 0", background: "linear-gradient(180deg, rgba(255,247,237,0.6), white)" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
           <Badge color="red">Our Facilities</Badge>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black text-gray-900">World-Class <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Infrastructure</span></h2>
-          <p className="mt-3 text-gray-500 text-sm max-w-lg mx-auto">Everything a child needs to learn, play, and grow in a safe and stimulating environment.</p>
+          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
+            World-Class <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Infrastructure</span>
+          </h2>
+          <p style={{ marginTop: 12, color: "#6b7280", maxWidth: 440, margin: "12px auto 0", fontSize: 14 }}>Everything a child needs to learn, play, and grow in a safe and stimulating environment.</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-5">
-          {items.map((item, i) => (
-            <div key={item.title}
-              className="group bg-white rounded-2xl p-5 border border-gray-100 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100/50 hover:-translate-y-1 transition-all duration-300 cursor-default">
-              <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${colors[i]} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform`}>
-                <Icon d={item.icon} size={20} className="text-white" />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 20 }}>
+          {items.map((item) => (
+            <div key={item.title} style={{
+              background: "white", borderRadius: 20, padding: 20,
+              border: "1px solid #f3f4f6", cursor: "default",
+              transition: "all 0.3s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#fed7aa"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(249,115,22,0.15)"; e.currentTarget.style.transform = "translateY(-4px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "#f3f4f6"; e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 14,
+                background: item.grad,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 12, boxShadow: "0 4px 12px rgba(249,115,22,0.25)",
+              }}>
+                {item.icon}
               </div>
-              <h3 className="font-bold text-gray-900 text-sm mb-1">{item.title}</h3>
-              <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
+              <h3 style={{ fontWeight: 700, color: "#111827", fontSize: 14, marginBottom: 4 }}>{item.title}</h3>
+              <p style={{ fontSize: 12, color: "#9ca3af", lineHeight: 1.5 }}>{item.desc}</p>
             </div>
           ))}
         </div>
@@ -315,28 +383,37 @@ function Facilities() {
 // ─── CLASSES ─────────────────────────────────────────────────────────────────
 function Classes() {
   const classes = [
-    { name: "Playgroup", age: "2+ Years", emoji: "🍼", color: "bg-yellow-50 border-yellow-200 text-yellow-700" },
-    { name: "Nursery", age: "3+ Years", emoji: "🌱", color: "bg-green-50 border-green-200 text-green-700" },
-    { name: "Jr. KG", age: "4 Years", emoji: "🎨", color: "bg-blue-50 border-blue-200 text-blue-700" },
-    { name: "Sr. KG", age: "5 Years", emoji: "⭐", color: "bg-purple-50 border-purple-200 text-purple-700" },
-    { name: "Class 1–4", age: "6–9 Years", emoji: "📚", color: "bg-orange-50 border-orange-200 text-orange-700" },
-    { name: "Class 5–8", age: "10+ Years", emoji: "🎓", color: "bg-red-50 border-red-200 text-red-700" },
+    { name: "Playgroup", age: "2+ Years", emoji: "🍼", bg: "#fefce8", border: "#fef08a", color: "#a16207" },
+    { name: "Nursery", age: "3+ Years", emoji: "🌱", bg: "#f0fdf4", border: "#bbf7d0", color: "#15803d" },
+    { name: "Jr. KG", age: "4 Years", emoji: "🎨", bg: "#eff6ff", border: "#bfdbfe", color: "#1d4ed8" },
+    { name: "Sr. KG", age: "5 Years", emoji: "⭐", bg: "#faf5ff", border: "#e9d5ff", color: "#7c3aed" },
+    { name: "Class 1–4", age: "6–9 Years", emoji: "📚", bg: "#fff7ed", border: "#fed7aa", color: "#c2410c" },
+    { name: "Class 5–8", age: "10+ Years", emoji: "🎓", bg: "#fff1f2", border: "#fecdd3", color: "#be123c" },
   ];
   return (
-    <Section id="classes" className="py-20 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
+    <Section id="classes" style={{ padding: "80px 0", background: "white" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
           <Badge color="yellow">Classes Offered</Badge>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black text-gray-900">Programs <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">We Offer</span></h2>
-          <p className="mt-3 text-gray-500 text-sm max-w-md mx-auto">From playgroup to Class 8 — we shape every stage of your child's early education journey.</p>
+          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
+            Programs <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>We Offer</span>
+          </h2>
+          <p style={{ marginTop: 12, color: "#6b7280", maxWidth: 400, margin: "12px auto 0", fontSize: 14 }}>From playgroup to Class 8 — we shape every stage of your child's early education journey.</p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 16 }}>
           {classes.map((cls) => (
-            <div key={cls.name}
-              className={`group rounded-2xl p-5 border-2 ${cls.color} text-center hover:-translate-y-2 hover:shadow-lg transition-all duration-300 cursor-default`}>
-              <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{cls.emoji}</div>
-              <div className="font-black text-base">{cls.name}</div>
-              <div className="text-xs font-medium opacity-70 mt-1">{cls.age}</div>
+            <div key={cls.name} style={{
+              background: cls.bg, borderRadius: 20,
+              border: `2px solid ${cls.border}`,
+              color: cls.color, textAlign: "center",
+              padding: 20, cursor: "default",
+              transition: "all 0.3s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-8px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>{cls.emoji}</div>
+              <div style={{ fontWeight: 900, fontSize: 15 }}>{cls.name}</div>
+              <div style={{ fontSize: 12, fontWeight: 500, opacity: 0.7, marginTop: 4 }}>{cls.age}</div>
             </div>
           ))}
         </div>
@@ -348,28 +425,41 @@ function Classes() {
 // ─── GALLERY ─────────────────────────────────────────────────────────────────
 function Gallery() {
   const photos = [
-    { bg: "from-orange-300 to-amber-400", label: "Classroom Activities", emoji: "🎨" },
-    { bg: "from-red-400 to-rose-400", label: "Sports Day", emoji: "🏀" },
-    { bg: "from-yellow-300 to-orange-400", label: "Cultural Program", emoji: "🎭" },
-    { bg: "from-amber-400 to-red-400", label: "Annual Day", emoji: "🏆" },
-    { bg: "from-orange-400 to-red-500", label: "Science Expo", emoji: "🔬" },
-    { bg: "from-red-300 to-orange-400", label: "Playground Fun", emoji: "🎠" },
+    { bg: "linear-gradient(135deg,#fb923c,#fbbf24)", label: "Classroom Activities", emoji: "🎨" },
+    { bg: "linear-gradient(135deg,#f87171,#f43f5e)", label: "Sports Day", emoji: "🏀" },
+    { bg: "linear-gradient(135deg,#fcd34d,#f97316)", label: "Cultural Program", emoji: "🎭" },
+    { bg: "linear-gradient(135deg,#fbbf24,#ef4444)", label: "Annual Day", emoji: "🏆" },
+    { bg: "linear-gradient(135deg,#f97316,#dc2626)", label: "Science Expo", emoji: "🔬" },
+    { bg: "linear-gradient(135deg,#fca5a5,#f97316)", label: "Playground Fun", emoji: "🎠" },
   ];
   return (
-    <Section id="gallery" className="py-20 bg-gradient-to-b from-orange-50/40 to-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
+    <Section id="gallery" style={{ padding: "80px 0", background: "linear-gradient(180deg, rgba(255,247,237,0.4), white)" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
           <Badge color="orange">Gallery</Badge>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black text-gray-900">Life at <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Mauli School</span></h2>
+          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
+            Life at <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Mauli School</span>
+          </h2>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
           {photos.map((p, i) => (
-            <div key={i} className={`group relative h-44 sm:h-56 rounded-2xl bg-gradient-to-br ${p.bg} overflow-hidden cursor-pointer shadow-md hover:shadow-xl transition-all duration-300`}>
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 group-hover:scale-110 transition-transform duration-300">
-                <span className="text-5xl">{p.emoji}</span>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/50 to-transparent p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                <p className="text-white text-xs font-bold text-center">{p.label}</p>
+            <div key={i} style={{
+              position: "relative", height: 200, borderRadius: 20,
+              background: p.bg, overflow: "hidden", cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+              transition: "all 0.3s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.2)"; e.currentTarget.style.transform = "scale(1.02)"; e.currentTarget.querySelector(".label").style.transform = "translateY(0)"; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)"; e.currentTarget.style.transform = "scale(1)"; e.currentTarget.querySelector(".label").style.transform = "translateY(100%)"; }}>
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 56 }}>{p.emoji}</div>
+              <div className="label" style={{
+                position: "absolute", inset: "auto 0 0",
+                background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)",
+                padding: 12, textAlign: "center",
+                transform: "translateY(100%)",
+                transition: "transform 0.3s",
+              }}>
+                <p style={{ color: "white", fontSize: 13, fontWeight: 700, margin: 0 }}>{p.label}</p>
               </div>
             </div>
           ))}
@@ -390,36 +480,58 @@ function Admission() {
     "Transport facility available",
   ];
   return (
-    <Section id="admission" className="py-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="relative bg-gradient-to-br from-orange-500 via-red-500 to-rose-600 rounded-3xl p-8 sm:p-12 overflow-hidden text-white shadow-2xl">
-          {/* bg decoration */}
-          <div className="absolute -top-16 -right-16 w-64 h-64 bg-white/10 rounded-full" />
-          <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-white/10 rounded-full" />
-          <div className="relative z-10 grid sm:grid-cols-2 gap-8 items-center">
+    <Section id="admission" style={{ padding: "80px 0" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{
+          position: "relative",
+          background: "linear-gradient(135deg, #f97316, #dc2626, #e11d48)",
+          borderRadius: 28, padding: "48px 40px",
+          overflow: "hidden", color: "white",
+          boxShadow: "0 20px 60px rgba(249,115,22,0.4)",
+        }}>
+          <div style={{ position: "absolute", top: -64, right: -64, width: 256, height: 256, background: "rgba(255,255,255,0.08)", borderRadius: "50%" }} />
+          <div style={{ position: "absolute", bottom: -40, left: -40, width: 192, height: 192, background: "rgba(255,255,255,0.08)", borderRadius: "50%" }} />
+          <div style={{ position: "relative", zIndex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "center" }} className="admission-grid">
             <div>
-              <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full mb-4">
-                <span className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse" />
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: "rgba(255,255,255,0.2)", color: "white",
+                fontSize: 12, fontWeight: 700, padding: "6px 14px",
+                borderRadius: 9999, marginBottom: 16,
+              }}>
+                <span style={{ width: 8, height: 8, background: "#fde047", borderRadius: "50%", display: "inline-block" }} />
                 Admissions Now Open
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black mb-3">Secure Your Child's<br />Future Today</h2>
-              <p className="text-orange-100 text-sm mb-6">Limited seats available for the academic year 2025–26. Apply early to avail special discounts.</p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a href="#contact"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-orange-600 font-bold rounded-xl shadow hover:shadow-md hover:scale-105 transition-all text-sm">
-                  Apply Now <Icon d={ICONS.arrow} size={16} />
+              <h2 style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)", fontWeight: 900, margin: "0 0 12px", lineHeight: 1.2 }}>Secure Your Child's<br />Future Today</h2>
+              <p style={{ color: "rgba(255,237,213,0.9)", fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>Limited seats available for the academic year 2025–26. Apply early to avail special discounts.</p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <a href="#contact" style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "10px 24px", background: "white", color: "#ea580c",
+                  fontWeight: 700, borderRadius: 12, textDecoration: "none", fontSize: 14,
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+                }}>
+                  Apply Now <ArrowRight size={16} />
                 </a>
-                <a href="tel:9130415350"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/20 text-white font-bold rounded-xl hover:bg-white/30 transition-all text-sm border border-white/30">
-                  <Icon d={ICONS.phone} size={15} /> Call Now
+                <a href="tel:9130415350" style={{
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "10px 24px", background: "rgba(255,255,255,0.2)",
+                  color: "white", fontWeight: 700, borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.3)", textDecoration: "none", fontSize: 14,
+                }}>
+                  <Phone size={15} /> Call Now
                 </a>
               </div>
             </div>
-            <div className="space-y-2.5">
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {benefits.map((b) => (
-                <div key={b} className="flex items-start gap-2.5 bg-white/15 rounded-xl px-4 py-2.5">
-                  <Icon d={ICONS.check} size={16} className="text-yellow-300 flex-shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">{b}</span>
+                <div key={b} style={{
+                  display: "flex", alignItems: "flex-start", gap: 10,
+                  background: "rgba(255,255,255,0.15)", borderRadius: 14,
+                  padding: "10px 16px",
+                }}>
+                  <Check size={16} color="#fde047" style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span style={{ fontSize: 14, fontWeight: 500 }}>{b}</span>
                 </div>
               ))}
             </div>
@@ -441,64 +553,88 @@ function Contact() {
     setForm({ name: "", phone: "", message: "" });
   };
   const info = [
-    { icon: ICONS.phone, label: "Phone", value: "9130415350 / 8180993047", href: "tel:9130415350" },
-    { icon: ICONS.mail, label: "Email", value: "erakidmauli@gmail.com", href: "mailto:erakidmauli@gmail.com" },
-    { icon: ICONS.location, label: "Address", value: "Somatane Phata, Talegaon Dabhade, Pune", href: "#" },
+    { icon: <Phone size={18} color="white" />, label: "Phone", value: "9130415350 / 8180993047", href: "tel:9130415350" },
+    { icon: <Mail size={18} color="white" />, label: "Email", value: "erakidmauli@gmail.com", href: "mailto:erakidmauli@gmail.com" },
+    { icon: <MapPin size={18} color="white" />, label: "Address", value: "Somatane Phata, Talegaon Dabhade, Pune", href: "#" },
   ];
+  const inputStyle = {
+    width: "100%", padding: "10px 16px", borderRadius: 12,
+    border: "1.5px solid #e5e7eb", outline: "none",
+    fontSize: 14, fontFamily: "inherit", boxSizing: "border-box",
+    transition: "border-color 0.2s",
+  };
   return (
-    <Section id="contact" className="py-20 bg-gradient-to-b from-orange-50/40 to-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12">
+    <Section id="contact" style={{ padding: "80px 0", background: "linear-gradient(180deg, rgba(255,247,237,0.4), white)" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "0 24px" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
           <Badge color="red">Contact Us</Badge>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black text-gray-900">Get in <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-500">Touch</span></h2>
-          <p className="mt-3 text-gray-500 text-sm">We'd love to hear from you. Reach out for admissions or any enquiries.</p>
+          <h2 style={{ marginTop: 12, fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, color: "#111827" }}>
+            Get in <span style={{ background: "linear-gradient(135deg, #f97316, #dc2626)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Touch</span>
+          </h2>
+          <p style={{ marginTop: 12, color: "#6b7280", fontSize: 14 }}>We'd love to hear from you. Reach out for admissions or any enquiries.</p>
         </div>
-        <div className="grid sm:grid-cols-2 gap-8">
-          {/* Info */}
-          <div className="space-y-4">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }} className="contact-grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {info.map((item) => (
-              <a key={item.label} href={item.href}
-                className="flex items-start gap-4 p-5 bg-white rounded-2xl border border-gray-100 hover:border-orange-200 hover:shadow-md hover:shadow-orange-50 transition-all group">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center shadow group-hover:scale-110 transition-transform flex-shrink-0">
-                  <Icon d={item.icon} size={18} className="text-white" />
-                </div>
+              <a key={item.label} href={item.href} style={{
+                display: "flex", alignItems: "flex-start", gap: 16,
+                padding: 20, background: "white", borderRadius: 20,
+                border: "1px solid #f3f4f6", textDecoration: "none",
+                transition: "all 0.3s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#fed7aa"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(249,115,22,0.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "#f3f4f6"; e.currentTarget.style.boxShadow = "none"; }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 14, flexShrink: 0,
+                  background: "linear-gradient(135deg, #f97316, #dc2626)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 4px 12px rgba(249,115,22,0.3)",
+                }}>{item.icon}</div>
                 <div>
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-0.5">{item.label}</div>
-                  <div className="text-sm font-semibold text-gray-800">{item.value}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2 }}>{item.label}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>{item.value}</div>
                 </div>
               </a>
             ))}
-            <div className="p-5 bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl border border-orange-100">
-              <p className="text-sm font-semibold text-orange-700 mb-1">School Hours</p>
-              <p className="text-sm text-gray-600">Mon – Sat: 8:00 AM – 2:00 PM</p>
-              <p className="text-xs text-gray-400 mt-1">Admission office open till 4:00 PM</p>
+            <div style={{ padding: 20, background: "linear-gradient(135deg, #fff7ed, #fefce8)", borderRadius: 20, border: "1px solid #fed7aa" }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#c2410c", margin: "0 0 4px" }}>School Hours</p>
+              <p style={{ fontSize: 14, color: "#374151", margin: "0 0 4px" }}>Mon – Sat: 8:00 AM – 2:00 PM</p>
+              <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>Admission office open till 4:00 PM</p>
             </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-4">
-            <h3 className="font-black text-gray-900 text-lg">Send an Enquiry</h3>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Your Name</label>
+          <form onSubmit={handleSubmit} style={{ background: "white", borderRadius: 20, border: "1px solid #f3f4f6", padding: 24, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+            <h3 style={{ fontWeight: 900, color: "#111827", fontSize: 20, margin: "0 0 20px" }}>Send an Enquiry</h3>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Your Name</label>
               <input type="text" required value={form.name} onChange={e => setForm(v => ({ ...v, name: e.target.value }))}
-                placeholder="Parent / Guardian Name"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none text-sm transition-all" />
+                placeholder="Parent / Guardian Name" style={inputStyle}
+                onFocus={e => e.target.style.borderColor = "#f97316"}
+                onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Phone Number</label>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Phone Number</label>
               <input type="tel" required value={form.phone} onChange={e => setForm(v => ({ ...v, phone: e.target.value }))}
-                placeholder="10-digit mobile number"
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none text-sm transition-all" />
+                placeholder="10-digit mobile number" style={inputStyle}
+                onFocus={e => e.target.style.borderColor = "#f97316"}
+                onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">Message</label>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Message</label>
               <textarea rows={4} value={form.message} onChange={e => setForm(v => ({ ...v, message: e.target.value }))}
-                placeholder="Your enquiry or message..."
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none text-sm transition-all resize-none" />
+                placeholder="Your enquiry or message..." style={{ ...inputStyle, resize: "none" }}
+                onFocus={e => e.target.style.borderColor = "#f97316"}
+                onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
             </div>
-            <button type="submit"
-              className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl shadow hover:shadow-orange-200 hover:scale-[1.02] transition-all text-sm">
-              {sent ? "✅ Message Sent!" : <><Icon d={ICONS.send} size={16} /> Send Message</>}
+            <button type="submit" style={{
+              width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              padding: "12px 0", background: "linear-gradient(135deg, #f97316, #dc2626)",
+              color: "white", fontWeight: 700, borderRadius: 14, border: "none",
+              cursor: "pointer", fontSize: 14, fontFamily: "inherit",
+              boxShadow: "0 4px 16px rgba(249,115,22,0.35)",
+              transition: "all 0.2s",
+            }}>
+              {sent ? "✅ Message Sent!" : <><Send size={16} /> Send Message</>}
             </button>
           </form>
         </div>
@@ -510,64 +646,52 @@ function Contact() {
 // ─── FOOTER ───────────────────────────────────────────────────────────────────
 function Footer() {
   return (
-    <footer className="bg-gray-950 text-gray-300">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid sm:grid-cols-3 gap-8 mb-8">
-          {/* Brand */}
+    <footer style={{ background: "#030712", color: "#9ca3af" }}>
+      <div style={{ maxWidth: 1152, margin: "0 auto", padding: "48px 24px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 32, marginBottom: 32 }}>
           <div>
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
-                <Icon d={ICONS.grad} size={18} className="text-white" />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #f97316, #dc2626)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GraduationCap size={18} color="white" />
               </div>
               <div>
-                <div className="text-white font-black text-sm tracking-wide">MAULI SCHOOL</div>
-                <div className="text-[10px] text-gray-500 font-medium tracking-widest uppercase">CBSE Pattern</div>
+                <div style={{ fontSize: 13, fontWeight: 900, color: "white", letterSpacing: "0.05em" }}>MAULI SCHOOL</div>
+                <div style={{ fontSize: 9, color: "#4b5563", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase" }}>CBSE Pattern</div>
               </div>
             </div>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              Sanvid Pratishthan Sanchalit<br />
-              Quality education from Pre-Primary to Class 8.
+            <p style={{ fontSize: 12, color: "#4b5563", lineHeight: 1.7, margin: 0 }}>
+              Sanvid Pratishthan Sanchalit<br />Quality education from Pre-Primary to Class 8.
             </p>
           </div>
-          {/* Links */}
           <div>
-            <h4 className="text-white font-bold text-sm mb-3 uppercase tracking-wide">Quick Links</h4>
-            <div className="space-y-1.5">
+            <h4 style={{ color: "white", fontWeight: 700, fontSize: 13, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>Quick Links</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {["Home", "About", "Facilities", "Classes", "Admission", "Contact"].map((l) => (
-                <a key={l} href={`#${l.toLowerCase()}`}
-                  className="block text-xs text-gray-500 hover:text-orange-400 transition-colors">
-                  {l}
-                </a>
+                <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: 12, color: "#4b5563", textDecoration: "none", transition: "color 0.2s" }}
+                  onMouseEnter={e => e.target.style.color = "#fb923c"}
+                  onMouseLeave={e => e.target.style.color = "#4b5563"}>{l}</a>
               ))}
             </div>
           </div>
-          {/* Contact */}
           <div>
-            <h4 className="text-white font-bold text-sm mb-3 uppercase tracking-wide">Contact</h4>
-            <div className="space-y-2">
-              <a href="tel:9130415350" className="flex items-center gap-2 text-xs text-gray-500 hover:text-orange-400 transition-colors">
-                <Icon d={ICONS.phone} size={13} /> 9130415350 / 8180993047
-              </a>
-              <a href="mailto:erakidmauli@gmail.com" className="flex items-center gap-2 text-xs text-gray-500 hover:text-orange-400 transition-colors">
-                <Icon d={ICONS.mail} size={13} /> erakidmauli@gmail.com
-              </a>
-              <div className="flex items-start gap-2 text-xs text-gray-500">
-                <Icon d={ICONS.location} size={13} className="flex-shrink-0 mt-0.5" />
-                Somatane Phata, Talegaon Dabhade, Pune
-              </div>
+            <h4 style={{ color: "white", fontWeight: 700, fontSize: 13, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>Contact</h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <a href="tel:9130415350" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#4b5563", textDecoration: "none" }}><Phone size={13} /> 9130415350 / 8180993047</a>
+              <a href="mailto:erakidmauli@gmail.com" style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#4b5563", textDecoration: "none" }}><Mail size={13} /> erakidmauli@gmail.com</a>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#4b5563" }}><MapPin size={13} style={{ flexShrink: 0, marginTop: 1 }} /> Somatane Phata, Talegaon Dabhade, Pune</div>
             </div>
           </div>
         </div>
-        <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
-          <p>© {new Date().getFullYear()} Mauli English Medium School & College. All rights reserved.</p>
-          <p>Admissions Open · CBSE Pattern · No Donation</p>
+        <div style={{ borderTop: "1px solid #111827", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 12, color: "#374151" }}>
+          <p style={{ margin: 0 }}>© {new Date().getFullYear()} Mauli English Medium School & College. All rights reserved.</p>
+          <p style={{ margin: 0 }}>Admissions Open · CBSE Pattern · No Donation</p>
         </div>
       </div>
     </footer>
   );
 }
 
-// ─── SCROLL-TO-TOP ────────────────────────────────────────────────────────────
+// ─── SCROLL TO TOP ────────────────────────────────────────────────────────────
 function ScrollTop() {
   const [show, setShow] = useState(false);
   useEffect(() => {
@@ -579,9 +703,19 @@ function ScrollTop() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg hover:scale-110 transition-all flex items-center justify-center"
+      style={{
+        position: "fixed", bottom: 24, right: 24, zIndex: 50,
+        width: 44, height: 44, borderRadius: "50%",
+        background: "linear-gradient(135deg, #f97316, #dc2626)",
+        color: "white", border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 4px 16px rgba(249,115,22,0.5)",
+        transition: "transform 0.2s",
+      }}
+      onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
+      onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
     >
-      ↑
+      <ChevronUp size={20} />
     </button>
   );
 }
@@ -592,7 +726,29 @@ export default function Page() {
     <>
       <style>{`
         html { scroll-behavior: smooth; }
-        * { box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        /* Responsive */
+        .hidden-mobile { display: flex; }
+        .show-mobile { display: none; }
+        .hero-grid { grid-template-columns: 1fr 1fr; }
+        .hero-text { text-align: left; }
+        .hero-card-wrap { display: flex; }
+        .admission-grid { grid-template-columns: 1fr 1fr; }
+        .contact-grid { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 768px) {
+          .hidden-mobile { display: none !important; }
+          .show-mobile { display: flex !important; }
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-text { text-align: center !important; }
+          .hero-card-wrap { justify-content: center !important; }
+          .admission-grid { grid-template-columns: 1fr !important; }
+          .contact-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
       <Navbar />
       <main>

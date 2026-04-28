@@ -7,7 +7,8 @@ import { isPayrollLocked } from '../route';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const leave = await Leave.findById(params.id)
+    const { id } = await params;
+    const leave = await Leave.findById(id)
       .populate('employee',   'name employeeId role')
       .populate('approvedBy', 'name');
     if (!leave) return r.notFound('Leave not found');
@@ -20,7 +21,8 @@ export const GET = protect(async (request, { params }) => {
 export const PUT = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const leave = await Leave.findById(params.id);
+    const { id } = await params;
+    const leave = await Leave.findById(id);
     if (!leave)                      return r.notFound('Leave not found');
     if (leave.status !== 'Pending')  return r.badRequest('Cannot edit a leave that has already been processed');
 
@@ -48,7 +50,8 @@ export const PUT = protect(async (request, { params }) => {
 export const DELETE = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const leave = await Leave.findById(params.id);
+    const { id } = await params;
+    const leave = await Leave.findById(id);
     if (!leave)                      return r.notFound('Leave not found');
     if (leave.status !== 'Pending')  return r.badRequest('Cannot delete a processed leave application');
 

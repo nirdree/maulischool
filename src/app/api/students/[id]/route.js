@@ -9,12 +9,11 @@ async function safeAbort(session) {
   try { await session.abortTransaction(); } catch (_) {}
 }
 
-// ── GET /api/students/:id ────────────────────────────────────
-
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const student = await Student.findById(params.id)
+    const { id } = await params;
+    const student = await Student.findById(id)
       .populate('classroom',    'displayName className section monthlyFees')
       .populate('academicYear', 'name')
       .populate('fatherUser',   'name email status studentIds')
@@ -33,15 +32,14 @@ export const GET = protect(async (request, { params }) => {
   }
 });
 
-// ── PUT /api/students/:id ────────────────────────────────────
-
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const body = await request.json();
     const { fatherUser, motherUser, admissionNo, ...updateData } = body;
 
-    const student = await Student.findByIdAndUpdate(params.id, updateData, {
+    const student = await Student.findByIdAndUpdate(id, updateData, {
       new: true, runValidators: true,
     })
       .populate('classroom',  'displayName')
@@ -55,15 +53,14 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
   }
 });
 
-// ── DELETE /api/students/:id ─────────────────────────────────
-
 export const DELETE = authorize('admin')(async (request, { params }) => {
   await connectDB();
+  const { id } = await params;
   const session   = await mongoose.startSession();
   let   committed = false;
   try {
     session.startTransaction();
-    const student = await Student.findByIdAndDelete(params.id).session(session);
+    const student = await Student.findByIdAndDelete(id).session(session);
     if (!student) {
       await safeAbort(session);
       committed = true;

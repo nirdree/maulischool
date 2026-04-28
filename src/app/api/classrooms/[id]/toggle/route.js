@@ -6,7 +6,8 @@ import { authorize } from '@/lib/auth';
 export const PATCH = authorize('admin')(async (request, { params }) => {
   try {
     await connectDB();
-    const classroom = await Classroom.findById(params.id);
+    const { id } = await params;
+    const classroom = await Classroom.findById(id);
     if (!classroom) return r.notFound('Classroom not found');
     classroom.isActive = !classroom.isActive;
     await classroom.save();

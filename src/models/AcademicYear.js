@@ -18,4 +18,4 @@ academicYearSchema.pre('save', async function () {
   }
 });
 
-module.exports = mongoose.model('AcademicYear', academicYearSchema);
+module.exports = mongoose.models.AcademicYear || mongoose.model('AcademicYear', academicYearSchema);

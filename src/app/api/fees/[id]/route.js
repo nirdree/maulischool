@@ -6,7 +6,8 @@ import { protect, authorize } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const fee = await Fee.findById(params.id)
+    const { id } = await params;
+    const fee = await Fee.findById(id)
       .populate('student',   'firstName lastName admissionNo fatherName fatherPhone')
       .populate('classroom', 'displayName');
     if (!fee) return r.notFound('Fee record not found');
@@ -19,6 +20,7 @@ export const GET = protect(async (request, { params }) => {
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const body = await request.json();
     const { tuitionFee, transportFee, activityFee, otherFee, lateFine = 0, discount = 0 } = body;
 
@@ -30,7 +32,7 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
       updateData.finalAmount = total - Number(discount || 0);
     }
 
-    const fee = await Fee.findByIdAndUpdate(params.id, updateData, {
+    const fee = await Fee.findByIdAndUpdate(id, updateData, {
       new: true, runValidators: true,
     }).populate('student', 'firstName lastName').populate('classroom', 'displayName');
 
@@ -44,11 +46,12 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin')(async (request, { params }) => {
   try {
     await connectDB();
-    const fee = await Fee.findById(params.id);
+    const { id } = await params;
+    const fee = await Fee.findById(id);
     if (!fee) return r.notFound('Fee record not found');
     await FeePayment.deleteMany({ fee: fee._id });
-    await Fee.findByIdAndDelete(params.id);
-    return r.ok({ id: params.id }, 'Fee record and associated payments deleted');
+    await Fee.findByIdAndDelete(id);
+    return r.ok({ id }, 'Fee record and associated payments deleted');
   } catch (err) {
     return r.serverError(err.message);
   }

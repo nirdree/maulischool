@@ -6,7 +6,8 @@ import { authorize } from '@/lib/auth';
 export const POST = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const fee = await Fee.findById(params.id);
+    const { id } = await params;
+    const fee = await Fee.findById(id);
     if (!fee)                  return r.notFound('Fee record not found');
     if (fee.status === 'Paid') return r.badRequest('Fee is already fully paid');
 

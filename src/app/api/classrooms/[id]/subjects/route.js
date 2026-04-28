@@ -7,9 +7,10 @@ import { protect, authorize } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const classroom = await Classroom.findById(params.id);
+    const { id } = await params;
+    const classroom = await Classroom.findById(id);
     if (!classroom) return r.notFound('Classroom not found');
-    const subjects = await Subject.find({ classroom: params.id })
+    const subjects = await Subject.find({ classroom: id })
       .populate('teacher', 'name employeeId')
       .sort({ name: 1 });
     return r.ok(subjects);
@@ -21,13 +22,14 @@ export const GET = protect(async (request, { params }) => {
 export const POST = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const classroom = await Classroom.findById(params.id);
+    const { id } = await params;
+    const classroom = await Classroom.findById(id);
     if (!classroom) return r.notFound('Classroom not found');
 
     const body = await request.json();
     if (!body.teacher) delete body.teacher;
 
-    const subject = await Subject.create({ ...body, classroom: params.id, academicYear: classroom.academicYear });
+    const subject = await Subject.create({ ...body, classroom: id, academicYear: classroom.academicYear });
     await subject.populate('teacher', 'name employeeId');
     return r.created(subject, 'Subject added');
   } catch (err) {

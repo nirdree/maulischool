@@ -6,7 +6,8 @@ import { protect } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const payments = await FeePayment.find({ fee: params.id })
+    const { id } = await params;
+    const payments = await FeePayment.find({ fee: id })
       .populate('collectedBy', 'name')
       .sort({ paymentDate: -1 });
     return r.ok(payments);

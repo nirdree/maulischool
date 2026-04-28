@@ -45,4 +45,4 @@ enquirySchema.pre('save', async function () {
   }
 });
 
-module.exports = mongoose.model('Enquiry', enquirySchema);
+module.exports = mongoose.models.Enquiry || mongoose.model('Enquiry', enquirySchema);

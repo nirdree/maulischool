@@ -6,11 +6,12 @@ import { protect } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const academicYear = searchParams.get('academicYear');
     const examType     = searchParams.get('examType');
 
-    const filter = { student: params.id };
+    const filter = { student: id };
     if (academicYear) filter.academicYear = academicYear;
 
     const marks = await Marks.find(filter)

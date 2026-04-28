@@ -6,7 +6,8 @@ import { protect, authorize } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const subject = await Subject.findById(params.id)
+    const { id } = await params;
+    const subject = await Subject.findById(id)
       .populate('classroom', 'displayName')
       .populate('teacher',   'name');
     if (!subject) return r.notFound('Subject not found');
@@ -19,8 +20,9 @@ export const GET = protect(async (request, { params }) => {
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const body    = await request.json();
-    const subject = await Subject.findByIdAndUpdate(params.id, body, { new: true, runValidators: true })
+    const subject = await Subject.findByIdAndUpdate(id, body, { new: true, runValidators: true })
       .populate('classroom', 'displayName')
       .populate('teacher',   'name');
     if (!subject) return r.notFound('Subject not found');
@@ -33,7 +35,8 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin')(async (request, { params }) => {
   try {
     await connectDB();
-    const subject = await Subject.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const subject = await Subject.findByIdAndDelete(id);
     if (!subject) return r.notFound('Subject not found');
     return r.noContent();
   } catch (err) {

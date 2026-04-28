@@ -15,4 +15,4 @@ const classroomSchema = new mongoose.Schema({
 
 classroomSchema.index({ className: 1, section: 1, academicYear: 1 }, { unique: true });
 
-module.exports = mongoose.model('Classroom', classroomSchema);
+module.exports = mongoose.models.Classroom || mongoose.model('Classroom', classroomSchema);

@@ -39,6 +39,7 @@ async function resolveParentUser({ existingUserId, email, phone, name, password,
 
 export const PATCH = authorize('admin', 'principal')(async (request, { params }) => {
   await connectDB();
+  const { id } = await params;
   const session   = await mongoose.startSession();
   let   committed = false;
   try {
@@ -46,7 +47,7 @@ export const PATCH = authorize('admin', 'principal')(async (request, { params })
     const { slot, existingUserId, email, name, phone, password } = await request.json();
     if (!['father', 'mother'].includes(slot)) return r.badRequest('slot must be "father" or "mother"');
 
-    const student = await Student.findById(params.id).session(session);
+    const student = await Student.findById(id).session(session);
     if (!student) return r.notFound('Student not found');
 
     const oldId = slot === 'father' ? student.fatherUser : student.motherUser;

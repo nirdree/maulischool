@@ -7,7 +7,8 @@ import { calculateSalary } from '../route';
 export const GET = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const record = await Payroll.findById(params.id)
+    const { id } = await params;
+    const record = await Payroll.findById(id)
       .populate('employee',    'name employeeId role monthlySalary email mobileNo')
       .populate('generatedBy', 'name')
       .populate('paidBy',      'name');
@@ -21,13 +22,14 @@ export const GET = authorize('admin', 'principal')(async (request, { params }) =
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const record = await Payroll.findById(params.id).populate('employee', 'monthlySalary name');
+    const { id } = await params;
+    const record = await Payroll.findById(id).populate('employee', 'monthlySalary name');
     if (!record)                  return r.notFound('Payroll record not found');
     if (record.status === 'Paid') return r.badRequest('Cannot edit a paid payroll record');
 
     const body = await request.json();
     const { daysPresent, holidays, paymentMode, notes } = body;
-    const bonus          = body.bonus          ?? record.bonus;
+    const bonus           = body.bonus           ?? record.bonus;
     const extraDeductions = body.extraDeductions ?? record.extraDeductions;
 
     const calc = calculateSalary({
@@ -64,11 +66,12 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const record = await Payroll.findById(params.id);
+    const { id } = await params;
+    const record = await Payroll.findById(id);
     if (!record)                  return r.notFound('Payroll record not found');
     if (record.status === 'Paid') return r.badRequest('Cannot delete a paid payroll record');
-    await Payroll.findByIdAndDelete(params.id);
-    return r.ok({ id: params.id }, 'Payroll record deleted');
+    await Payroll.findByIdAndDelete(id);
+    return r.ok({ id }, 'Payroll record deleted');
   } catch (err) {
     return r.serverError(err.message);
   }

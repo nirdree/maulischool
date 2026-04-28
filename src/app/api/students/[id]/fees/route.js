@@ -6,8 +6,9 @@ import { protect } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const academicYear = new URL(request.url).searchParams.get('academicYear');
-    const filter = { student: params.id };
+    const filter = { student: id };
     if (academicYear) filter.academicYear = academicYear;
 
     const fees     = await Fee.find(filter).sort({ year: 1, month: 1 });

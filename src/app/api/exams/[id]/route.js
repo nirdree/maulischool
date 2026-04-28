@@ -6,7 +6,8 @@ import { protect, authorize } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const exam = await Exam.findById(params.id)
+    const { id } = await params;
+    const exam = await Exam.findById(id)
       .populate('classroom', 'displayName')
       .populate('subject',   'name totalMarks')
       .populate('teacher',   'name');
@@ -20,8 +21,9 @@ export const GET = protect(async (request, { params }) => {
 export const PUT = authorize('admin', 'principal', 'teacher')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const body = await request.json();
-    const exam = await Exam.findByIdAndUpdate(params.id, body, {
+    const exam = await Exam.findByIdAndUpdate(id, body, {
       new: true, runValidators: true,
     });
     if (!exam) return r.notFound('Exam not found');
@@ -34,8 +36,9 @@ export const PUT = authorize('admin', 'principal', 'teacher')(async (request, { 
 export const DELETE = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    await Exam.findByIdAndDelete(params.id);
-    await Marks.deleteMany({ exam: params.id });
+    const { id } = await params;
+    await Exam.findByIdAndDelete(id);
+    await Marks.deleteMany({ exam: id });
     return r.noContent();
   } catch (err) {
     return r.serverError(err.message);

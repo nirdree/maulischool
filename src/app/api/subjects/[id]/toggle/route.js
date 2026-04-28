@@ -6,7 +6,8 @@ import { authorize } from '@/lib/auth';
 export const PATCH = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const subject = await Subject.findById(params.id);
+    const { id } = await params;
+    const subject = await Subject.findById(id);
     if (!subject) return r.notFound('Subject not found');
     subject.isActive = !subject.isActive;
     await subject.save();

@@ -6,8 +6,9 @@ import { protect } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
+    const { teacherId } = await params;
     const { searchParams } = new URL(request.url);
-    const filter = { 'schedule.periods.teacher': params.teacherId };
+    const filter = { 'schedule.periods.teacher': teacherId };
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
     const timetables = await Timetable.find(filter)
@@ -20,7 +21,7 @@ export const GET = protect(async (request, { params }) => {
       schedule: tt.schedule.map(ds => ({
         day: ds.day,
         periods: ds.periods.filter(
-          p => p.teacher && (p.teacher._id || p.teacher).toString() === params.teacherId
+          p => p.teacher && (p.teacher._id || p.teacher).toString() === teacherId
         ),
       })).filter(ds => ds.periods.length > 0),
     }));

@@ -42,4 +42,4 @@ employeeSchema.pre('save', async function () {
   }
 });
 
-module.exports = mongoose.model('Employee', employeeSchema);
+module.exports = mongoose.models.Employee || mongoose.model('Employee', employeeSchema);

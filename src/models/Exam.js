@@ -56,7 +56,7 @@ marksSchema.pre('save', async function () {
   }
 });
 
-const Exam  = mongoose.model('Exam',  examSchema);
-const Marks = mongoose.model('Marks', marksSchema);
+const Exam  = mongoose.models.Exam  || mongoose.model('Exam',  examSchema);
+const Marks = mongoose.models.Marks || mongoose.model('Marks', marksSchema);
 
 module.exports = { Exam, Marks };

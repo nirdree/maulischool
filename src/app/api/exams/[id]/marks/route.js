@@ -6,7 +6,8 @@ import { protect, authorize } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const marks = await Marks.find({ exam: params.id })
+    const { id } = await params;
+    const marks = await Marks.find({ exam: id })
       .populate('student', 'firstName lastName rollNumber admissionNo')
       .populate('subject', 'name')
       .sort({ 'student.rollNumber': 1 });
@@ -19,11 +20,12 @@ export const GET = protect(async (request, { params }) => {
 export const POST = authorize('admin', 'principal', 'teacher')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const { marks } = await request.json();
     if (!Array.isArray(marks) || marks.length === 0)
       return r.badRequest('marks array is required');
 
-    const exam = await Exam.findById(params.id);
+    const exam = await Exam.findById(id);
     if (!exam) return r.notFound('Exam not found');
 
     const calcGrade = (obtained, total) => {
@@ -39,7 +41,7 @@ export const POST = authorize('admin', 'principal', 'teacher')(async (request, {
 
     const bulkOps = marks.map(m => ({
       updateOne: {
-        filter: { exam: params.id, student: m.studentId },
+        filter: { exam: id, student: m.studentId },
         update: {
           $set: {
             obtainedMarks: m.obtainedMarks,

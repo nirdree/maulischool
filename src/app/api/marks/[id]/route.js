@@ -6,7 +6,8 @@ import { protect } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const mark = await Marks.findById(params.id)
+    const { id } = await params;
+    const mark = await Marks.findById(id)
       .populate('student',   'firstName lastName rollNumber admissionNo')
       .populate('subject',   'name totalMarks')
       .populate('exam',      'name examType totalMarks examDate')
@@ -29,10 +30,11 @@ export const GET = protect(async (request, { params }) => {
 export const DELETE = protect(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     if (!['admin', 'principal'].includes(request.user.role))
       return r.forbidden();
 
-    const mark = await Marks.findByIdAndDelete(params.id);
+    const mark = await Marks.findByIdAndDelete(id);
     if (!mark) return r.notFound('Mark entry not found');
     return r.noContent();
   } catch (err) {

@@ -6,7 +6,8 @@ import { protect } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const allMarks = await Marks.find({ student: params.id })
+    const { id } = await params;
+    const allMarks = await Marks.find({ student: id })
       .populate('exam',         'name examType totalMarks examDate')
       .populate('subject',      'name')
       .populate('academicYear', 'name startDate')

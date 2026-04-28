@@ -7,11 +7,12 @@ import { authorize } from '@/lib/auth';
 export const PATCH = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const { target, password } = await request.json();
     if (!['father', 'mother'].includes(target)) return r.badRequest('target must be "father" or "mother"');
     if (!password || password.length < 6) return r.badRequest('Password must be at least 6 characters');
 
-    const student = await Student.findById(params.id).select('fatherUser motherUser');
+    const student = await Student.findById(id).select('fatherUser motherUser');
     if (!student) return r.notFound('Student not found');
 
     const userId = target === 'father' ? student.fatherUser : student.motherUser;

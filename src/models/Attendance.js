@@ -33,7 +33,7 @@ const employeeAttendanceSchema = new mongoose.Schema({
 
 employeeAttendanceSchema.index({ employee: 1, date: 1 }, { unique: true });
 
-const Attendance         = mongoose.model('Attendance',         attendanceSchema);
-const EmployeeAttendance = mongoose.model('EmployeeAttendance', employeeAttendanceSchema);
+const Attendance         = mongoose.models.Attendance         || mongoose.model('Attendance',         attendanceSchema);
+const EmployeeAttendance = mongoose.models.EmployeeAttendance || mongoose.model('EmployeeAttendance', employeeAttendanceSchema);
 
 module.exports = { Attendance, EmployeeAttendance };

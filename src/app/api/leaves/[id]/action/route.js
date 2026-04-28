@@ -7,11 +7,12 @@ import { isPayrollLocked } from '../../route';
 export const PATCH = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const { status, approvalRemark } = await request.json();
     if (!['Approved', 'Rejected'].includes(status))
       return r.badRequest("status must be 'Approved' or 'Rejected'");
 
-    const leave = await Leave.findById(params.id);
+    const leave = await Leave.findById(id);
     if (!leave)                      return r.notFound('Leave record not found');
     if (leave.status !== 'Pending')  return r.badRequest('Leave has already been processed');
 

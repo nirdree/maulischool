@@ -8,7 +8,8 @@ import { protect, authorize } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const classroom = await Classroom.findById(params.id)
+    const { id } = await params;
+    const classroom = await Classroom.findById(id)
       .populate('classTeacher', 'name employeeId email mobileNo')
       .populate('academicYear', 'name');
     if (!classroom) return r.notFound('Classroom not found');
@@ -25,17 +26,18 @@ export const GET = protect(async (request, { params }) => {
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const body = await request.json();
     if (!body.classTeacher) delete body.classTeacher;
 
     if (body.classTeacher && body.academicYear) {
       const conflict = await Classroom.findOne({
-        classTeacher: body.classTeacher, academicYear: body.academicYear, _id: { $ne: params.id },
+        classTeacher: body.classTeacher, academicYear: body.academicYear, _id: { $ne: id },
       });
       if (conflict) return r.conflict(`This teacher is already the class teacher of ${conflict.displayName}`);
     }
 
-    const classroom = await Classroom.findByIdAndUpdate(params.id, body, { new: true, runValidators: true })
+    const classroom = await Classroom.findByIdAndUpdate(id, body, { new: true, runValidators: true })
       .populate('classTeacher', 'name employeeId');
     if (!classroom) return r.notFound('Classroom not found');
     return r.ok(classroom, 'Classroom updated');
@@ -48,18 +50,19 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin')(async (request, { params }) => {
   try {
     await connectDB();
-    const classroom = await Classroom.findById(params.id);
+    const { id } = await params;
+    const classroom = await Classroom.findById(id);
     if (!classroom) return r.notFound('Classroom not found');
 
     const activeStudentCount = await Student.countDocuments({
-      classroom: params.id, status: { $nin: ['Left', 'Alumni'] },
+      classroom: id, status: { $nin: ['Left', 'Alumni'] },
     });
     if (activeStudentCount > 0) {
       return r.badRequest(`Cannot delete: ${activeStudentCount} student(s) still enrolled. Transfer or remove them first.`);
     }
 
-    await Subject.deleteMany({ classroom: params.id });
-    await Classroom.findByIdAndDelete(params.id);
+    await Subject.deleteMany({ classroom: id });
+    await Classroom.findByIdAndDelete(id);
     return r.noContent();
   } catch (err) {
     return r.serverError(err.message);

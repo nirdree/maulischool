@@ -6,7 +6,8 @@ import { authorize } from '@/lib/auth';
 export const PATCH = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const record = await Payroll.findById(params.id);
+    const { id } = await params;
+    const record = await Payroll.findById(id);
     if (!record)                  return r.notFound('Payroll record not found');
     if (record.status === 'Paid') return r.badRequest('Already marked as paid');
 

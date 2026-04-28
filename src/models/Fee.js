@@ -64,7 +64,7 @@ feePaymentSchema.pre('save', async function () {
   }
 });
 
-const Fee        = mongoose.model('Fee',        feeSchema);
-const FeePayment = mongoose.model('FeePayment', feePaymentSchema);
+const Fee        = mongoose.models.Fee        || mongoose.model('Fee',        feeSchema);
+const FeePayment = mongoose.models.FeePayment || mongoose.model('FeePayment', feePaymentSchema);
 
 module.exports = { Fee, FeePayment };

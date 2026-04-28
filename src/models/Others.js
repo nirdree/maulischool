@@ -128,10 +128,10 @@ const schoolSettingsSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = {
-  Payroll:        mongoose.model('Payroll',        payrollSchema),
-  Leave:          mongoose.model('Leave',          leaveSchema),
-  Homework:       mongoose.model('Homework',       homeworkSchema),
-  Notice:         mongoose.model('Notice',         noticeSchema),
-  Timetable:      mongoose.model('Timetable',      timetableSchema),
-  SchoolSettings: mongoose.model('SchoolSettings', schoolSettingsSchema),
+  Payroll:        mongoose.models.Payroll        || mongoose.model('Payroll',        payrollSchema),
+  Leave:          mongoose.models.Leave          || mongoose.model('Leave',          leaveSchema),
+  Homework:       mongoose.models.Homework       || mongoose.model('Homework',       homeworkSchema),
+  Notice:         mongoose.models.Notice         || mongoose.model('Notice',         noticeSchema),
+  Timetable:      mongoose.models.Timetable      || mongoose.model('Timetable',      timetableSchema),
+  SchoolSettings: mongoose.models.SchoolSettings || mongoose.model('SchoolSettings', schoolSettingsSchema),
 };

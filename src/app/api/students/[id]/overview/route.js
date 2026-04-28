@@ -9,7 +9,7 @@ import { protect } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const { id: studentId } = params;
+    const { id: studentId } = await params;
 
     if (request.user.role === 'parent') {
       const allowed = (request.user.studentIds || []).map(String);
@@ -74,7 +74,7 @@ export const GET = protect(async (request, { params }) => {
       total: v.total,
     })).sort((a, b) => b.percentage - a.percentage);
 
-    const validMarks    = marks.filter(m => !m.isAbsent);
+    const validMarks      = marks.filter(m => !m.isAbsent);
     const overallObtained = validMarks.reduce((s, m) => s + m.marksObtained, 0);
     const overallTotal    = validMarks.reduce((s, m) => s + (m.exam?.totalMarks || 100), 0);
 

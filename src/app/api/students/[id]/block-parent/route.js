@@ -7,10 +7,11 @@ import { authorize } from '@/lib/auth';
 export const PATCH = authorize('admin')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const { target = 'both', blocked } = await request.json();
     if (typeof blocked !== 'boolean') return r.badRequest('blocked must be true or false');
 
-    const student = await Student.findById(params.id).select('fatherUser motherUser');
+    const student = await Student.findById(id).select('fatherUser motherUser');
     if (!student) return r.notFound('Student not found');
 
     const status  = blocked ? 'inactive' : 'active';

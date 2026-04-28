@@ -7,10 +7,11 @@ import { authorize } from '@/lib/auth';
 export const PATCH = authorize('admin')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const { status } = await request.json();
     if (!['active', 'inactive', 'resigned'].includes(status)) return r.badRequest('Invalid status');
 
-    const employee = await Employee.findByIdAndUpdate(params.id, { status }, { new: true });
+    const employee = await Employee.findByIdAndUpdate(id, { status }, { returnDocument: 'after' });
     if (!employee) return r.notFound('Employee not found');
 
     if (employee.user) {

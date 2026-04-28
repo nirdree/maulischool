@@ -6,7 +6,8 @@ import { authorize } from '@/lib/auth';
 export const GET = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const enquiry = await Enquiry.findById(params.id)
+    const { id } = await params;
+    const enquiry = await Enquiry.findById(id)
       .populate('classApplying', 'displayName')
       .populate('academicYear',  'name');
     if (!enquiry) return r.notFound('Enquiry not found');
@@ -19,8 +20,9 @@ export const GET = authorize('admin', 'principal')(async (request, { params }) =
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const body    = await request.json();
-    const enquiry = await Enquiry.findByIdAndUpdate(params.id, body, {
+    const enquiry = await Enquiry.findByIdAndUpdate(id, body, {
       new: true, runValidators: true,
     }).populate('classApplying', 'displayName');
     if (!enquiry) return r.notFound('Enquiry not found');
@@ -33,7 +35,8 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin')(async (request, { params }) => {
   try {
     await connectDB();
-    const enquiry = await Enquiry.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const enquiry = await Enquiry.findByIdAndDelete(id);
     if (!enquiry) return r.notFound('Enquiry not found');
     return r.noContent();
   } catch (err) {

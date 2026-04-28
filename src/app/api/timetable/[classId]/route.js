@@ -8,8 +8,9 @@ import { sanitizeSchedule, checkIncomingConflicts } from '../route';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
+    const { classId } = await params;
     const { searchParams } = new URL(request.url);
-    const filter = { classroom: params.classId };
+    const filter = { classroom: classId };
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
     const timetable = await Timetable.findOne(filter)
@@ -27,7 +28,8 @@ export const GET = protect(async (request, { params }) => {
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
-    const existing = await Timetable.findById(params.classId);
+    const { classId } = await params;
+    const existing = await Timetable.findById(classId);
     if (!existing) return r.notFound('Timetable not found');
 
     const body     = await request.json();
@@ -45,7 +47,7 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
     }
 
     const timetable = await Timetable.findByIdAndUpdate(
-      params.classId, { ...body, schedule }, { new: true }
+      classId, { ...body, schedule }, { new: true }
     ).populate('classroom', 'displayName');
 
     return r.ok(timetable, 'Timetable updated');
@@ -57,8 +59,9 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin')(async (request, { params }) => {
   try {
     await connectDB();
+    const { classId } = await params;
     const { searchParams } = new URL(request.url);
-    const filter = { classroom: params.classId };
+    const filter = { classroom: classId };
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
     const result = await Timetable.findOneAndDelete(filter);

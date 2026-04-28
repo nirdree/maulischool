@@ -28,11 +28,12 @@ async function syncParentStatus(student, desiredStatus) {
 export const PATCH = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const { status, rejectionRemark, holdRemark, leavingReason, leavingDate } = await request.json();
     const allowed = ['UnderReview', 'Approved', 'Rejected', 'OnHold', 'Left', 'Alumni'];
     if (!allowed.includes(status)) return r.badRequest('Invalid status');
 
-    const student = await Student.findById(params.id);
+    const student = await Student.findById(id);
     if (!student) return r.notFound('Student not found');
 
     const update = { status };
@@ -48,7 +49,7 @@ export const PATCH = authorize('admin', 'principal')(async (request, { params })
       update.rollNumber = count + 1;
     }
 
-    const updated = await Student.findByIdAndUpdate(params.id, update, { new: true });
+    const updated = await Student.findByIdAndUpdate(id, update, { new: true });
 
     if (['Left', 'Rejected'].includes(status)) await syncParentStatus(student, 'inactive');
     else if (status === 'Approved')            await syncParentStatus(student, 'active');

@@ -8,7 +8,8 @@ import { protect, authorize } from '@/lib/auth';
 export const GET = protect(async (request, { params }) => {
   try {
     await connectDB();
-    const employee = await Employee.findById(params.id)
+    const { id } = await params;
+    const employee = await Employee.findById(id)
       .populate('academicYear', 'name')
       .populate('user', 'email status');
     if (!employee) return r.notFound('Employee not found');
@@ -21,10 +22,11 @@ export const GET = protect(async (request, { params }) => {
 export const PUT = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const body = await request.json();
     const { password, ...updateData } = body;
 
-    const employee = await Employee.findByIdAndUpdate(params.id, updateData, {
+    const employee = await Employee.findByIdAndUpdate(id, updateData, {
       new: true, runValidators: true,
     }).populate('user', 'email status');
 
@@ -47,10 +49,11 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 
 export const DELETE = authorize('admin')(async (request, { params }) => {
   await connectDB();
+  const { id } = await params;
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const employee = await Employee.findByIdAndDelete(params.id).session(session);
+    const employee = await Employee.findByIdAndDelete(id).session(session);
     if (!employee) {
       await session.abortTransaction();
       return r.notFound('Employee not found');

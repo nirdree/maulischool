@@ -7,10 +7,11 @@ import { authorize } from '@/lib/auth';
 export const PATCH = authorize('admin', 'principal')(async (request, { params }) => {
   try {
     await connectDB();
+    const { id } = await params;
     const { password } = await request.json();
     if (!password || password.length < 6) return r.badRequest('Password must be at least 6 characters');
 
-    const employee = await Employee.findById(params.id).select('user');
+    const employee = await Employee.findById(id).select('user');
     if (!employee)      return r.notFound('Employee not found');
     if (!employee.user) return r.notFound('No linked user account found');
 
