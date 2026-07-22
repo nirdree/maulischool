@@ -27,7 +27,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const res = await api.post(API.AUTH.LOGIN, { email, password });
-      const payload = res.data ?? res;
+      const payload = res?.data ?? res;
 
       const { token, user: userData } = payload;
 
@@ -42,9 +42,10 @@ export function AuthProvider({ children }) {
 
       return { success: true, role: userData.role };
     } catch (err) {
+      const errorPayload = err?.response?.data ?? err;
       return {
         success: false,
-        message: err?.response?.data?.message || err.message || 'Login failed',
+        message: errorPayload?.message || errorPayload?.error || 'Login failed',
       };
     } finally {
       setLoading(false);

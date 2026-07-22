@@ -18,27 +18,57 @@ function priorityColor(p) {
   return { Urgent: 'red', Important: 'yellow', Normal: 'slate' }[p] || 'slate';
 }
 
+function formatDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('en-IN');
+}
+
 export default function NoticesAdminPage() {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ayId, setAyId] = useState('');
   const [addOpen, setAddOpen] = useState(false);
   const [editNotice, setEditNotice] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
-      const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
-      setAyId(ay.data?._id);
+      try {
+        const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
+        if (!cancelled) {
+          setAyId(ay?.data?._id || '');
+          setError('');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setAyId('');
+          setError(err?.message || 'Unable to load the current academic year.');
+        }
+      }
     })();
+
+    return () => { cancelled = true; };
   }, []);
 
   const fetchNotices = async () => {
-    if (!ayId) return;
+    if (!ayId) {
+      setNotices([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await api.get(`${API.NOTICES.BASE}?academicYear=${ayId}`);
-      setNotices(res.data || []);
-    } catch {} finally { setLoading(false); }
+      const res = await api.get(`${API.NOTICES.BASE}?academicYear=${encodeURIComponent(ayId)}`);
+      setNotices(Array.isArray(res?.data) ? res.data : []);
+      setError('');
+    } catch (err) {
+      setNotices([]);
+      setError(err?.message || 'Unable to load notices right now.');
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { if (ayId) fetchNotices(); }, [ayId]);
@@ -59,9 +89,9 @@ export default function NoticesAdminPage() {
         </div>
       ),
     },
-    { key: 'priority', label: 'Priority', render: (n) => <Badge label={n.priority} color={priorityColor(n.priority)} /> },
+    { key: 'priority', label: 'Priority', render: (n) => <Badge label={n.priority || 'Normal'} color={priorityColor(n.priority)} /> },
     { key: 'targetRoles', label: 'Audience', render: (n) => (n.targetRoles || []).map(r => <Badge key={r} label={r} color="indigo" className="mr-1" />) },
-    { key: 'publishDate', label: 'Published', render: (n) => new Date(n.publishDate).toLocaleDateString('en-IN') },
+    { key: 'publishDate', label: 'Published', render: (n) => formatDate(n.publishDate) },
     { key: 'createdBy', label: 'By', render: (n) => n.createdBy?.name || '—' },
     {
       key: 'actions', label: '',
@@ -81,6 +111,11 @@ export default function NoticesAdminPage() {
         subtitle={`${notices.length} notices`}
         actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Publish Notice</Button>}
       />
+      {error && (
+        <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+          {error}
+        </div>
+      )}
       <Card className="!p-0">
         <Table columns={columns} data={notices} loading={loading} emptyMessage="No notices" />
       </Card>

@@ -189,15 +189,20 @@ export default function AppLayout({ children, portal = 'admin' }) {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  const pathPortal = pathname?.split('/').filter(Boolean)[0] || portal;
+  const resolvedPortal = ['admin', 'teacher', 'parent'].includes(pathPortal) ? pathPortal : portal;
+  const allowed = ALLOWED_ROLES[resolvedPortal] ?? [];
+
+  useEffect(() => {
+    if (initialized && (!user || !allowed.includes(user.role))) {
+      router.replace('/login');
+    }
+  }, [initialized, user, allowed, router]);
+
   if (!initialized) return null;
+  if (!user || !allowed.includes(user.role)) return null;
 
-  const allowed = ALLOWED_ROLES[portal] ?? [];
-  if (!user || !allowed.includes(user.role)) {
-    router.replace('/login');
-    return null;
-  }
-
-  const prefix    = ROLE_PREFIX[user.role] ?? portal;
+  const prefix    = ROLE_PREFIX[user.role] ?? resolvedPortal;
   const theme     = ROLE_CONFIG[user.role] ?? ROLE_CONFIG.admin;
   const navItems  = ALL_NAV.filter(n => n.roles.includes(user.role));
   const handleLogout = () => { logout(); router.replace('/login'); };

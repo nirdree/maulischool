@@ -8,7 +8,7 @@
  *   DELETE /api/leaves/:id            — cancel pending leave
  */
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
@@ -24,25 +24,41 @@ export default function TeacherLeaves() {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ayId, setAyId] = useState('');
+  const [ayError, setAyError] = useState('');
   const [applyOpen, setApplyOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
-      const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
-      setAyId(ay.data?._id);
+      try {
+        const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
+        if (cancelled) return;
+        setAyId(ay?.data?._id || '');
+        setAyError('');
+      } catch (err) {
+        if (cancelled) return;
+        setAyId('');
+        setAyError(err?.message || 'Unable to load the current academic year.');
+      }
     })();
+
+    return () => { cancelled = true; };
   }, []);
 
-  const fetchLeaves = async () => {
-    if (!ayId) return;
+  const fetchLeaves = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get(`${API.LEAVES.BASE}?academicYear=${ayId}`);
-      setLeaves(res.data || []);
-    } catch {} finally { setLoading(false); }
-  };
+      const query = ayId ? `?academicYear=${encodeURIComponent(ayId)}` : '';
+      const res = await api.get(`${API.LEAVES.BASE}${query}`);
+      setLeaves(Array.isArray(res?.data) ? res.data : []);
+    } catch (err) {
+      console.error('Failed to load leave applications', err);
+      setLeaves([]);
+    } finally { setLoading(false); }
+  }, [ayId]);
 
-  useEffect(() => { if (ayId) fetchLeaves(); }, [ayId]);
+  useEffect(() => { fetchLeaves(); }, [fetchLeaves]);
 
   const handleDelete = async (id) => {
     if (!confirm('Cancel this leave application?')) return;
@@ -93,8 +109,14 @@ export default function TeacherLeaves() {
       <PageHeader
         title="My Leaves"
         subtitle="Apply and track your leave applications"
-        actions={<Button onClick={() => setApplyOpen(true)}><Plus className="w-4 h-4" /> Apply Leave</Button>}
+        actions={<Button onClick={() => setApplyOpen(true)} disabled={!ayId}><Plus className="w-4 h-4" /> Apply Leave</Button>}
       />
+
+      {ayError && (
+        <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+          {ayError}
+        </div>
+      )}
 
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
@@ -138,6 +160,10 @@ function ApplyLeaveModal({ open, onClose, ayId, employeeId, onSuccess }) {
   };
 
   const handleSubmit = async () => {
+    if (!ayId) {
+      alert('The current academic year is not available right now. Please contact the administrator.');
+      return;
+    }
     if (!form.fromDate || !form.toDate || !form.reason) {
       alert('Please fill all required fields');
       return;
