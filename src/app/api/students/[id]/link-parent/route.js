@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/mongodb';
+import { connectDB, supportsTransactions } from '@/lib/mongodb';
 import Student from '@/models/Student';
 import User from '@/models/User';
 import mongoose from 'mongoose';
@@ -11,20 +11,26 @@ async function safeAbort(session) {
 
 async function resolveParentUser({ existingUserId, email, phone, name, password, studentId, session }) {
   if (existingUserId) {
-    const user = await User.findById(existingUserId).session(session);
+    const user = session
+      ? await User.findById(existingUserId).session(session)
+      : await User.findById(existingUserId);
     if (!user) throw new Error(`Parent user ${existingUserId} not found`);
     if (!user.studentIds.map(String).includes(String(studentId))) {
       user.studentIds.push(studentId);
-      await user.save({ session });
+      if (session) await user.save({ session });
+      else await user.save();
     }
     return user;
   }
   if (email) {
-    const existing = await User.findOne({ email: email.toLowerCase() }).session(session);
+    const existing = session
+      ? await User.findOne({ email: email.toLowerCase() }).session(session)
+      : await User.findOne({ email: email.toLowerCase() });
     if (existing) {
       if (!existing.studentIds.map(String).includes(String(studentId))) {
         existing.studentIds.push(studentId);
-        await existing.save({ session });
+        if (session) await existing.save({ session });
+        else await existing.save();
       }
       return existing;
     }
@@ -35,7 +41,8 @@ async function resolveParentUser({ existingUserId, email, phone, name, password,
       role: 'parent',
       studentIds: [studentId],
     });
-    await created.save({ session });
+    if (session) await created.save({ session });
+    else await created.save();
     return created;
   }
   return null;
@@ -44,22 +51,28 @@ async function resolveParentUser({ existingUserId, email, phone, name, password,
 export const PATCH = authorize('admin', 'principal')(async (request, { params }) => {
   await connectDB();
   const { id } = await params;
-  const session   = await mongoose.startSession();
-  let   committed = false;
+  const useTxn = await supportsTransactions();
+  const session = useTxn ? await mongoose.startSession() : null;
+  let committed = false;
   try {
-    session.startTransaction();
+    if (session) session.startTransaction();
     const { slot, existingUserId, email, name, phone, password } = await request.json();
     if (!['father', 'mother'].includes(slot)) return r.badRequest('slot must be "father" or "mother"');
 
-    const student = await Student.findById(id).session(session);
+    const student = session
+      ? await Student.findById(id).session(session)
+      : await Student.findById(id);
     if (!student) return r.notFound('Student not found');
 
     const oldId = slot === 'father' ? student.fatherUser : student.motherUser;
     if (oldId) {
-      const old = await User.findById(oldId).session(session);
+      const old = session
+        ? await User.findById(oldId).session(session)
+        : await User.findById(oldId);
       if (old) {
         old.studentIds = (old.studentIds || []).filter(s => String(s) !== String(student._id));
-        await old.save({ session });
+        if (session) await old.save({ session });
+        else await old.save();
       }
     }
 
@@ -71,8 +84,9 @@ export const PATCH = authorize('admin', 'principal')(async (request, { params })
     });
 
     student[slot === 'father' ? 'fatherUser' : 'motherUser'] = newUser?._id || null;
-    await student.save({ session });
-    await session.commitTransaction();
+    if (session) await student.save({ session });
+    else await student.save();
+    if (session) await session.commitTransaction();
     committed = true;
 
     const populated = await Student.findById(student._id)
@@ -81,10 +95,10 @@ export const PATCH = authorize('admin', 'principal')(async (request, { params })
 
     return r.ok(populated, `${slot} account linked`);
   } catch (err) {
-    if (!committed) await safeAbort(session);
+    if (session && !committed) await safeAbort(session);
     if (err.code === 11000) return r.conflict('Email already registered');
     return r.serverError(err.message);
   } finally {
-    session.endSession();
+    if (session) session.endSession();
   }
 });

@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/mongodb';
+import { connectDB, supportsTransactions } from '@/lib/mongodb';
 import Employee from '@/models/Employee';
 import User from '@/models/User';
 import mongoose from 'mongoose';
@@ -39,41 +39,50 @@ export const GET = protect(async (request) => {
 
 export const POST = authorize('admin', 'principal')(async (request) => {
   await connectDB();
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const useTxn = await supportsTransactions();
+  const session = useTxn ? await mongoose.startSession() : null;
+  if (session) session.startTransaction();
   try {
     const body = await request.json();
     const normalizedEmail = String(body.email || '').trim().toLowerCase();
     const { name, password, role } = body;
 
     if (!name || !normalizedEmail || !password || !role) {
-      await session.abortTransaction();
+      if (session) await session.abortTransaction();
       return r.badRequest('name, email, password and role are required');
     }
 
-    const existingUser     = await User.findOne({ email: normalizedEmail }).session(session);
-    const existingEmployee = await Employee.findOne({ email: normalizedEmail }).session(session);
+    const existingUser     = session
+      ? await User.findOne({ email: normalizedEmail }).session(session)
+      : await User.findOne({ email: normalizedEmail });
+    const existingEmployee = session
+      ? await Employee.findOne({ email: normalizedEmail }).session(session)
+      : await Employee.findOne({ email: normalizedEmail });
     if (existingUser || existingEmployee) {
-      await session.abortTransaction();
+      if (session) await session.abortTransaction();
       return r.conflict('Email already registered');
     }
 
     const employeePayload = { ...body, email: normalizedEmail };
-    const [employee] = await Employee.create([employeePayload], { session });
+    const [employee] = session
+      ? await Employee.create([employeePayload], { session })
+      : await Employee.create([employeePayload]);
 
     const userDoc = new User({ name, email: normalizedEmail, password: await bcrypt.hash(password, 12), role, employeeId: employee._id });
-    await userDoc.save({ session });
+    if (session) await userDoc.save({ session });
+    else await userDoc.save();
 
     employee.user = userDoc._id;
-    await employee.save({ session });
-    await session.commitTransaction();
+    if (session) await employee.save({ session });
+    else await employee.save();
+    if (session) await session.commitTransaction();
 
     return r.created(employee, 'Employee created');
   } catch (err) {
-    await session.abortTransaction();
+    if (session) await session.abortTransaction();
     if (err.code === 11000) return r.conflict('Email or employee ID already exists');
     return r.serverError(err.message);
   } finally {
-    session.endSession();
+    if (session) session.endSession();
   }
 });

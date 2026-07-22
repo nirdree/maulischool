@@ -1,0 +1,302 @@
+[
+  {
+    "firstName": "Arjun",
+    "lastName": "Sharma",
+    "middleName": "Kumar",
+    "gender": "Male",
+    "dateOfBirth": "2018-05-12",
+    "classroom": "Class 1-A",
+    "bloodGroup": "B+",
+    "religion": "Hindu",
+    "caste": "General",
+    "motherTongue": "Marathi",
+    "placeOfBirth": "Pune",
+    "penNumber": "PEN100001",
+    "father": {
+      "fullName": "Rajesh Sharma",
+      "phone": "9876500001",
+      "email": "rajesh.sharma@example.com",
+      "occupation": "Engineer",
+      "loginPassword": "9876500001"
+    },
+    "mother": {
+      "fullName": "Sunita Sharma",
+      "phone": "9876500002",
+      "email": "sunita.sharma@example.com",
+      "occupation": "Teacher",
+      "loginPassword": "9876500002"
+    },
+    "previousSchool": "ABC Primary School",
+    "previousClass": "UKG"
+  },
+  {
+    "firstName": "Ananya",
+    "lastName": "Patel",
+    "middleName": "R",
+    "gender": "Female",
+    "dateOfBirth": "2017-11-08",
+    "classroom": "Class 2-A",
+    "bloodGroup": "O+",
+    "religion": "Hindu",
+    "caste": "General",
+    "motherTongue": "Gujarati",
+    "placeOfBirth": "Ahmedabad",
+    "penNumber": "PEN100002",
+    "father": {
+      "fullName": "Rakesh Patel",
+      "phone": "9876500003",
+      "email": "rakesh.patel@example.com",
+      "occupation": "Businessman",
+      "loginPassword": "9876500003"
+    },
+    "mother": {
+      "fullName": "Kiran Patel",
+      "phone": "9876500004",
+      "email": "kiran.patel@example.com",
+      "occupation": "Homemaker",
+      "loginPassword": "9876500004"
+    },
+    "previousSchool": "Little Flower School",
+    "previousClass": "Class 1"
+  },
+  {
+    "firstName": "Vivaan",
+    "lastName": "Joshi",
+    "middleName": "S",
+    "gender": "Male",
+    "dateOfBirth": "2016-03-21",
+    "classroom": "Class 3-A",
+    "bloodGroup": "A+",
+    "religion": "Hindu",
+    "caste": "General",
+    "motherTongue": "Marathi",
+    "placeOfBirth": "Nashik",
+    "penNumber": "PEN100003",
+    "father": {
+      "fullName": "Suresh Joshi",
+      "phone": "9876500005",
+      "email": "suresh.joshi@example.com",
+      "occupation": "Doctor",
+      "loginPassword": "9876500005"
+    },
+    "mother": {
+      "fullName": "Meena Joshi",
+      "phone": "9876500006",
+      "email": "meena.joshi@example.com",
+      "occupation": "Teacher",
+      "loginPassword": "9876500006"
+    },
+    "previousSchool": "Modern Public School",
+    "previousClass": "Class 2"
+  },
+  {
+    "firstName": "Diya",
+    "lastName": "Mehta",
+    "middleName": "A",
+    "gender": "Female",
+    "dateOfBirth": "2015-07-15",
+    "classroom": "Class 4-A",
+    "bloodGroup": "AB+",
+    "religion": "Hindu",
+    "caste": "General",
+    "motherTongue": "Hindi",
+    "placeOfBirth": "Mumbai",
+    "penNumber": "PEN100004",
+    "father": {
+      "fullName": "Amit Mehta",
+      "phone": "9876500007",
+      "email": "amit.mehta@example.com",
+      "occupation": "CA",
+      "loginPassword": "9876500007"
+    },
+    "mother": {
+      "fullName": "Neha Mehta",
+      "phone": "9876500008",
+      "email": "neha.mehta@example.com",
+      "occupation": "Bank Manager",
+      "loginPassword": "9876500008"
+    },
+    "previousSchool": "Delhi Public School",
+    "previousClass": "Class 3"
+  },
+  {
+    "firstName": "Aarav",
+    "lastName": "Kulkarni",
+    "middleName": "P",
+    "gender": "Male",
+    "dateOfBirth": "2014-02-10",
+    "classroom": "Class 5-A",
+    "bloodGroup": "O-",
+    "religion": "Hindu",
+    "caste": "General",
+    "motherTongue": "Marathi",
+    "placeOfBirth": "Kolhapur",
+    "penNumber": "PEN100005",
+    "father": {
+      "fullName": "Prakash Kulkarni",
+      "phone": "9876500009",
+      "email": "prakash.k@example.com",
+      "occupation": "Police Officer",
+      "loginPassword": "9876500009"
+    },
+    "mother": {
+      "fullName": "Anita Kulkarni",
+      "phone": "9876500010",
+      "email": "anita.k@example.com",
+      "occupation": "Nurse",
+      "loginPassword": "9876500010"
+    },
+    "previousSchool": "Vidya Mandir",
+    "previousClass": "Class 4"
+  },
+  {
+    "firstName": "Ishita",
+    "lastName": "Verma",
+    "middleName": "K",
+    "gender": "Female",
+    "dateOfBirth": "2013-09-19",
+    "classroom": "Class 6-A",
+    "bloodGroup": "B-",
+    "religion": "Hindu",
+    "caste": "OBC",
+    "motherTongue": "Hindi",
+    "placeOfBirth": "Nagpur",
+    "penNumber": "PEN100006",
+    "father": {
+      "fullName": "Kamal Verma",
+      "phone": "9876500011",
+      "email": "kamal.verma@example.com",
+      "occupation": "Government Employee",
+      "loginPassword": "9876500011"
+    },
+    "mother": {
+      "fullName": "Pooja Verma",
+      "phone": "9876500012",
+      "email": "pooja.verma@example.com",
+      "occupation": "Teacher",
+      "loginPassword": "9876500012"
+    },
+    "previousSchool": "St. Xavier School",
+    "previousClass": "Class 5"
+  },
+  {
+    "firstName": "Kabir",
+    "lastName": "Desai",
+    "middleName": "M",
+    "gender": "Male",
+    "dateOfBirth": "2012-01-30",
+    "classroom": "Class 7-A",
+    "bloodGroup": "A-",
+    "religion": "Hindu",
+    "caste": "General",
+    "motherTongue": "Gujarati",
+    "placeOfBirth": "Surat",
+    "penNumber": "PEN100007",
+    "father": {
+      "fullName": "Mahesh Desai",
+      "phone": "9876500013",
+      "email": "mahesh.desai@example.com",
+      "occupation": "Businessman",
+      "loginPassword": "9876500013"
+    },
+    "mother": {
+      "fullName": "Rekha Desai",
+      "phone": "9876500014",
+      "email": "rekha.desai@example.com",
+      "occupation": "Homemaker",
+      "loginPassword": "9876500014"
+    },
+    "previousSchool": "New Era School",
+    "previousClass": "Class 6"
+  },
+  {
+    "firstName": "Sara",
+    "lastName": "Khan",
+    "middleName": "A",
+    "gender": "Female",
+    "dateOfBirth": "2011-12-04",
+    "classroom": "Class 8-A",
+    "bloodGroup": "O+",
+    "religion": "Muslim",
+    "caste": "General",
+    "motherTongue": "Urdu",
+    "placeOfBirth": "Hyderabad",
+    "penNumber": "PEN100008",
+    "father": {
+      "fullName": "Ahmed Khan",
+      "phone": "9876500015",
+      "email": "ahmed.khan@example.com",
+      "occupation": "Architect",
+      "loginPassword": "9876500015"
+    },
+    "mother": {
+      "fullName": "Farah Khan",
+      "phone": "9876500016",
+      "email": "farah.khan@example.com",
+      "occupation": "Doctor",
+      "loginPassword": "9876500016"
+    },
+    "previousSchool": "Scholars Academy",
+    "previousClass": "Class 7"
+  },
+  {
+    "firstName": "Yash",
+    "lastName": "Gupta",
+    "middleName": "R",
+    "gender": "Male",
+    "dateOfBirth": "2010-04-18",
+    "classroom": "Class 9-A",
+    "bloodGroup": "B+",
+    "religion": "Hindu",
+    "caste": "General",
+    "motherTongue": "Hindi",
+    "placeOfBirth": "Indore",
+    "penNumber": "PEN100009",
+    "father": {
+      "fullName": "Rohit Gupta",
+      "phone": "9876500017",
+      "email": "rohit.gupta@example.com",
+      "occupation": "Software Engineer",
+      "loginPassword": "9876500017"
+    },
+    "mother": {
+      "fullName": "Seema Gupta",
+      "phone": "9876500018",
+      "email": "seema.gupta@example.com",
+      "occupation": "Teacher",
+      "loginPassword": "9876500018"
+    },
+    "previousSchool": "Central School",
+    "previousClass": "Class 8"
+  },
+  {
+    "firstName": "Riya",
+    "lastName": "Singh",
+    "middleName": "P",
+    "gender": "Female",
+    "dateOfBirth": "2009-08-23",
+    "classroom": "Class 10-A",
+    "bloodGroup": "AB+",
+    "religion": "Hindu",
+    "caste": "General",
+    "motherTongue": "Hindi",
+    "placeOfBirth": "Delhi",
+    "penNumber": "PEN100010",
+    "father": {
+      "fullName": "Pradeep Singh",
+      "phone": "9876500019",
+      "email": "pradeep.singh@example.com",
+      "occupation": "Lawyer",
+      "loginPassword": "9876500019"
+    },
+    "mother": {
+      "fullName": "Anjali Singh",
+      "phone": "9876500020",
+      "email": "anjali.singh@example.com",
+      "occupation": "Principal",
+      "loginPassword": "9876500020"
+    },
+    "previousSchool": "Springfield School",
+    "previousClass": "Class 9"
+  }
+]

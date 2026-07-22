@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/mongodb';
+import { connectDB, supportsTransactions } from '@/lib/mongodb';
 import Employee from '@/models/Employee';
 import User from '@/models/User';
 import mongoose from 'mongoose';
@@ -50,21 +50,27 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin')(async (request, { params }) => {
   await connectDB();
   const { id } = await params;
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const useTxn = await supportsTransactions();
+  const session = useTxn ? await mongoose.startSession() : null;
+  if (session) session.startTransaction();
   try {
-    const employee = await Employee.findByIdAndDelete(id).session(session);
+    const employee = session
+      ? await Employee.findByIdAndDelete(id).session(session)
+      : await Employee.findByIdAndDelete(id);
     if (!employee) {
-      await session.abortTransaction();
+      if (session) await session.abortTransaction();
       return r.notFound('Employee not found');
     }
-    if (employee.user) await User.findByIdAndDelete(employee.user).session(session);
-    await session.commitTransaction();
+    if (employee.user) {
+      if (session) await User.findByIdAndDelete(employee.user).session(session);
+      else await User.findByIdAndDelete(employee.user);
+    }
+    if (session) await session.commitTransaction();
     return r.noContent();
   } catch (err) {
-    await session.abortTransaction();
+    if (session) await session.abortTransaction();
     return r.serverError(err.message);
   } finally {
-    session.endSession();
+    if (session) session.endSession();
   }
 });

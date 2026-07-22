@@ -58,3 +58,9 @@ async function createAdmin() {
 }
 
 createAdmin();
+
+
+// MONGODB_URI=mongodb://localhost:27017/mauilSchool
+// JWT_SECRET=your_super_secure_jwt_secret_key_here
+// JWT_EXPIRE=7d
+// NODE_ENV=development

@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/mongodb';
+import { connectDB, supportsTransactions } from '@/lib/mongodb';
 import Student from '@/models/Student';
 import User from '@/models/User';
 import mongoose from 'mongoose';
@@ -93,10 +93,11 @@ export const GET = protect(async (request) => {
 
 export const POST = authorize('admin', 'principal')(async (request) => {
   await connectDB();
-  const session   = await mongoose.startSession();
-  let   committed = false;
+  const useTxn = await supportsTransactions();
+  const session = useTxn ? await mongoose.startSession() : null;
+  let committed = false;
   try {
-    session.startTransaction();
+    if (session) session.startTransaction();
     const body = await request.json();
     const {
       fatherExistingUserId, fatherEmail, fatherPhone, fatherName, fatherOccupation, fatherPassword,
@@ -107,7 +108,9 @@ export const POST = authorize('admin', 'principal')(async (request) => {
     const merge = { fatherName, fatherPhone, fatherEmail, fatherOccupation, motherName, motherPhone, motherEmail, motherOccupation };
     for (const [k, v] of Object.entries(merge)) { if (v) studentData[k] = v; }
 
-    const [student] = await Student.create([studentData], { session });
+    const [student] = session
+      ? await Student.create([studentData], { session })
+      : await Student.create([studentData]);
 
     const fatherUser = await resolveParentUser({
       existingUserId: fatherExistingUserId,
@@ -133,8 +136,9 @@ export const POST = authorize('admin', 'principal')(async (request) => {
         });
     if (motherUser) student.motherUser = motherUser._id;
 
-    await student.save({ session });
-    await session.commitTransaction();
+    if (session) await student.save({ session });
+    else await student.save();
+    if (session) await session.commitTransaction();
     committed = true;
 
     const populated = await Student.findById(student._id)
@@ -144,10 +148,10 @@ export const POST = authorize('admin', 'principal')(async (request) => {
 
     return r.created(populated, 'Student admission created');
   } catch (err) {
-    if (!committed) await safeAbort(session);
+    if (session && !committed) await safeAbort(session);
     if (err.code === 11000) return r.conflict('Duplicate admission number or email');
     return r.serverError(err.message);
   } finally {
-    session.endSession();
+    if (session) session.endSession();
   }
 });

@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/mongodb';
+import { connectDB, supportsTransactions } from '@/lib/mongodb';
 import Student from '@/models/Student';
 import User from '@/models/User';
 import mongoose from 'mongoose';
@@ -56,13 +56,16 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 export const DELETE = authorize('admin')(async (request, { params }) => {
   await connectDB();
   const { id } = await params;
-  const session   = await mongoose.startSession();
-  let   committed = false;
+  const useTxn = await supportsTransactions();
+  const session = useTxn ? await mongoose.startSession() : null;
+  let committed = false;
   try {
-    session.startTransaction();
-    const student = await Student.findByIdAndDelete(id).session(session);
+    if (session) session.startTransaction();
+    const student = session
+      ? await Student.findByIdAndDelete(id).session(session)
+      : await Student.findByIdAndDelete(id);
     if (!student) {
-      await safeAbort(session);
+      if (session) await safeAbort(session);
       committed = true;
       return r.notFound('Student not found');
     }
@@ -73,23 +76,27 @@ export const DELETE = authorize('admin')(async (request, { params }) => {
       const uid = String(userId);
       if (seen.has(uid)) continue;
       seen.add(uid);
-      const user = await User.findById(userId).session(session);
+      const user = session
+        ? await User.findById(userId).session(session)
+        : await User.findById(userId);
       if (!user) continue;
       user.studentIds = (user.studentIds || []).filter(s => String(s) !== String(student._id));
       if (user.studentIds.length === 0) {
-        await User.findByIdAndDelete(userId).session(session);
+        if (session) await User.findByIdAndDelete(userId).session(session);
+        else await User.findByIdAndDelete(userId);
       } else {
-        await user.save({ session });
+        if (session) await user.save({ session });
+        else await user.save();
       }
     }
 
-    await session.commitTransaction();
+    if (session) await session.commitTransaction();
     committed = true;
     return r.noContent();
   } catch (err) {
-    if (!committed) await safeAbort(session);
+    if (session && !committed) await safeAbort(session);
     return r.serverError(err.message);
   } finally {
-    session.endSession();
+    if (session) session.endSession();
   }
 });

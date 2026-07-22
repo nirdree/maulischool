@@ -1,0 +1,162 @@
+[
+  {
+    "className": "Playgroup",
+    "section": "A",
+    "displayName": "Playgroup-A",
+    "monthlyFees": 1800,
+    "capacity": 25,
+    "classTeacher": "Priya Patel"
+  },
+  {
+    "className": "Nursery",
+    "section": "A",
+    "displayName": "Nursery-A",
+    "monthlyFees": 1900,
+    "capacity": 30,
+    "classTeacher": "Rahul Sharma"
+  },
+  {
+    "className": "Junior KG",
+    "section": "A",
+    "displayName": "Junior KG-A",
+    "monthlyFees": 2000,
+    "capacity": 30,
+    "classTeacher": "Sneha Joshi"
+  },
+  {
+    "className": "Senior KG",
+    "section": "A",
+    "displayName": "Senior KG-A",
+    "monthlyFees": 2100,
+    "capacity": 30,
+    "classTeacher": "Amit Verma"
+  },
+  {
+    "className": "Class 1",
+    "section": "A",
+    "displayName": "Class 1-A",
+    "monthlyFees": 2200,
+    "capacity": 40,
+    "classTeacher": "Neha Singh"
+  },
+  {
+    "className": "Class 2",
+    "section": "A",
+    "displayName": "Class 2-A",
+    "monthlyFees": 2400,
+    "capacity": 40,
+    "classTeacher": "Vikas Gupta"
+  },
+  {
+    "className": "Class 3",
+    "section": "A",
+    "displayName": "Class 3-A",
+    "monthlyFees": 2600,
+    "capacity": 40,
+    "classTeacher": "Anjali Desai"
+  },
+  {
+    "className": "Class 4",
+    "section": "A",
+    "displayName": "Class 4-A",
+    "monthlyFees": 2800,
+    "capacity": 40,
+    "classTeacher": "Rohit Kulkarni"
+  },
+  {
+    "className": "Class 5",
+    "section": "A",
+    "displayName": "Class 5-A",
+    "monthlyFees": 3000,
+    "capacity": 40,
+    "classTeacher": "Pooja Mehta"
+  },
+  {
+    "className": "Class 6",
+    "section": "A",
+    "displayName": "Class 6-A",
+    "monthlyFees": 3200,
+    "capacity": 40,
+    "classTeacher": "Karan Shah"
+  },
+  {
+    "className": "Class 7",
+    "section": "A",
+    "displayName": "Class 7-A",
+    "monthlyFees": 3400,
+    "capacity": 40,
+    "classTeacher": "Meera Nair"
+  },
+  {
+    "className": "Class 8",
+    "section": "A",
+    "displayName": "Class 8-A",
+    "monthlyFees": 3600,
+    "capacity": 40,
+    "classTeacher": "Sandeep Yadav"
+  },
+  {
+    "className": "Class 9",
+    "section": "A",
+    "displayName": "Class 9-A",
+    "monthlyFees": 4000,
+    "capacity": 40,
+    "classTeacher": "Kavita Rao"
+  },
+  {
+    "className": "Class 10",
+    "section": "A",
+    "displayName": "Class 10-A",
+    "monthlyFees": 4500,
+    "capacity": 40,
+    "classTeacher": "Arjun Mishra"
+  },
+  {
+    "className": "Class 11",
+    "section": "Science",
+    "displayName": "Class 11 - Science",
+    "monthlyFees": 5500,
+    "capacity": 40,
+    "classTeacher": "Nisha Kapoor"
+  },
+  {
+    "className": "Class 11",
+    "section": "Commerce",
+    "displayName": "Class 11 - Commerce",
+    "monthlyFees": 5300,
+    "capacity": 40,
+    "classTeacher": "Deepak Kumar"
+  },
+  {
+    "className": "Class 11",
+    "section": "Arts",
+    "displayName": "Class 11 - Arts",
+    "monthlyFees": 5100,
+    "capacity": 40,
+    "classTeacher": "Ritu Agarwal"
+  },
+  {
+    "className": "Class 12",
+    "section": "Science",
+    "displayName": "Class 12 - Science",
+    "monthlyFees": 6000,
+    "capacity": 40,
+    "classTeacher": "Manoj Tiwari"
+  },
+  {
+    "className": "Class 12",
+    "section": "Commerce",
+    "displayName": "Class 12 - Commerce",
+    "monthlyFees": 5800,
+    "capacity": 40,
+    "classTeacher": "Shweta Iyer"
+  },
+  {
+    "className": "Class 12",
+    "section": "Arts",
+    "displayName": "Class 12 - Arts",
+    "monthlyFees": 5600,
+    "capacity": 40,
+    "classTeacher": "Harsh Jain"
+  }
+]

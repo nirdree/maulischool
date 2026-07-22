@@ -1,0 +1,614 @@
+{
+  "Playgroup": [
+    {
+      "subjectName": "Rhymes & Music",
+      "teacher": "Priya Patel",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Story Time",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Play Activities",
+      "teacher": "Sneha Joshi",
+      "totalMarks": 100
+    },
+    { "subjectName": "Art & Craft", "teacher": "Amit Verma", "totalMarks": 100 }
+  ],
+
+  "Nursery": [
+    { "subjectName": "English", "teacher": "Priya Patel", "totalMarks": 100 },
+    { "subjectName": "Numbers", "teacher": "Rahul Sharma", "totalMarks": 100 },
+    { "subjectName": "Drawing", "teacher": "Sneha Joshi", "totalMarks": 100 },
+    { "subjectName": "Rhymes", "teacher": "Amit Verma", "totalMarks": 100 },
+    { "subjectName": "EVS", "teacher": "Neha Singh", "totalMarks": 100 }
+  ],
+
+  "Junior KG": [
+    { "subjectName": "English", "teacher": "Priya Patel", "totalMarks": 100 },
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    },
+    { "subjectName": "EVS", "teacher": "Sneha Joshi", "totalMarks": 100 },
+    { "subjectName": "Drawing", "teacher": "Amit Verma", "totalMarks": 100 },
+    { "subjectName": "Rhymes", "teacher": "Neha Singh", "totalMarks": 100 }
+  ],
+
+  "Senior KG": [
+    { "subjectName": "English", "teacher": "Priya Patel", "totalMarks": 100 },
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    },
+    { "subjectName": "EVS", "teacher": "Sneha Joshi", "totalMarks": 100 },
+    { "subjectName": "Hindi", "teacher": "Amit Verma", "totalMarks": 100 },
+    { "subjectName": "Drawing", "teacher": "Neha Singh", "totalMarks": 100 }
+  ],
+  "Class 1-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Priya Patel",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Environmental Science (EVS)",
+      "teacher": "Sneha Joshi",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Amit Verma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Marathi",
+      "teacher": "Neha Singh",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Art & Craft",
+      "teacher": "Vikas Gupta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Anjali Desai",
+      "totalMarks": 100
+    }
+  ],
+  "Class 2-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Rohit Kulkarni",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Pooja Mehta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Environmental Science (EVS)",
+      "teacher": "Karan Shah",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Meera Nair",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Marathi",
+      "teacher": "Sandeep Yadav",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Art & Craft",
+      "teacher": "Kavita Rao",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Arjun Mishra",
+      "totalMarks": 100
+    }
+  ],
+  "Class 3-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Nisha Kapoor",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Deepak Kumar",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Environmental Science (EVS)",
+      "teacher": "Ritu Agarwal",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Manoj Tiwari",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Marathi",
+      "teacher": "Shweta Iyer",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Art & Craft",
+      "teacher": "Harsh Jain",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Priya Patel",
+      "totalMarks": 100
+    }
+  ],
+  "Class 4-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Sneha Joshi",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Environmental Science (EVS)",
+      "teacher": "Amit Verma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Neha Singh",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Marathi",
+      "teacher": "Vikas Gupta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Art & Craft",
+      "teacher": "Anjali Desai",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Rohit Kulkarni",
+      "totalMarks": 100
+    }
+  ],
+  "Class 5-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Pooja Mehta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Karan Shah",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Environmental Science (EVS)",
+      "teacher": "Meera Nair",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Sandeep Yadav",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Marathi",
+      "teacher": "Kavita Rao",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Art & Craft",
+      "teacher": "Arjun Mishra",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Nisha Kapoor",
+      "totalMarks": 100
+    }
+  ],
+  "Class 6-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Deepak Kumar",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Ritu Agarwal",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Science",
+      "teacher": "Manoj Tiwari",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Social Studies",
+      "teacher": "Shweta Iyer",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Harsh Jain",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Computer Science",
+      "teacher": "Priya Patel",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    }
+  ],
+  "Class 7-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Sneha Joshi",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Amit Verma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Science",
+      "teacher": "Neha Singh",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Social Studies",
+      "teacher": "Vikas Gupta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Anjali Desai",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Computer Science",
+      "teacher": "Rohit Kulkarni",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Pooja Mehta",
+      "totalMarks": 100
+    }
+  ],
+  "Class 8-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Karan Shah",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Meera Nair",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Science",
+      "teacher": "Sandeep Yadav",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Social Studies",
+      "teacher": "Kavita Rao",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Arjun Mishra",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Computer Science",
+      "teacher": "Nisha Kapoor",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Deepak Kumar",
+      "totalMarks": 100
+    }
+  ],
+  "Class 9-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Ritu Agarwal",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Manoj Tiwari",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Science",
+      "teacher": "Shweta Iyer",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Social Studies",
+      "teacher": "Harsh Jain",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Priya Patel",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Computer Applications",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Sneha Joshi",
+      "totalMarks": 100
+    }
+  ],
+  "Class 10-A": [
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Amit Verma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Neha Singh",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Science",
+      "teacher": "Vikas Gupta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Social Studies",
+      "teacher": "Anjali Desai",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Hindi",
+      "teacher": "Rohit Kulkarni",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Computer Applications",
+      "teacher": "Pooja Mehta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Physical Education",
+      "teacher": "Karan Shah",
+      "totalMarks": 100
+    }
+  ],
+  "Class 11 - Science": [
+    {
+      "subjectName": "Physics",
+      "teacher": "Meera Nair",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Chemistry",
+      "teacher": "Sandeep Yadav",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Kavita Rao",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Biology",
+      "teacher": "Arjun Mishra",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Nisha Kapoor",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Computer Science",
+      "teacher": "Deepak Kumar",
+      "totalMarks": 100
+    }
+  ],
+  "Class 11 - Commerce": [
+    {
+      "subjectName": "Accountancy",
+      "teacher": "Ritu Agarwal",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Business Studies",
+      "teacher": "Manoj Tiwari",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Economics",
+      "teacher": "Shweta Iyer",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Harsh Jain",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Priya Patel",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Informatics Practices",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    }
+  ],
+  "Class 11 - Arts": [
+    {
+      "subjectName": "History",
+      "teacher": "Sneha Joshi",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Political Science",
+      "teacher": "Amit Verma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Geography",
+      "teacher": "Neha Singh",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Vikas Gupta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Economics",
+      "teacher": "Anjali Desai",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Psychology",
+      "teacher": "Rohit Kulkarni",
+      "totalMarks": 100
+    }
+  ],
+  "Class 12 - Science": [
+    {
+      "subjectName": "Physics",
+      "teacher": "Pooja Mehta",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Chemistry",
+      "teacher": "Karan Shah",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Meera Nair",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Biology",
+      "teacher": "Sandeep Yadav",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Kavita Rao",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Computer Science",
+      "teacher": "Arjun Mishra",
+      "totalMarks": 100
+    }
+  ],
+  "Class 12 - Commerce": [
+    {
+      "subjectName": "Accountancy",
+      "teacher": "Nisha Kapoor",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Business Studies",
+      "teacher": "Deepak Kumar",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Economics",
+      "teacher": "Ritu Agarwal",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Manoj Tiwari",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Mathematics",
+      "teacher": "Shweta Iyer",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Informatics Practices",
+      "teacher": "Harsh Jain",
+      "totalMarks": 100
+    }
+  ],
+  "Class 12 - Arts": [
+    {
+      "subjectName": "History",
+      "teacher": "Priya Patel",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Political Science",
+      "teacher": "Rahul Sharma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Geography",
+      "teacher": "Sneha Joshi",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "English",
+      "teacher": "Amit Verma",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Economics",
+      "teacher": "Neha Singh",
+      "totalMarks": 100
+    },
+    {
+      "subjectName": "Psychology",
+      "teacher": "Vikas Gupta",
+      "totalMarks": 100
+    }
+  ]
+}
