@@ -28,10 +28,14 @@ async function resolveParentUser({ existingUserId, email, phone, name, password,
       }
       return existing;
     }
-    const [created] = await User.create(
-      [{ name, email: email.toLowerCase(), password, role: 'parent', studentIds: [studentId] }],
-      { session }
-    );
+    const created = new User({
+      name,
+      email: email.toLowerCase(),
+      password,
+      role: 'parent',
+      studentIds: [studentId],
+    });
+    await created.save({ session });
     return created;
   }
   return null;

@@ -4,6 +4,7 @@ import User from '@/models/User';
 import mongoose from 'mongoose';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
 
 export const GET = protect(async (request) => {
   try {
@@ -42,24 +43,28 @@ export const POST = authorize('admin', 'principal')(async (request) => {
   session.startTransaction();
   try {
     const body = await request.json();
-    const { name, email, password, role } = body;
+    const normalizedEmail = String(body.email || '').trim().toLowerCase();
+    const { name, password, role } = body;
 
-    if (!name || !email || !password || !role) {
+    if (!name || !normalizedEmail || !password || !role) {
       await session.abortTransaction();
       return r.badRequest('name, email, password and role are required');
     }
 
-    const existingUser     = await User.findOne({ email }).session(session);
-    const existingEmployee = await Employee.findOne({ email }).session(session);
+    const existingUser     = await User.findOne({ email: normalizedEmail }).session(session);
+    const existingEmployee = await Employee.findOne({ email: normalizedEmail }).session(session);
     if (existingUser || existingEmployee) {
       await session.abortTransaction();
       return r.conflict('Email already registered');
     }
 
-    const [employee] = await Employee.create([body], { session });
-    const [user]     = await User.create([{ name, email, password, role, employeeId: employee._id }], { session });
+    const employeePayload = { ...body, email: normalizedEmail };
+    const [employee] = await Employee.create([employeePayload], { session });
 
-    employee.user = user._id;
+    const userDoc = new User({ name, email: normalizedEmail, password: await bcrypt.hash(password, 12), role, employeeId: employee._id });
+    await userDoc.save({ session });
+
+    employee.user = userDoc._id;
     await employee.save({ session });
     await session.commitTransaction();
 

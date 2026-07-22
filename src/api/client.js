@@ -9,7 +9,9 @@ const api = axios.create({
 // ── Request interceptor: attach JWT token ────────────────────
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('sms_token');
+    if (typeof window === 'undefined') return config;
+
+    const token = window.localStorage.getItem('sms_token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
@@ -20,11 +22,14 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('sms_token');
-      localStorage.removeItem('sms_user');
+    const isLoginRequest = error?.config?.url?.includes('/api/auth/login');
+
+    if (error.response?.status === 401 && !isLoginRequest && typeof window !== 'undefined') {
+      window.localStorage.removeItem('sms_token');
+      window.localStorage.removeItem('sms_user');
       window.location.href = '/login';
     }
+
     return Promise.reject(error.response?.data || error);
   }
 );

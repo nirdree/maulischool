@@ -11,13 +11,39 @@ const userSchema = new mongoose.Schema({
   studentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }],
 }, { timestamps: true });
 
-userSchema.pre('save', async function () {
-  if (!this.isModified('password')) return;
+userSchema.pre('save', async function (next) {
+  if (this.email) this.email = this.email.toLowerCase().trim();
+
+  if (!this.isModified('password')) return next();
+  if (typeof this.password === 'string' && this.password.startsWith('$2')) return next();
   this.password = await bcrypt.hash(this.password, 12);
+  next();
+});
+
+userSchema.pre('insertMany', async function (next, docs) {
+  for (const doc of docs) {
+    if (doc.email) doc.email = doc.email.toLowerCase().trim();
+    if (doc.password && typeof doc.password === 'string' && !doc.password.startsWith('$2')) {
+      doc.password = await bcrypt.hash(doc.password, 12);
+    }
+  }
+  next();
 });
 
 userSchema.methods.matchPassword = async function (entered) {
-  return bcrypt.compare(entered, this.password);
+  if (!this.password) return false;
+
+  if (this.password.startsWith('$2')) {
+    return bcrypt.compare(entered, this.password);
+  }
+
+  if (this.password === entered) {
+    this.password = await bcrypt.hash(entered, 12);
+    await this.save();
+    return true;
+  }
+
+  return false;
 };
 
 export default mongoose.models.User || mongoose.model('User', userSchema);
