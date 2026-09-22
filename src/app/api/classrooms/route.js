@@ -1,6 +1,8 @@
 import { connectDB } from '@/lib/mongodb';
 import Classroom from '@/models/Classroom';
 import Student from '@/models/Student';
+import AcademicYear from '@/models/AcademicYear';
+import Employee from '@/models/Employee';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
 
@@ -16,8 +18,8 @@ export const GET = protect(async (request) => {
     if (isActive !== null)     filter.isActive     = isActive === 'true';
 
     const classrooms = await Classroom.find(filter)
-      .populate('classTeacher', 'name employeeId')
-      .populate('academicYear', 'name')
+      .populate({ path: 'classTeacher', select: 'name employeeId', model: Employee })
+      .populate({ path: 'academicYear', select: 'name', model: AcademicYear })
       .sort({ order: 1, className: 1, section: 1 });
 
     const counts = await Student.aggregate([
