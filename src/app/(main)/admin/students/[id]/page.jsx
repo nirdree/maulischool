@@ -320,6 +320,8 @@ function OverviewTab({ student, attendance, fees, exams, onLinkParent }) {
           <InfoPair label="Mother Tongue"   value={student.motherTongue} />
           <InfoPair label="Place of Birth"  value={student.placeOfBirth} />
           <InfoPair label="PEN Number"      value={student.penNumber} />
+          <InfoPair label="RTE Student"     value={student.isRTE ? 'Yes' : 'No'} />
+          <InfoPair label="Govt. Contribution" value={student.isRTE ? fmtMoney(student.rteFee) : '—'} />
           <InfoPair label="Previous School" value={student.previousSchoolName} />
           <InfoPair label="Previous Class"  value={student.previousClass} />
           <InfoPair label="Admitted"        value={fmt(student.createdAt)} />
@@ -946,6 +948,7 @@ function EditStudentModal({ open, onClose, student, onSuccess }) {
       caste: student.caste || '', motherTongue: student.motherTongue || '',
       placeOfBirth: student.placeOfBirth || '', penNumber: student.penNumber || '',
       previousSchoolName: student.previousSchoolName || '', previousClass: student.previousClass || '',
+      isRTE: !!student.isRTE, rteFee: student.rteFee ?? 0,
     });
   }, [student]);
 
@@ -989,6 +992,11 @@ function EditStudentModal({ open, onClose, student, onSuccess }) {
           <Input label="Middle Name"    value={form.middleName || ''}  onChange={(e) => set('middleName',  e.target.value)} />
           <Select label="Gender" value={form.gender} onChange={(e) => set('gender', e.target.value)} options={GENDER_OPTIONS} />
           <Input label="Date of Birth" type="date" value={form.dateOfBirth || ''} onChange={(e) => set('dateOfBirth', e.target.value)} />
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input type="checkbox" checked={!!form.isRTE} onChange={(e) => set('isRTE', e.target.checked)} />
+            RTE student
+          </label>
+          <Input label="Government Contribution (₹)" type="number" min="0" value={form.rteFee ?? 0} onChange={(e) => set('rteFee', e.target.value)} />
           <Input label="Blood Group"    value={form.bloodGroup || ''}   onChange={(e) => set('bloodGroup',   e.target.value)} />
           <Input label="Religion"       value={form.religion || ''}     onChange={(e) => set('religion',     e.target.value)} />
           <Input label="Caste"          value={form.caste || ''}        onChange={(e) => set('caste',        e.target.value)} />

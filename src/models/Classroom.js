@@ -6,6 +6,7 @@ const classroomSchema = new mongoose.Schema({
   section:        { type: String, trim: true, default: '' },
   displayName:    { type: String, required: true, trim: true },
   monthlyFees:    { type: Number, required: true, min: 0 },
+  rteFee:         { type: Number, default: 0, min: 0 },
   classTeacher:   { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
   order:          { type: Number, default: 99 },
   capacity:       { type: Number, default: 40 },

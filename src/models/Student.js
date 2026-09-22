@@ -16,6 +16,8 @@ const studentSchema = new mongoose.Schema({
   placeOfBirth:       { type: String },
   penNumber:          { type: String },
   classroom:          { type: mongoose.Schema.Types.ObjectId, ref: 'Classroom', required: true },
+  isRTE:              { type: Boolean, default: false },
+  rteFee:             { type: Number, default: 0, min: 0 },
   rollNumber:         { type: Number },
   status:             {
     type: String,

@@ -39,7 +39,10 @@ export const POST = authorize('admin', 'principal')(async (request) => {
           const classroom = student.classroom;
           if (!classroom) { skipped++; toCreate--; toSkip++; continue; }
 
-          const tuitionFee = classroom.monthlyFees || 0;
+          const tuitionFee = Math.max(
+            0,
+            (classroom.monthlyFees || 0) - (student.isRTE ? (student.rteFee || 0) : 0),
+          );
           await Fee.create({
             student: student._id, classroom: classroom._id,
             month: Number(month), year: Number(year),

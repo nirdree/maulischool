@@ -490,7 +490,7 @@ const EMPTY_STUDENT = {
   firstName: '', middleName: '', lastName: '', gender: 'Male',
   dateOfBirth: '', classroom: '', bloodGroup: '', religion: '',
   caste: '', motherTongue: '', placeOfBirth: '', penNumber: '',
-  previousSchoolName: '', previousClass: '',
+  previousSchoolName: '', previousClass: '', isRTE: false, rteFee: 0,
 };
 
 function AdmissionModal({ open, onClose, classrooms, ayId, onSuccess }) {
@@ -596,7 +596,16 @@ function AdmissionModal({ open, onClose, classrooms, ayId, onSuccess }) {
           <Input label="Middle Name"    value={form.middleName}  onChange={(e) => set('middleName',  e.target.value)} placeholder="Kumar" />
           <Select label="Gender *" value={form.gender} onChange={(e) => set('gender', e.target.value)} options={GENDER_OPTIONS} />
           <Input label="Date of Birth *" type="date" value={form.dateOfBirth} onChange={(e) => set('dateOfBirth', e.target.value)} />
-          <Select label="Classroom *" value={form.classroom} onChange={(e) => set('classroom', e.target.value)} options={classOptions} />
+          <Select label="Classroom *" value={form.classroom} onChange={(e) => {
+            const selected = classrooms.find(c => c._id === e.target.value);
+            set('classroom', e.target.value);
+            if (!form.rteFee && selected?.rteFee) set('rteFee', selected.rteFee);
+          }} options={classOptions} />
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input type="checkbox" checked={form.isRTE} onChange={e => set('isRTE', e.target.checked)} />
+            RTE student
+          </label>
+          <Input label="Government Contribution (₹)" type="number" min="0" value={form.rteFee} onChange={(e) => set('rteFee', e.target.value)} />
           <Input label="Blood Group"    value={form.bloodGroup}   onChange={(e) => set('bloodGroup',   e.target.value)} placeholder="B+" />
           <Input label="Religion"       value={form.religion}     onChange={(e) => set('religion',     e.target.value)} placeholder="Hindu" />
           <Input label="Caste"          value={form.caste}        onChange={(e) => set('caste',        e.target.value)} placeholder="General" />
@@ -663,6 +672,7 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
       caste: student.caste || '', motherTongue: student.motherTongue || '',
       placeOfBirth: student.placeOfBirth || '', penNumber: student.penNumber || '',
       previousSchoolName: student.previousSchoolName || '', previousClass: student.previousClass || '',
+      isRTE: !!student.isRTE, rteFee: student.rteFee ?? 0,
       status: student.status || 'UnderReview',
       rejectionRemark: student.rejectionRemark || '', holdRemark: student.holdRemark || '',
       leavingReason: student.leavingReason || '',
@@ -760,7 +770,16 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
           <Input label="Middle Name"    value={form.middleName || ''}  onChange={(e) => set('middleName',  e.target.value)} />
           <Select label="Gender" value={form.gender} onChange={(e) => set('gender', e.target.value)} options={GENDER_OPTIONS} />
           <Input label="Date of Birth" type="date" value={form.dateOfBirth || ''} onChange={(e) => set('dateOfBirth', e.target.value)} />
-          <Select label="Classroom" value={form.classroom || ''} onChange={(e) => set('classroom', e.target.value)} options={classOptions} />
+          <Select label="Classroom" value={form.classroom || ''} onChange={(e) => {
+            const selected = classrooms.find(c => c._id === e.target.value);
+            set('classroom', e.target.value);
+            if (!form.rteFee && selected?.rteFee) set('rteFee', selected.rteFee);
+          }} options={classOptions} />
+          <label className="flex items-center gap-2 text-sm text-slate-300">
+            <input type="checkbox" checked={!!form.isRTE} onChange={(e) => set('isRTE', e.target.checked)} />
+            RTE student
+          </label>
+          <Input label="Government Contribution (₹)" type="number" min="0" value={form.rteFee ?? 0} onChange={(e) => set('rteFee', e.target.value)} />
           <Input label="Blood Group"    value={form.bloodGroup || ''}   onChange={(e) => set('bloodGroup',   e.target.value)} />
           <Input label="Religion"       value={form.religion || ''}     onChange={(e) => set('religion',     e.target.value)} />
           <Input label="Caste"          value={form.caste || ''}        onChange={(e) => set('caste',        e.target.value)} />

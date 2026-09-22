@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/mongodb';
 import Student from '@/models/Student';
+import Classroom from '@/models/Classroom';
 import User from '@/models/User';
 import mongoose from 'mongoose';
 import { r } from '@/lib/response';
@@ -106,6 +107,11 @@ export const POST = authorize('admin', 'principal')(async (request) => {
 
     const merge = { fatherName, fatherPhone, fatherEmail, fatherOccupation, motherName, motherPhone, motherEmail, motherOccupation };
     for (const [k, v] of Object.entries(merge)) { if (v) studentData[k] = v; }
+
+    if (studentData.isRTE && (studentData.rteFee === undefined || studentData.rteFee === '')) {
+      const classroom = await Classroom.findById(studentData.classroom).select('rteFee');
+      studentData.rteFee = classroom?.rteFee || 0;
+    }
 
     const [student] = await Student.create([studentData], { session });
 

@@ -38,7 +38,7 @@ import {
 
 const EMPTY_FORM = {
   className: '', section: '', displayName: '',
-  monthlyFees: '', capacity: 40, classTeacher: '', order: 99,
+  monthlyFees: '', rteFee: 0, capacity: 40, classTeacher: '', order: 99,
 };
 
 const EMPTY_SUBJECT_FORM = { name: '', teacher: '', totalMarks: 100 };
@@ -303,8 +303,9 @@ function ClassroomCard({
       </div>
 
       {/* ── Stats row ── */}
-      <div className="grid grid-cols-3 divide-x divide-slate-700 border-b border-slate-700">
+      <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-700 border-b border-slate-700">
         <StatCell label="Monthly Fee" value={`₹${classroom.monthlyFees?.toLocaleString()}`} accent="amber" />
+        <StatCell label="RTE Support" value={`₹${(classroom.rteFee || 0).toLocaleString()}`} accent="emerald" />
         <StatCell label="Capacity"    value={classroom.capacity} />
         <StatCell label="Students"    value={classroom.studentCount ?? 0} />
       </div>
@@ -675,6 +676,7 @@ function ClassroomModal({ open, onClose, classroom, ayId, onSuccess }) {
         section:      classroom.section      || '',
         displayName:  classroom.displayName  || '',
         monthlyFees:  classroom.monthlyFees  || '',
+        rteFee:       classroom.rteFee       ?? 0,
         capacity:     classroom.capacity     || 40,
         classTeacher: classroom.classTeacher?._id || '',
         order:        classroom.order        ?? 99,
@@ -767,6 +769,14 @@ function ClassroomModal({ open, onClose, classroom, ayId, onSuccess }) {
           value={form.monthlyFees}
           onChange={e => set('monthlyFees', e.target.value)}
           placeholder="2000"
+        />
+        <Input
+          label="RTE Government Contribution (₹)"
+          type="number"
+          min="0"
+          value={form.rteFee}
+          onChange={e => set('rteFee', e.target.value)}
+          placeholder="0"
         />
         <Input
           label="Capacity"
