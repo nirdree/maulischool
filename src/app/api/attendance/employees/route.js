@@ -3,13 +3,18 @@ import { EmployeeAttendance } from '@/models/Attendance';
 import { r } from '@/lib/response';
 import { authorize } from '@/lib/auth';
 
-export const GET = authorize('admin', 'principal')(async (request) => {
+export const GET = protect(async (request) => {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
     const filter = {};
 
-    if (searchParams.get('employeeId'))   filter.employee     = searchParams.get('employeeId');
+    if (request.user.role === 'teacher') {
+      if (!request.user.employeeId) return r.forbidden('Teacher account is not linked to an employee');
+      filter.employee = request.user.employeeId;
+    } else if (searchParams.get('employeeId')) {
+      filter.employee = searchParams.get('employeeId');
+    }
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
     const date     = searchParams.get('date');

@@ -32,6 +32,7 @@ function statusBtnClass(s, active) {
 export default function AttendancePage() {
   const { user } = useAuth();
 
+  const [view, setView] = useState('students');
   const [classrooms, setClassrooms] = useState([]);
   const [classFilter, setClassFilter] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -41,6 +42,8 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [myAttendance, setMyAttendance] = useState([]);
+  const [myAttendanceLoading, setMyAttendanceLoading] = useState(false);
 
   useEffect(() => {
   (async () => {
@@ -71,6 +74,11 @@ export default function AttendancePage() {
     if (classFilter && ayId) fetchAttendance();
   }, [classFilter, date, ayId]);
 
+  useEffect(() => {
+    if (view !== 'mine' || !ayId) return;
+    fetchMyAttendance();
+  }, [view, date, ayId]);
+
   const fetchAttendance = async () => {
     setLoading(true);
     try {
@@ -90,6 +98,25 @@ export default function AttendancePage() {
       setAttendance(init);
     } catch {} finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMyAttendance = async () => {
+    setMyAttendanceLoading(true);
+    try {
+      const [year, month] = date.split('-').map(Number);
+      const monthDays = new Date(year, month, 0).getDate();
+      const params = new URLSearchParams({
+        academicYear: ayId,
+        fromDate: `${date.slice(0, 7)}-01`,
+        toDate: `${date.slice(0, 7)}-${String(monthDays).padStart(2, '0')}T23:59:59`,
+      });
+      const res = await api.get(`${API.ATTENDANCE.EMPLOYEES}?${params}`);
+      setMyAttendance(res.data || []);
+    } catch {
+      setMyAttendance([]);
+    } finally {
+      setMyAttendanceLoading(false);
     }
   };
 
@@ -130,15 +157,24 @@ export default function AttendancePage() {
   return (
     <PageContent>
       <PageHeader
-        title="Mark Attendance"
-        subtitle="Record daily student attendance"
+        title={view === 'students' ? 'Mark Attendance' : 'My Attendance'}
+        subtitle={view === 'students' ? 'Record daily student attendance' : 'View your attendance records'}
         actions={
-          <Button onClick={handleSave} disabled={saving || students.length === 0}>
+          view === 'students' && <Button onClick={handleSave} disabled={saving || students.length === 0}>
             {saved ? <CheckCircle className="w-4 h-4 text-emerald-400" /> : <Save className="w-4 h-4" />}
             {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Attendance'}
           </Button>
         }
       />
+
+      <div className="flex gap-2 mb-6">
+        <Button variant={view === 'students' ? 'primary' : 'ghost'} onClick={() => setView('students')}>
+          Student Attendance
+        </Button>
+        <Button variant={view === 'mine' ? 'primary' : 'ghost'} onClick={() => setView('mine')}>
+          My Attendance
+        </Button>
+      </div>
 
       {/* Controls */}
       <div className="flex flex-wrap gap-3 mb-4 items-end">
@@ -151,16 +187,16 @@ export default function AttendancePage() {
             className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
         </div>
-        <Select
+        {view === 'students' && <Select
           label="Class"
           options={classOptions}
           value={classFilter}
           onChange={e => setClassFilter(e.target.value)}
           className="w-44"
-        />
-        <Button variant="ghost" onClick={fetchAttendance}><RefreshCw className="w-4 h-4" /></Button>
+        />}
+        <Button variant="ghost" onClick={view === 'students' ? fetchAttendance : fetchMyAttendance}><RefreshCw className="w-4 h-4" /></Button>
 
-        {students.length > 0 && (
+        {view === 'students' && students.length > 0 && (
           <div className="flex gap-2 ml-auto">
             {['Present', 'Absent', 'Holiday'].map(s => (
               <Button key={s} size="sm" variant="ghost" onClick={() => markAll(s)}>
@@ -171,8 +207,40 @@ export default function AttendancePage() {
         )}
       </div>
 
+      {view === 'mine' && (
+        <Card className="!p-0">
+          {myAttendanceLoading ? (
+            <div className="py-12 text-center text-slate-500">Loading your attendance...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-800">
+                    <th className="text-left py-3 px-4 text-xs font-medium text-slate-400 uppercase">Date</th>
+                    <th className="text-left py-3 px-4 text-xs font-medium text-slate-400 uppercase">Status</th>
+                    <th className="text-left py-3 px-4 text-xs font-medium text-slate-400 uppercase">Remark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {myAttendance.map(record => (
+                    <tr key={record._id} className="border-b border-slate-800/50">
+                      <td className="py-3 px-4 text-white">{new Date(record.date).toLocaleDateString('en-IN')}</td>
+                      <td className="py-3 px-4 text-slate-300">{record.status}</td>
+                      <td className="py-3 px-4 text-slate-400">{record.remark || '—'}</td>
+                    </tr>
+                  ))}
+                  {myAttendance.length === 0 && (
+                    <tr><td colSpan={3} className="py-12 text-center text-slate-500">No attendance records for this month.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+
       {/* Summary bar */}
-      {students.length > 0 && (
+      {view === 'students' && students.length > 0 && (
         <div className="flex gap-4 mb-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
           <span className="text-xs text-slate-400">Total: <span className="text-white font-bold">{students.length}</span></span>
           <span className="text-xs text-slate-400">Present: <span className="text-emerald-400 font-bold">{summary.present}</span></span>
@@ -181,7 +249,7 @@ export default function AttendancePage() {
         </div>
       )}
 
-      <Card className="!p-0">
+      {view === 'students' && <Card className="!p-0">
         {loading ? (
           <div className="py-12 text-center text-slate-500">Loading students...</div>
         ) : (
@@ -228,7 +296,7 @@ export default function AttendancePage() {
             </table>
           </div>
         )}
-      </Card>
+      </Card>}
     </PageContent>
   );
 }
