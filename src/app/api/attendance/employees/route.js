@@ -1,7 +1,7 @@
 import { connectDB } from '@/lib/mongodb';
 import { EmployeeAttendance } from '@/models/Attendance';
 import { r } from '@/lib/response';
-import { authorize } from '@/lib/auth';
+import { protect, authorize } from '@/lib/auth';
 
 export const GET = protect(async (request) => {
   try {
