@@ -1,5 +1,5 @@
 import { connectDB } from '@/lib/mongodb';
-import { Fee } from '@/models/Fee';
+import { Fee, FeePayment } from '@/models/Fee';
 import Student from '@/models/Student';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
@@ -17,7 +17,10 @@ export const GET = protect(async (request) => {
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
     if (request.user.role === 'parent') {
-      filter.student = { $in: request.user.studentIds || [] };
+      const studentId = searchParams.get('studentId');
+      const linkedStudents = (request.user.studentIds || []).map(String);
+      if (studentId && !linkedStudents.includes(studentId)) return r.forbidden('Student is not linked to this parent');
+      filter.student = studentId || { $in: linkedStudents };
     } else if (searchParams.get('studentId')) {
       filter.student = searchParams.get('studentId');
     }
@@ -39,6 +42,17 @@ export const GET = protect(async (request) => {
       .populate('classroom', 'displayName')
       .sort({ year: -1, month: -1 });
 
+    if (request.user.role === 'parent' && fees.length) {
+      const payments = await FeePayment.aggregate([
+        { $match: { fee: { $in: fees.map(fee => fee._id) } } },
+        { $group: { _id: '$fee', amountPaid: { $sum: { $subtract: ['$amountPaid', { $ifNull: ['$amountRefunded', 0] }] } } } },
+      ]);
+      const paidByFee = new Map(payments.map(item => [String(item._id), item.amountPaid]));
+      return r.ok(fees.map(fee => {
+        const amountPaid = paidByFee.get(String(fee._id)) || 0;
+        return { ...fee.toObject(), amountPaid, outstandingAmount: Math.max(0, fee.finalAmount - amountPaid) };
+      }));
+    }
     return r.ok(fees);
   } catch (err) {
     return r.serverError(err.message);

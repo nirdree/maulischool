@@ -16,5 +16,6 @@ export const r = {
   forbidden:   (message = 'Forbidden')                => respond(403, false, message),
   notFound:    (message = 'Not found')                => respond(404, false, message),
   conflict:    (message = 'Conflict')                 => respond(409, false, message),
+  tooManyRequests: (message = 'Too many requests')      => respond(429, false, message),
   serverError: (message = 'Internal server error')    => respond(500, false, message),
 };
