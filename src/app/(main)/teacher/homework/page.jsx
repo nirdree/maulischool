@@ -16,7 +16,7 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
-  PageContent, PageHeader, Card, Table, Button, Input, Select, Badge, Modal,
+  PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
 import { useAuth } from '@/context/AuthContext';
 
@@ -27,6 +27,8 @@ export default function HomeworkPage() {
   const [ayId, setAyId] = useState('');
   const [loading, setLoading] = useState(true);
   const [classFilter, setClassFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
   const [editHw, setEditHw] = useState(null);
 
@@ -45,14 +47,15 @@ export default function HomeworkPage() {
     if (!ayId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ academicYear: ayId });
+      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
       if (classFilter) params.set('classId', classFilter);
       const res = await api.get(`${API.HOMEWORK.BASE}?${params}`);
       setHomework(res.data || []);
+      setTotal(res.meta?.total || 0);
     } catch { } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (ayId) fetchHomework(); }, [classFilter, ayId]);
+  useEffect(() => { if (ayId) fetchHomework(); }, [classFilter, ayId, page]);
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this homework?')) return;
@@ -104,14 +107,15 @@ export default function HomeworkPage() {
     <PageContent>
       <PageHeader
         title="Homework"
-        subtitle={`${homework.length} assignments`}
+        subtitle={`${total} assignments`}
         actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Assign Homework</Button>}
       />
       <div className="flex gap-3 mb-4">
-        <Select options={classOptions} value={classFilter} onChange={e => setClassFilter(e.target.value)} className="w-48" />
+        <Select options={classOptions} value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }} className="w-48" />
       </div>
       <Card className="!p-0">
         <Table columns={columns} data={homework} loading={loading} emptyMessage="No homework assigned" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       <HomeworkModal

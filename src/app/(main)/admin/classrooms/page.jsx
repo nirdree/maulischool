@@ -27,7 +27,7 @@ import {
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
-  PageContent, PageHeader, Card, Button,
+  PageContent, PageHeader, Card, Pagination, Button,
   Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
 
@@ -55,6 +55,8 @@ export default function ClassroomsPage() {
   const [loading, setLoading]               = useState(true);
   const [searchQuery, setSearchQuery]       = useState('');
   const [statusFilter, setStatusFilter]     = useState('all'); // 'all' | 'active' | 'inactive'
+  const [page, setPage]                     = useState(1);
+  const [total, setTotal]                   = useState(0);
 
   // Modal states
   const [addOpen, setAddOpen]               = useState(false);
@@ -72,15 +74,10 @@ export default function ClassroomsPage() {
         const ayid = ay.data?._id;
         setAyId(ayid);
 
-        const [cls, emps] = await Promise.all([
-          api.get(`${API.CLASSROOMS.BASE}?academicYear=${ayid}`),
-          api.get(`${API.EMPLOYEES.BASE}?role=teacher&status=active`),
-        ]);
-        setClassrooms(cls.data || []);
+        const emps = await api.get(`${API.EMPLOYEES.BASE}?role=teacher&status=active`);
         setAllTeachers(emps.data || []);
       } catch (err) {
         console.log(err);
-      } finally {
         setLoading(false);
       }
     })();
@@ -89,9 +86,26 @@ export default function ClassroomsPage() {
   // ── Data helpers ───────────────────────────────────────────────────────────
   const fetchClassrooms = useCallback(async () => {
     if (!ayId) return;
-    const res = await api.get(`${API.CLASSROOMS.BASE}?academicYear=${ayId}`);
-    setClassrooms(res.data || []);
-  }, [ayId]);
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
+      if (statusFilter !== 'all') params.set('isActive', String(statusFilter === 'active'));
+      if (searchQuery.trim()) params.set('search', searchQuery.trim());
+      const res = await api.get(`${API.CLASSROOMS.BASE}?${params}`);
+      setClassrooms(res.data || []);
+      setTotal(res.meta?.total || 0);
+    } catch (err) {
+      console.error('Failed to load classrooms', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [ayId, page, statusFilter, searchQuery]);
+
+  useEffect(() => {
+    if (!ayId) return undefined;
+    const timeout = window.setTimeout(fetchClassrooms, 250);
+    return () => window.clearTimeout(timeout);
+  }, [fetchClassrooms, ayId]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
   const handleToggle = async (id) => {
@@ -116,21 +130,6 @@ export default function ClassroomsPage() {
       }
     }
   };
-
-  // ── Filtering ──────────────────────────────────────────────────────────────
-  const filtered = classrooms.filter((c) => {
-    const matchSearch =
-      !searchQuery ||
-      c.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.className.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'active' && c.isActive) ||
-      (statusFilter === 'inactive' && !c.isActive);
-
-    return matchSearch && matchStatus;
-  });
 
   // ── Expand toggler ─────────────────────────────────────────────────────────
   const togglePanel = (id, panel) => {
@@ -158,7 +157,7 @@ export default function ClassroomsPage() {
       {/* ── Header ── */}
       <PageHeader
         title="Classrooms"
-        subtitle={`${classrooms.length} class${classrooms.length !== 1 ? 'es' : ''} this year`}
+        subtitle={`${total} class${total !== 1 ? 'es' : ''} this year`}
         actions={
           <Button onClick={() => setAddOpen(true)}>
             <Plus className="w-4 h-4" /> Add Classroom
@@ -171,13 +170,13 @@ export default function ClassroomsPage() {
         <Input
           placeholder="Search classrooms…"
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={e => { setSearchQuery(e.target.value); setPage(1); }}
           className="w-56"
         />
         {['all', 'active', 'inactive'].map(f => (
           <button
             key={f}
-            onClick={() => setStatusFilter(f)}
+            onClick={() => { setStatusFilter(f); setPage(1); }}
             className={`px-3 py-1 rounded-full text-sm border transition-colors ${
               statusFilter === f
                 ? 'bg-blue-600 text-white border-blue-600'
@@ -190,7 +189,7 @@ export default function ClassroomsPage() {
         {(searchQuery || statusFilter !== 'all') && (
           <button
             className="text-xs text-slate-400 hover:text-white ml-1"
-            onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
+            onClick={() => { setSearchQuery(''); setStatusFilter('all'); setPage(1); }}
           >
             Clear filters
           </button>
@@ -198,7 +197,7 @@ export default function ClassroomsPage() {
       </div>
 
       {/* ── Empty state ── */}
-      {filtered.length === 0 && (
+      {classrooms.length === 0 && (
         <Card className="py-16 text-center text-slate-400">
           <GraduationCap className="w-10 h-10 mx-auto mb-3 opacity-30" />
           <p>{searchQuery ? 'No classrooms match your search.' : 'No classrooms yet. Add one to get started.'}</p>
@@ -207,7 +206,7 @@ export default function ClassroomsPage() {
 
       {/* ── Classroom cards ── */}
       <div className="grid grid-cols-1 gap-4">
-        {filtered.map(classroom => (
+        {classrooms.map(classroom => (
           <ClassroomCard
             key={classroom._id}
             classroom={classroom}
@@ -222,6 +221,7 @@ export default function ClassroomsPage() {
           />
         ))}
       </div>
+      <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
 
       {/* ── Add / Edit modal ── */}
       <ClassroomModal
@@ -397,19 +397,24 @@ function PanelToggle({ icon, label, active, onClick, bordered }) {
 function StudentsPanel({ classroomId }) {
   const [students, setStudents] = useState([]);
   const [loading, setLoading]   = useState(true);
+  const [page, setPage]         = useState(1);
+  const [total, setTotal]       = useState(0);
 
   useEffect(() => {
+    setLoading(true);
     (async () => {
       try {
-        const res = await api.get(`${API.CLASSROOMS.BY_ID(classroomId)}/students`);
+        const res = await api.get(`${API.CLASSROOMS.BY_ID(classroomId)}/students?page=${page}&limit=20`);
         setStudents(res.data || []);
+        setTotal(res.meta?.total || 0);
       } catch {
         setStudents([]);
+        setTotal(0);
       } finally {
         setLoading(false);
       }
     })();
-  }, [classroomId]);
+  }, [classroomId, page]);
 
   const STATUS_COLORS = {
     Approved:    'green',
@@ -458,6 +463,7 @@ function StudentsPanel({ classroomId }) {
           </div>
         ))}
       </div>
+      <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
     </div>
   );
 }

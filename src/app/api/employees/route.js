@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
 
 export const GET = protect(async (request) => {
   try {
@@ -15,6 +16,8 @@ export const GET = protect(async (request) => {
     const status       = searchParams.get('status');
     const academicYear = searchParams.get('academicYear');
     const search       = searchParams.get('search');
+    const pagination = parsePagination(searchParams);
+    if (pagination?.error) return r.badRequest(pagination.error);
 
     if (role)         filter.role         = role;
     if (status)       filter.status       = status;
@@ -27,11 +30,18 @@ export const GET = protect(async (request) => {
       ];
     }
 
-    const employees = await Employee.find(filter)
+    const query = Employee.find(filter)
       .populate('academicYear', 'name')
       .sort({ name: 1 });
+    if (pagination) query.skip(pagination.skip).limit(pagination.limit);
+    const [employees, total] = await Promise.all([
+      query,
+      pagination ? Employee.countDocuments(filter) : Promise.resolve(null),
+    ]);
 
-    return r.ok(employees);
+    return pagination
+      ? r.ok(employees, 'Employees fetched', paginationMeta(total, pagination))
+      : r.ok(employees);
   } catch (err) {
     return r.serverError(err.message);
   }

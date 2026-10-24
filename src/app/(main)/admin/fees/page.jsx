@@ -25,7 +25,7 @@ import {
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
-  PageContent, PageHeader, Card, Table, Button, Input,
+  PageContent, PageHeader, Card, Table, Pagination, Button, Input,
   Select, feeStatusBadge, Modal,
 } from '@/components/ui.jsx';
 
@@ -59,6 +59,9 @@ export default function FeesPage() {
   const [ayId, setAyId]           = useState('');
   const [ayStartDate, setAyStartDate] = useState(null);
   const [loading, setLoading]     = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({ pendingCount: 0, overdueCount: 0, totalOutstanding: 0 });
 
   // filters
   const [classFilter, setClassFilter]   = useState('');
@@ -97,7 +100,7 @@ export default function FeesPage() {
     if (!ayId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ academicYear: ayId });
+      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
       if (classFilter)   params.set('classId', classFilter);
       if (statusFilter)  params.set('status', statusFilter);
       if (monthFilter)   params.set('month', monthFilter);
@@ -105,9 +108,15 @@ export default function FeesPage() {
       if (searchRef.current) params.set('search', searchRef.current);
       const res = await api.get(`${API.FEES.BASE}?${params}`);
       setFees(res.data || []);
+      setTotal(res.meta?.total || 0);
+      setSummary({
+        pendingCount: res.meta?.pendingCount || 0,
+        overdueCount: res.meta?.overdueCount || 0,
+        totalOutstanding: res.meta?.totalOutstanding || 0,
+      });
       setSelected([]);
     } catch {} finally { setLoading(false); }
-  }, [ayId, classFilter, statusFilter, monthFilter, yearFilter]);
+  }, [ayId, classFilter, statusFilter, monthFilter, yearFilter, page]);
 
   useEffect(() => { if (ayId) fetchFees(); }, [fetchFees]);
 
@@ -116,8 +125,11 @@ export default function FeesPage() {
   const handleSearchChange = (val) => {
     setStudentSearch(val);
     searchRef.current = val;
+    setPage(1);
     clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => fetchFees(), 400);
+    if (page === 1) {
+      searchTimer.current = setTimeout(() => fetchFees(), 400);
+    }
   };
 
   const monthOptions = buildMonthOptions(ayStartDate, true);
@@ -228,15 +240,11 @@ export default function FeesPage() {
     },
   ];
 
-  const pendingCount  = fees.filter(f => f.status === 'Pending').length;
-  const overdueCount  = fees.filter(f => f.status === 'Overdue').length;
-  const totalPending  = fees.filter(f => f.status !== 'Paid').reduce((s, f) => s + (f.finalAmount || 0), 0);
-
   return (
     <PageContent>
       <PageHeader
         title="Fees"
-        subtitle={`${fees.length} records · ${pendingCount} pending · ${overdueCount} overdue`}
+        subtitle={`${total} records · ${summary.pendingCount} pending · ${summary.overdueCount} overdue`}
         actions={
           <div className="flex gap-2 flex-wrap">
             <Button variant="ghost" onClick={() => setReceiptsOpen(true)}>
@@ -256,11 +264,11 @@ export default function FeesPage() {
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700">
           <p className="text-xs text-slate-500 mb-1">Total Outstanding</p>
-          <p className="text-lg font-bold text-amber-400">₹{totalPending.toLocaleString()}</p>
+          <p className="text-lg font-bold text-amber-400">₹{summary.totalOutstanding.toLocaleString()}</p>
         </div>
         <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700">
           <p className="text-xs text-slate-500 mb-1">Overdue</p>
-          <p className="text-lg font-bold text-red-400">{overdueCount}</p>
+          <p className="text-lg font-bold text-red-400">{summary.overdueCount}</p>
         </div>
         <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700">
           <p className="text-xs text-slate-500 mb-1">Paid This View</p>
@@ -286,10 +294,10 @@ export default function FeesPage() {
             </button>
           )}
         </div>
-        <Select options={classOptions}  value={classFilter}  onChange={e => setClassFilter(e.target.value)}  className="w-44" />
-        <Select options={statusOptions} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-40" />
-        <Select options={monthOptions}  value={monthFilter}  onChange={e => setMonthFilter(e.target.value)}  className="w-36" />
-        <Select options={yearOptions}   value={yearFilter}   onChange={e => setYearFilter(e.target.value)}   className="w-32" />
+        <Select options={classOptions}  value={classFilter}  onChange={e => { setClassFilter(e.target.value); setPage(1); }}  className="w-44" />
+        <Select options={statusOptions} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} className="w-40" />
+        <Select options={monthOptions}  value={monthFilter}  onChange={e => { setMonthFilter(e.target.value); setPage(1); }}  className="w-36" />
+        <Select options={yearOptions}   value={yearFilter}   onChange={e => { setYearFilter(e.target.value); setPage(1); }}   className="w-32" />
         <Button variant="ghost" onClick={fetchFees}><RefreshCw className="w-4 h-4" /></Button>
         {selected.length > 0 && (
           <Button variant="danger" onClick={handleBulkDelete}>
@@ -300,6 +308,7 @@ export default function FeesPage() {
 
       <Card className="!p-0">
         <Table columns={columns} data={fees} loading={loading} emptyMessage="No fee records found" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       {/* Modals */}

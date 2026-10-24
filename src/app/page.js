@@ -78,23 +78,23 @@ const GALLERY = [
 
 /* ── shared styles ── */
 const S = {
-  amber: "#f59e0b",
-  amberDim: "rgba(245,158,11,0.12)",
-  amberBorder: "rgba(245,158,11,0.18)",
-  bg0: "#09090b",
-  bg1: "#0c0c0f",
-  bg2: "#111113",
-  card: "rgba(255,255,255,0.025)",
-  border: "rgba(255,255,255,0.06)",
+  amber: "#818cf8",
+  amberDim: "rgba(99,102,241,0.12)",
+  amberBorder: "rgba(99,102,241,0.24)",
+  bg0: "#020617",
+  bg1: "#0f172a",
+  bg2: "#1e293b",
+  card: "rgba(255,255,255,0.04)",
+  border: "rgba(148,163,184,0.12)",
   text: "#f4f4f5",
-  muted: "#71717a",
-  dim: "#52525b",
+  muted: "#94a3b8",
+  dim: "#64748b",
   sora: "'Sora', sans-serif",
   dm: "'DM Sans', sans-serif",
 };
 
 const cardBase = {
-  background: `linear-gradient(160deg, ${S.card} 0%, rgba(9,9,11,0.9) 100%)`,
+  background: `linear-gradient(160deg, ${S.card} 0%, rgba(2,6,23,0.9) 100%)`,
   border: `1px solid ${S.border}`,
   borderRadius: 20,
 };
@@ -160,35 +160,35 @@ export default function MauliSchoolPage() {
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
         html{scroll-behavior:smooth}
-        body{font-family:'DM Sans',sans-serif;background:#09090b;color:#d4d4d8}
+        body{font-family:'DM Sans',sans-serif;background:#020617;color:#d4d4d8}
         h1,h2,h3,h4{font-family:'Sora',sans-serif}
         a{text-decoration:none;color:inherit}
         ::-webkit-scrollbar{width:3px}
-        ::-webkit-scrollbar-thumb{background:rgba(245,158,11,0.3);border-radius:4px}
+        ::-webkit-scrollbar-thumb{background:rgba(99,102,241,0.5);border-radius:4px}
 
         @keyframes heroUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
         @keyframes shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
-        @keyframes ring{0%{box-shadow:0 0 0 0 rgba(245,158,11,0.5)}70%{box-shadow:0 0 0 10px rgba(245,158,11,0)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}
+        @keyframes ring{0%{box-shadow:0 0 0 0 rgba(99,102,241,0.5)}70%{box-shadow:0 0 0 10px rgba(99,102,241,0)}100%{box-shadow:0 0 0 0 rgba(99,102,241,0)}}
         @keyframes spin{to{transform:rotate(360deg)}}
 
         .hero-up{animation:heroUp 0.9s cubic-bezier(.16,1,.3,1) both}
         .hero-up-2{animation:heroUp 0.9s 0.18s cubic-bezier(.16,1,.3,1) both}
         .card-float{animation:float 4.5s ease-in-out infinite}
         .fire-text{
-          background:linear-gradient(90deg,#f59e0b,#fb923c,#f87171,#fb923c,#f59e0b);
+          background:linear-gradient(90deg,#818cf8,#6366f1,#38bdf8,#6366f1,#818cf8);
           background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
           animation:shimmer 5s linear infinite}
         .ring{animation:ring 2.2s ease infinite}
         .spin{animation:spin 1s linear infinite}
 
-        .fac-card:hover{transform:translateY(-4px)!important;border-color:rgba(245,158,11,0.22)!important;box-shadow:0 12px 40px rgba(0,0,0,0.45)!important}
-        .cls-card:hover{transform:translateY(-8px)!important;border-color:rgba(245,158,11,0.28)!important;box-shadow:0 16px 44px rgba(0,0,0,0.55)!important}
+        .fac-card:hover{transform:translateY(-4px)!important;border-color:rgba(99,102,241,0.35)!important;box-shadow:0 12px 40px rgba(0,0,0,0.45)!important}
+        .cls-card:hover{transform:translateY(-8px)!important;border-color:rgba(99,102,241,0.4)!important;box-shadow:0 16px 44px rgba(0,0,0,0.55)!important}
         .gal-card:hover{transform:scale(1.03)!important;box-shadow:0 20px 50px rgba(0,0,0,0.7)!important}
         .gal-card:hover .gal-label{transform:translateY(0)!important}
-        .about-card:hover{border-color:rgba(245,158,11,0.22)!important;box-shadow:0 8px 32px rgba(245,158,11,0.07)!important}
-        .info-link:hover{border-color:rgba(245,158,11,0.22)!important;box-shadow:0 4px 20px rgba(245,158,11,0.07)!important}
-        .fd-input:focus{border-color:rgba(245,158,11,0.55)!important;background:#131315!important}
+        .about-card:hover{border-color:rgba(99,102,241,0.35)!important;box-shadow:0 8px 32px rgba(99,102,241,0.12)!important}
+        .info-link:hover{border-color:rgba(99,102,241,0.35)!important;box-shadow:0 4px 20px rgba(99,102,241,0.12)!important}
+        .fd-input:focus{border-color:rgba(99,102,241,0.65)!important;background:#1e293b!important}
 
         @media(max-width:768px){
           .hero-grid{grid-template-columns:1fr!important}
@@ -209,10 +209,10 @@ export default function MauliSchoolPage() {
         {/* ══════ NAV ══════ */}
         <nav style={{
           position:"fixed", inset:"0 0 auto", zIndex:50,
-          background: scrolled ? "rgba(9,9,11,0.97)" : "rgba(9,9,11,0.82)",
+          background: scrolled ? "rgba(2,6,23,0.97)" : "rgba(2,6,23,0.82)",
           backdropFilter:"blur(20px) saturate(1.5)",
           borderBottom: `1px solid ${scrolled ? S.amberBorder : "rgba(255,255,255,0.04)"}`,
-          boxShadow: scrolled ? "0 2px 32px rgba(245,158,11,0.07)" : "none",
+          boxShadow: scrolled ? "0 2px 32px rgba(99,102,241,0.12)" : "none",
           transition:"all 0.35s",
         }}>
           <div style={{ maxWidth:1152, margin:"0 auto", padding:"0 24px", height:64,
@@ -221,14 +221,14 @@ export default function MauliSchoolPage() {
             <a href="#home" style={{ display:"flex", alignItems:"center", gap:12 }}>
               <div style={{
                 width:38, height:38, borderRadius:12,
-                background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
                 display:"flex", alignItems:"center", justifyContent:"center",
-                boxShadow:"0 4px 16px rgba(245,158,11,0.3)",
+                boxShadow:"0 4px 16px rgba(79,70,229,0.3)",
               }}>
-                <Flame size={18} color="white"/>
+                <GraduationCap size={18} color="white"/>
               </div>
               <div>
-                <div style={{ fontFamily:S.sora, fontSize:13, fontWeight:900, color:S.amber, letterSpacing:"0.06em", lineHeight:1 }}>MAULI SCHOOL</div>
+                <div style={{ fontFamily:S.sora, fontSize:13, fontWeight:900, color:S.amber, letterSpacing:"0.06em", lineHeight:1 }}>MAULI ENGLISH MEDIUM</div>
                 <div style={{ fontSize:9, color:"#3f3f46", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase" }}>CBSE Pattern</div>
               </div>
             </a>
@@ -254,8 +254,8 @@ export default function MauliSchoolPage() {
               </a>
               <a href="#admission" style={{
                 marginLeft:6, padding:"8px 22px", fontSize:13, fontWeight:700, color:"white",
-                borderRadius:9999, background:"linear-gradient(135deg,#f59e0b,#ef4444)",
-                boxShadow:"0 4px 16px rgba(245,158,11,0.3)",
+                borderRadius:9999, background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
+                boxShadow:"0 4px 16px rgba(79,70,229,0.3)",
               }}>Apply Now</a>
             </div>
 
@@ -286,7 +286,7 @@ export default function MauliSchoolPage() {
               <a href="#admission" onClick={() => setMenuOpen(false)}
                 style={{ display:"block", margin:"6px 16px 14px", padding:"10px 16px",
                   textAlign:"center", fontSize:14, fontWeight:700, color:"white", borderRadius:12,
-                  background:"linear-gradient(135deg,#f59e0b,#ef4444)" }}>
+                  background:"linear-gradient(135deg,#4f46e5,#0ea5e9)" }}>
                 Apply Now
               </a>
             </div>
@@ -297,10 +297,10 @@ export default function MauliSchoolPage() {
         <section id="home" style={{
           position:"relative", minHeight:"100vh", display:"flex", alignItems:"center",
           paddingTop:64, overflow:"hidden",
-          background:"linear-gradient(150deg,#09090b 0%,#0f0c08 45%,#130f06 70%,#09090b 100%)",
+          background:"linear-gradient(150deg,#020617 0%,#0f172a 48%,#111b3a 72%,#020617 100%)",
         }}>
           <div style={{ position:"absolute", top:-120, right:-120, width:640, height:640, borderRadius:"50%",
-            background:"radial-gradient(circle,rgba(245,158,11,0.13) 0%,transparent 65%)", filter:"blur(50px)", pointerEvents:"none" }}/>
+            background:"radial-gradient(circle,rgba(99,102,241,0.2) 0%,transparent 65%)", filter:"blur(50px)", pointerEvents:"none" }}/>
           <div style={{ position:"absolute", bottom:-100, left:-100, width:520, height:520, borderRadius:"50%",
             background:"radial-gradient(circle,rgba(239,68,68,0.07) 0%,transparent 65%)", filter:"blur(40px)", pointerEvents:"none" }}/>
           <div style={{ position:"absolute", inset:0, pointerEvents:"none", opacity:0.025,
@@ -321,7 +321,7 @@ export default function MauliSchoolPage() {
                 <h1 style={{ lineHeight:1.05, marginBottom:16 }}>
                   <span className="fire-text" style={{ display:"block", fontSize:"clamp(3rem,6vw,4.5rem)", fontWeight:900 }}>MAULI</span>
                   <span style={{ display:"block", fontSize:"clamp(2rem,4vw,3rem)", fontWeight:800, color:S.text }}>English Medium</span>
-                  <span style={{ display:"block", fontSize:"clamp(1.2rem,2.5vw,1.7rem)", fontWeight:600, color:S.dim }}>School &amp; College</span>
+                  <span style={{ display:"block", fontSize:"clamp(1.2rem,2.5vw,1.7rem)", fontWeight:600, color:S.dim }}>School &amp; Jr. College</span>
                 </h1>
 
                 <p style={{ fontSize:14, color:S.dim, marginBottom:24, lineHeight:1.7 }}>
@@ -332,8 +332,8 @@ export default function MauliSchoolPage() {
                 <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:28 }}>
                   {[
                     ["✅ No Donation",           "rgba(16,185,129,0.1)","rgba(16,185,129,0.25)","#34d399"],
-                    ["🎉 50% Discount",          "rgba(245,158,11,0.1)","rgba(245,158,11,0.25)",S.amber],
-                    ["👶 Pre-Primary & Primary", "rgba(239,68,68,0.1)", "rgba(239,68,68,0.25)","#f87171"],
+                    ["🎉 50% Discount",          "rgba(99,102,241,0.12)","rgba(99,102,241,0.28)",S.amber],
+                    ["👶 Pre-Primary & Primary", "rgba(56,189,248,0.1)", "rgba(56,189,248,0.25)","#7dd3fc"],
                   ].map(([t,bg,br,tc]) => (
                     <span key={t} style={{ padding:"4px 13px", borderRadius:9999, fontSize:12, fontWeight:700,
                       background:bg, border:`1px solid ${br}`, color:tc }}>{t}</span>
@@ -342,9 +342,9 @@ export default function MauliSchoolPage() {
 
                 <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                   <a href="#admission" style={{ display:"inline-flex", alignItems:"center", gap:8,
-                    padding:"12px 28px", background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                    padding:"12px 28px", background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
                     color:"white", fontWeight:700, borderRadius:16, fontSize:14,
-                    boxShadow:"0 8px 28px rgba(245,158,11,0.28)" }}>Apply Now →</a>
+                    boxShadow:"0 8px 28px rgba(79,70,229,0.3)" }}>Apply Now →</a>
                   <a href="tel:9130415350" style={{ display:"inline-flex", alignItems:"center", gap:8,
                     padding:"12px 28px", background:"rgba(255,255,255,0.03)",
                     border:`1px solid ${S.amberBorder}`, color:S.amber,
@@ -358,14 +358,14 @@ export default function MauliSchoolPage() {
               <div className="hero-card-col" style={{ display:"flex", justifyContent:"flex-end" }}>
                 <div className="card-float hero-up-2" style={{ position:"relative", width:"100%", maxWidth:340 }}>
                   <div style={{
-                    background:"linear-gradient(160deg,rgba(245,158,11,0.05) 0%,rgba(9,9,11,0.97) 100%)",
+                    background:"linear-gradient(160deg,rgba(99,102,241,0.08) 0%,rgba(2,6,23,0.97) 100%)",
                     border:`1px solid ${S.amberBorder}`, borderRadius:28, padding:32,
                     boxShadow:"0 32px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.04)",
                   }}>
                     <div style={{ width:78, height:78, margin:"0 auto 16px", borderRadius:22,
                       display:"flex", alignItems:"center", justifyContent:"center",
-                      background:"linear-gradient(135deg,#f59e0b,#ef4444)",
-                      boxShadow:"0 8px 32px rgba(245,158,11,0.35)" }}>
+                      background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
+                      boxShadow:"0 8px 32px rgba(79,70,229,0.35)" }}>
                       <GraduationCap size={38} color="white"/>
                     </div>
                     <h3 style={{ textAlign:"center", fontWeight:900, fontSize:20, color:S.text, marginBottom:4 }}>Mauli School</h3>
@@ -382,9 +382,9 @@ export default function MauliSchoolPage() {
                     ))}
                   </div>
                   <div style={{ position:"absolute", top:-16, left:-20,
-                    background:"linear-gradient(135deg,#f59e0b,#ef4444)", color:"white",
+                    background:"linear-gradient(135deg,#4f46e5,#0ea5e9)", color:"white",
                     fontSize:12, fontWeight:700, padding:"8px 14px", borderRadius:12,
-                    boxShadow:"0 4px 16px rgba(245,158,11,0.4)" }}>🏆 Best School</div>
+                    boxShadow:"0 4px 16px rgba(79,70,229,0.35)" }}>🏆 Best School</div>
                   <div style={{ position:"absolute", bottom:-16, right:-16,
                     background:"rgba(9,9,11,0.95)", border:`1px solid ${S.amberBorder}`,
                     color:S.amber, fontSize:12, fontWeight:700, padding:"8px 14px", borderRadius:12,
@@ -405,7 +405,7 @@ export default function MauliSchoolPage() {
             </Reveal>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:20 }}>
               {[
-                { Icon:GraduationCap, title:"Caring Teachers",   desc:"Experienced educators who nurture every child individually.",   bg:"rgba(245,158,11,0.1)",  ic:S.amber },
+                { Icon:GraduationCap, title:"Caring Teachers",   desc:"Experienced educators who nurture every child individually.",   bg:"rgba(99,102,241,0.14)",  ic:S.amber },
                 { Icon:Shield,        title:"Safe Environment",  desc:"CCTV-monitored, child-safe campus with secure atmosphere.",     bg:"rgba(139,92,246,0.1)",  ic:"#a78bfa" },
                 { Icon:Heart,         title:"Holistic Growth",   desc:"Academics paired with sports, arts, and cultural activities.",  bg:"rgba(16,185,129,0.1)",  ic:"#34d399" },
               ].map(({Icon,title,desc,bg,ic}, i) => (
@@ -462,8 +462,8 @@ export default function MauliSchoolPage() {
               {CLASSES.map(({emoji,name,age}, i) => (
                 <Reveal key={name} delay={i*80}>
                   <div className="cls-card" style={{
-                    background:`linear-gradient(160deg,rgba(245,158,11,0.04) 0%,rgba(9,9,11,0.95) 100%)`,
-                    border:`1px solid rgba(245,158,11,0.1)`,
+                    background:`linear-gradient(160deg,rgba(99,102,241,0.08) 0%,rgba(2,6,23,0.95) 100%)`,
+                    border:`1px solid rgba(99,102,241,0.2)`,
                     borderRadius:20, padding:"22px 16px", textAlign:"center",
                     cursor:"default", transition:"all 0.3s",
                   }}>
@@ -515,15 +515,15 @@ export default function MauliSchoolPage() {
             <Reveal>
               <div style={{
                 position:"relative", overflow:"hidden",
-                background:"linear-gradient(135deg,#140c00,#0f0a00 50%,#0a0608)",
-                border:`1px solid rgba(245,158,11,0.15)`,
+                background:"linear-gradient(135deg,#111b3a,#0f172a 50%,#020617)",
+                border:`1px solid rgba(99,102,241,0.24)`,
                 borderRadius:28, padding:"48px 40px",
                 boxShadow:"0 24px 80px rgba(0,0,0,0.55)",
               }}>
                 <div style={{ position:"absolute", top:-80, right:-80, width:320, height:320, borderRadius:"50%",
-                  background:"radial-gradient(circle,rgba(245,158,11,0.1),transparent)", filter:"blur(40px)" }}/>
+                  background:"radial-gradient(circle,rgba(99,102,241,0.18),transparent)", filter:"blur(40px)" }}/>
                 <div style={{ position:"absolute", bottom:-60, left:-60, width:240, height:240, borderRadius:"50%",
-                  background:"radial-gradient(circle,rgba(239,68,68,0.06),transparent)", filter:"blur(30px)" }}/>
+                  background:"radial-gradient(circle,rgba(14,165,233,0.1),transparent)", filter:"blur(30px)" }}/>
                 <div className="adm-grid" style={{ position:"relative", zIndex:1,
                   display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center" }}>
                   <div>
@@ -541,9 +541,9 @@ export default function MauliSchoolPage() {
                     </p>
                     <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
                       <a href="#contact" style={{ display:"inline-flex", alignItems:"center", gap:8,
-                        padding:"10px 24px", background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                        padding:"10px 24px", background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
                         color:"white", fontWeight:700, borderRadius:12, fontSize:14,
-                        boxShadow:"0 4px 20px rgba(245,158,11,0.25)" }}>Apply Now →</a>
+                        boxShadow:"0 4px 20px rgba(79,70,229,0.3)" }}>Apply Now →</a>
                       <a href="tel:9130415350" style={{ display:"inline-flex", alignItems:"center", gap:8,
                         padding:"10px 24px", background:"rgba(255,255,255,0.04)",
                         border:"1px solid rgba(255,255,255,0.08)",
@@ -564,7 +564,7 @@ export default function MauliSchoolPage() {
                       <div key={b} style={{ display:"flex", alignItems:"flex-start", gap:10,
                         background:"rgba(255,255,255,0.025)", border:"1px solid rgba(255,255,255,0.05)",
                         borderRadius:12, padding:"10px 16px" }}>
-                        <CheckCircle2 size={14} color="#fbbf24" style={{ flexShrink:0, marginTop:2 }}/>
+                        <CheckCircle2 size={14} color="#818cf8" style={{ flexShrink:0, marginTop:2 }}/>
                         <span style={{ fontSize:13, color:"#a1a1aa" }}>{b}</span>
                       </div>
                     ))}
@@ -596,9 +596,9 @@ export default function MauliSchoolPage() {
                   ].map(({Icon,label,value,href}) => {
                     const inner = <>
                       <div style={{ width:44, height:44, borderRadius:12, flexShrink:0,
-                        background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                        background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
                         display:"flex", alignItems:"center", justifyContent:"center",
-                        boxShadow:"0 4px 12px rgba(245,158,11,0.25)" }}>
+                        boxShadow:"0 4px 12px rgba(79,70,229,0.3)" }}>
                         <Icon size={18} color="white"/>
                       </div>
                       <div>
@@ -614,8 +614,8 @@ export default function MauliSchoolPage() {
                       ? <a key={label} href={href} className="info-link" style={sh}>{inner}</a>
                       : <div key={label} style={sh}>{inner}</div>;
                   })}
-                  <div style={{ padding:"18px 20px", background:"rgba(245,158,11,0.04)",
-                    border:`1px solid rgba(245,158,11,0.12)`, borderRadius:18 }}>
+                  <div style={{ padding:"18px 20px", background:"rgba(99,102,241,0.07)",
+                    border:`1px solid rgba(99,102,241,0.2)`, borderRadius:18 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6 }}>
                       <Clock size={13} color={S.amber}/>
                       <span style={{ fontSize:13, fontWeight:700, color:S.amber }}>School Hours</span>
@@ -629,8 +629,8 @@ export default function MauliSchoolPage() {
               {/* ── enquiry form ── */}
               <Reveal delay={120}>
                 <form onSubmit={submitEnquiry} style={{
-                  background:`linear-gradient(160deg,rgba(245,158,11,0.03) 0%,rgba(9,9,11,0.98) 100%)`,
-                  border:`1px solid rgba(245,158,11,0.1)`,
+                  background:`linear-gradient(160deg,rgba(99,102,241,0.07) 0%,rgba(2,6,23,0.98) 100%)`,
+                  border:`1px solid rgba(99,102,241,0.2)`,
                   borderRadius:24, padding:28,
                   boxShadow:"0 20px 60px rgba(0,0,0,0.45)",
                 }}>
@@ -705,11 +705,11 @@ export default function MauliSchoolPage() {
                     padding:"13px 0",
                     background: submitted
                       ? "linear-gradient(135deg,#059669,#10b981)"
-                      : "linear-gradient(135deg,#f59e0b,#ef4444)",
+                      : "linear-gradient(135deg,#4f46e5,#0ea5e9)",
                     color:"white", fontWeight:700, borderRadius:14, border:"none",
                     cursor: submitting ? "not-allowed" : "pointer",
                     fontSize:14, fontFamily:S.sora,
-                    boxShadow: submitted ? "0 4px 20px rgba(16,185,129,0.3)" : "0 4px 20px rgba(245,158,11,0.28)",
+                    boxShadow: submitted ? "0 4px 20px rgba(16,185,129,0.3)" : "0 4px 20px rgba(79,70,229,0.3)",
                     opacity: submitting ? 0.7 : 1, transition:"all 0.3s",
                   }}>
                     {submitting
@@ -731,12 +731,12 @@ export default function MauliSchoolPage() {
               <div>
                 <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
                   <div style={{ width:36, height:36, borderRadius:10,
-                    background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+                    background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
                     display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <Flame size={16} color="white"/>
+                    <GraduationCap size={16} color="white"/>
                   </div>
                   <div>
-                    <div style={{ fontFamily:S.sora, fontSize:13, fontWeight:900, color:S.amber }}>MAULI SCHOOL</div>
+                    <div style={{ fontFamily:S.sora, fontSize:13, fontWeight:900, color:S.amber }}>MAULI ENGLISH MEDIUM</div>
                     <div style={{ fontSize:9, color:"#3f3f46", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase" }}>CBSE Pattern</div>
                   </div>
                 </div>
@@ -782,10 +782,10 @@ export default function MauliSchoolPage() {
           <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
             style={{ position:"fixed", bottom:24, right:24, zIndex:50,
               width:44, height:44, borderRadius:"50%",
-              background:"linear-gradient(135deg,#f59e0b,#ef4444)",
+              background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
               color:"white", border:"none", cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
-              boxShadow:"0 4px 20px rgba(245,158,11,0.4)", transition:"transform 0.2s" }}
+              boxShadow:"0 4px 20px rgba(79,70,229,0.35)", transition:"transform 0.2s" }}
             onMouseEnter={e=>e.currentTarget.style.transform="scale(1.1)"}
             onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
             <ChevronUp size={20}/>
@@ -799,9 +799,9 @@ export default function MauliSchoolPage() {
 /* ── sub-components ── */
 function SectionHeader({ chip, chipColor="amber", title, desc }) {
   const chipMap = {
-    amber: { bg:"rgba(245,158,11,0.1)",  border:"rgba(245,158,11,0.2)",  color:"#f59e0b" },
-    red:   { bg:"rgba(239,68,68,0.1)",   border:"rgba(239,68,68,0.2)",   color:"#f87171" },
-    yellow:{ bg:"rgba(234,179,8,0.1)",   border:"rgba(234,179,8,0.2)",   color:"#fbbf24" },
+    amber: { bg:"rgba(99,102,241,0.12)", border:"rgba(99,102,241,0.25)", color:"#a5b4fc" },
+    red:   { bg:"rgba(14,165,233,0.1)",  border:"rgba(14,165,233,0.24)", color:"#7dd3fc" },
+    yellow:{ bg:"rgba(129,140,248,0.1)", border:"rgba(129,140,248,0.24)", color:"#c7d2fe" },
   };
   const c = chipMap[chipColor] || chipMap.amber;
   return (
@@ -833,7 +833,7 @@ function FInput({ label, required, style: outerStyle = {}, ...props }) {
     <div style={outerStyle}>
       <label style={{ display:"block", fontSize:10, fontWeight:700, color:"#52525b",
         textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:6 }}>
-        {label}{required && <span style={{ color:"#f59e0b", marginLeft:2 }}>*</span>}
+        {label}{required && <span style={{ color:"#818cf8", marginLeft:2 }}>*</span>}
       </label>
       <input
         {...props}

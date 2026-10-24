@@ -4,6 +4,8 @@ import { EmployeeAttendance } from '@/models/Attendance';
 import Employee from '@/models/Employee';
 import { r } from '@/lib/response';
 import { authorize } from '@/lib/auth';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
+import mongoose from 'mongoose';
 
 // ─── helpers ────────────────────────────────────────────────
 
@@ -45,6 +47,8 @@ export const GET = authorize('admin', 'principal')(async (request) => {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
+    const pagination = parsePagination(searchParams);
+    if (pagination?.error) return r.badRequest(pagination.error);
     const filter = {};
     if (searchParams.get('employeeId'))   filter.employee     = searchParams.get('employeeId');
     if (searchParams.get('month'))        filter.month        = Number(searchParams.get('month'));
@@ -52,13 +56,40 @@ export const GET = authorize('admin', 'principal')(async (request) => {
     if (searchParams.get('status'))       filter.status       = searchParams.get('status');
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
-    const records = await Payroll.find(filter)
+    const query = Payroll.find(filter)
       .populate('employee',    'name employeeId role monthlySalary')
       .populate('generatedBy', 'name')
       .populate('paidBy',      'name')
       .sort({ year: -1, month: -1 });
+    if (pagination) query.skip(pagination.skip).limit(pagination.limit);
+    const [records, total, summary] = await Promise.all([
+      query,
+      pagination ? Payroll.countDocuments(filter) : Promise.resolve(null),
+      pagination
+        ? Payroll.aggregate([
+            {
+              $match: Object.fromEntries(Object.entries(filter).map(([key, value]) => (
+                ['employee', 'academicYear'].includes(key) && mongoose.Types.ObjectId.isValid(value)
+                  ? [key, new mongoose.Types.ObjectId(value)]
+                  : [key, value]
+              ))),
+            },
+            {
+              $group: {
+                _id: null,
+                totalPayable: { $sum: '$netSalary' },
+                totalPaid: {
+                  $sum: { $cond: [{ $eq: ['$status', 'Paid'] }, '$netSalary', 0] },
+                },
+              },
+            },
+          ]).then(result => result[0] || { totalPayable: 0, totalPaid: 0 })
+        : Promise.resolve(null),
+    ]);
 
-    return r.ok(records);
+    return pagination
+      ? r.ok(records, 'Payroll fetched', { ...paginationMeta(total, pagination), ...summary })
+      : r.ok(records);
   } catch (err) {
     return r.serverError(err.message);
   }

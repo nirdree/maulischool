@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Badge } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Pagination, Badge } from '@/components/ui.jsx';
 
 function priorityColor(p) {
   return { Urgent: 'red', Important: 'yellow', Normal: 'slate' }[p] || 'slate';
@@ -18,16 +18,24 @@ function priorityColor(p) {
 export default function ParentNotices() {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     (async () => {
       try {
         const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
-        const res = await api.get(`${API.NOTICES.BASE}?academicYear=${ay.data?._id}`);
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: '20',
+          academicYear: ay.data?._id || '',
+        });
+        const res = await api.get(`${API.NOTICES.BASE}?${params}`);
         setNotices(res.data || []);
+        setTotal(res.meta?.total || 0);
       } catch {} finally { setLoading(false); }
     })();
-  }, []);
+  }, [page]);
 
   const urgent = notices.filter(n => n.priority === 'Urgent');
   const important = notices.filter(n => n.priority === 'Important');
@@ -78,7 +86,7 @@ export default function ParentNotices() {
 
   return (
     <PageContent>
-      <PageHeader title="School Notices" subtitle={`${notices.length} active notices`} />
+      <PageHeader title="School Notices" subtitle={`${total} active notices`} />
 
       {notices.length === 0 ? (
         <Card>
@@ -91,6 +99,7 @@ export default function ParentNotices() {
           <NoticeGroup title="📢 General" items={normal} borderColor="slate" />
         </>
       )}
+      <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
     </PageContent>
   );
 }

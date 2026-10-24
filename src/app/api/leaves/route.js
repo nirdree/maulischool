@@ -3,6 +3,8 @@ import { Leave, Payroll } from '@/models/Others';
 import Employee from '@/models/Employee';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
+import mongoose from 'mongoose';
 
 export async function isPayrollLocked(employeeId, fromDate, toDate) {
   const from = new Date(fromDate);
@@ -25,6 +27,8 @@ export const GET = protect(async (request) => {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
+    const pagination = parsePagination(searchParams);
+    if (pagination?.error) return r.badRequest(pagination.error);
     const filter = {};
 
     if (searchParams.get('status'))       filter.status       = searchParams.get('status');
@@ -45,12 +49,40 @@ export const GET = protect(async (request) => {
       filter.employee = searchParams.get('employeeId');
     }
 
-    const leaves = await Leave.find(filter)
+    const query = Leave.find(filter)
       .populate('employee',   'name employeeId role')
       .populate('approvedBy', 'name')
       .sort({ createdAt: -1 });
+    if (pagination) query.skip(pagination.skip).limit(pagination.limit);
+    const [leaves, total, summary] = await Promise.all([
+      query,
+      pagination ? Leave.countDocuments(filter) : Promise.resolve(null),
+      pagination
+        ? Leave.aggregate([
+            {
+              $match: Object.fromEntries(Object.entries(filter).map(([key, value]) => (
+                ['employee', 'academicYear'].includes(key) && mongoose.Types.ObjectId.isValid(value)
+                  ? [key, new mongoose.Types.ObjectId(value)]
+                  : [key, value]
+              ))),
+            },
+            {
+              $group: {
+                _id: null,
+                pendingCount: { $sum: { $cond: [{ $eq: ['$status', 'Pending'] }, 1, 0] } },
+                approvedCount: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
+                approvedDays: {
+                  $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, '$totalDays', 0] },
+                },
+              },
+            },
+          ]).then(result => result[0] || { pendingCount: 0, approvedCount: 0, approvedDays: 0 })
+        : Promise.resolve(null),
+    ]);
 
-    return r.ok(leaves);
+    return pagination
+      ? r.ok(leaves, 'Leaves fetched', { ...paginationMeta(total, pagination), ...summary })
+      : r.ok(leaves);
   } catch (err) {
     return r.serverError(err.message);
   }

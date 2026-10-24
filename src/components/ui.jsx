@@ -102,6 +102,41 @@ export function Table({ columns, data, loading, emptyMessage = 'No data found' }
   );
 }
 
+export function Pagination({ page, total, limit, onPageChange, loading = false }) {
+  const pages = Math.ceil(total / limit);
+  if (pages <= 1 && page <= 1) return null;
+
+  const firstItem = total ? Math.min((page - 1) * limit + 1, total) : 0;
+  const lastItem = Math.min(page * limit, total);
+
+  return (
+    <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800">
+      <span className="text-xs text-slate-500">
+        Showing {firstItem}–{lastItem} of {total}
+      </span>
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={loading || page <= 1}
+          onClick={() => onPageChange(page - 1)}
+        >
+          Prev
+        </Button>
+        <span className="text-xs text-slate-400">Page {page} of {Math.max(1, pages)}</span>
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={loading || page >= pages}
+          onClick={() => onPageChange(page + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ── Buttons ──────────────────────────────────────────────────
 export function Button({ children, onClick, variant = 'primary', size = 'md', disabled, className = '', type = 'button' }) {
   const variants = {

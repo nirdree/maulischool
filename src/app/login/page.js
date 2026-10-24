@@ -12,13 +12,6 @@ const ROLE_HOME = {
   parent:    '/parent/dashboard',
 };
 
-const DEMO_CREDS = [
-  { label: 'Admin',     email: 'admin@school.com',        password: 'Admin@123' },
-  { label: 'Principal', email: 'principal@school.com',    password: 'Principal@123' },
-  { label: 'Teacher',   email: 'priya.patel@school.com',  password: 'Teacher@123' },
-  { label: 'Parent',    email: 'anil.gupta@gmail.com',    password: 'Parent@123' },
-];
-
 export default function LoginPage() {
   return (
     <Suspense>
@@ -54,11 +47,6 @@ function LoginForm() {
     }
   };
 
-  const fillDemo = (cred) => {
-    setForm({ email: cred.email, password: cred.password });
-    setError('');
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
@@ -70,10 +58,10 @@ function LoginForm() {
             <GraduationCap className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
-            Sunrise School
+            Mauli English Medium School
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            Management System
+            Sanvid Pratishthan Sanchalit · School &amp; Jr. College
           </p>
         </div>
 
@@ -139,23 +127,6 @@ function LoginForm() {
             </button>
           </form>
 
-          {/* Demo */}
-          <div className="mt-6 pt-6 border-t border-slate-800">
-            <p className="text-xs text-slate-500 text-center mb-3">
-              Quick demo login
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {DEMO_CREDS.map((c) => (
-                <button
-                  key={c.label}
-                  onClick={() => fillDemo(c)}
-                  className="text-xs py-1.5 bg-slate-800 text-slate-300 rounded-md"
-                >
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </div>

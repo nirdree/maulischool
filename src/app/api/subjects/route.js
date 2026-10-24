@@ -2,11 +2,14 @@ import { connectDB } from '@/lib/mongodb';
 import Subject from '@/models/Subject';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
 
 export const GET = protect(async (request) => {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
+    const pagination = parsePagination(searchParams);
+    if (pagination?.error) return r.badRequest(pagination.error);
     const filter = {};
     const classId      = searchParams.get('classId');
     const teacherId    = searchParams.get('teacherId');
@@ -18,13 +21,20 @@ export const GET = protect(async (request) => {
     if (academicYear)         filter.academicYear = academicYear;
     if (isActive !== null)    filter.isActive     = isActive === 'true';
 
-    const subjects = await Subject.find(filter)
+    const query = Subject.find(filter)
       .populate('classroom',   'displayName')
       .populate('teacher',     'name employeeId')
       .populate('academicYear','name')
       .sort({ name: 1 });
+    if (pagination) query.skip(pagination.skip).limit(pagination.limit);
+    const [subjects, total] = await Promise.all([
+      query,
+      pagination ? Subject.countDocuments(filter) : Promise.resolve(null),
+    ]);
 
-    return r.ok(subjects);
+    return pagination
+      ? r.ok(subjects, 'Subjects fetched', paginationMeta(total, pagination))
+      : r.ok(subjects);
   } catch (err) {
     return r.serverError(err.message);
   }

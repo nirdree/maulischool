@@ -5,6 +5,7 @@ import User from '@/models/User';
 import mongoose from 'mongoose';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -54,8 +55,8 @@ export const GET = protect(async (request) => {
     const status       = searchParams.get('status');
     const academicYear = searchParams.get('academicYear');
     const search       = searchParams.get('search');
-    const page         = Number(searchParams.get('page')  || 1);
-    const limit        = Number(searchParams.get('limit') || 20);
+    const pagination = parsePagination(searchParams, { enabledByDefault: true });
+    if (pagination.error) return r.badRequest(pagination.error);
 
     const filter = {};
     if (classId)      filter.classroom    = classId;
@@ -79,12 +80,10 @@ export const GET = protect(async (request) => {
       .populate('fatherUser',   'name email status')
       .populate('motherUser',   'name email status')
       .sort({ rollNumber: 1, createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+      .skip(pagination.skip)
+      .limit(pagination.limit);
 
-    return r.ok(students, 'Students fetched', {
-      total, page, limit, pages: Math.ceil(total / limit),
-    });
+    return r.ok(students, 'Students fetched', paginationMeta(total, pagination));
   } catch (err) {
     return r.serverError(err.message);
   }
