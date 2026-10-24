@@ -15,7 +15,7 @@ import { Plus, Search, RefreshCw, Edit2, Trash2, KeyRound } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
-  PageContent, PageHeader, Card, Table, Button, Input, Select,
+  PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select,
   Badge, Modal,
 } from '@/components/ui.jsx';
 
@@ -59,6 +59,8 @@ export default function EmployeesPage() {
   const [search,       setSearch]       = useState('');
   const [roleFilter,   setRoleFilter]   = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   // Modal state — null = closed, 'add' = add form, Employee obj = edit form
   const [modal,        setModal]        = useState(null);
@@ -66,12 +68,13 @@ export default function EmployeesPage() {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
       if (search)       params.set('search', search);
       if (roleFilter)   params.set('role',   roleFilter);
       if (statusFilter) params.set('status', statusFilter);
       const res = await api.get(`${API.EMPLOYEES.BASE}?${params}`);
       setEmployees(res.data || []);
+      setTotal(res.meta?.total || 0);
     } catch (err) {
       console.log(err);
     } finally {
@@ -79,7 +82,7 @@ export default function EmployeesPage() {
     }
   };
 
-  useEffect(() => { fetchEmployees(); }, [roleFilter, statusFilter]);
+  useEffect(() => { fetchEmployees(); }, [roleFilter, statusFilter, page]);
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this employee? Their login account will also be removed.')) return;
@@ -198,7 +201,7 @@ export default function EmployeesPage() {
     <PageContent>
       <PageHeader
         title="Employees"
-        subtitle={`${employees.length} employee${employees.length !== 1 ? 's' : ''}`}
+        subtitle={`${total} employee${total !== 1 ? 's' : ''}`}
         actions={
           <Button onClick={() => setModal('add')}>
             <Plus className="w-4 h-4" /> Add Employee
@@ -215,19 +218,24 @@ export default function EmployeesPage() {
             placeholder="Search employees..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchEmployees()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (page === 1) fetchEmployees();
+                else setPage(1);
+              }
+            }}
           />
         </div>
         <Select
           options={ROLE_OPTIONS}
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
           className="w-40"
         />
         <Select
           options={STATUS_OPTIONS}
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           className="w-40"
         />
         <Button variant="ghost" onClick={fetchEmployees} title="Refresh">
@@ -243,6 +251,7 @@ export default function EmployeesPage() {
           loading={loading}
           emptyMessage="No employees found"
         />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       {/* Add / Edit modal */}

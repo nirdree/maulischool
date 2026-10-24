@@ -13,7 +13,7 @@ import { load } from '@cashfreepayments/cashfree-js';
 import { Eye, AlertCircle, CreditCard, Download, LoaderCircle } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Table, Button, Select, feeStatusBadge, Modal } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Table, Pagination, Button, Select, feeStatusBadge, Modal } from '@/components/ui.jsx';
 
 const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -29,6 +29,11 @@ export default function ParentFees() {
   const [selectedFee, setSelectedFee] = useState(null);
   const [payingFee, setPayingFee] = useState('');
   const [paymentNotice, setPaymentNotice] = useState(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({ annualTotal: 0, totalPaid: 0, totalDue: 0 });
+  const [gatewayPage, setGatewayPage] = useState(1);
+  const [gatewayTotal, setGatewayTotal] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -47,18 +52,33 @@ export default function ParentFees() {
   const fetchFees = useCallback(async () => {
     setLoading(true);
     try {
-      const [feeResponse, paymentResponse] = await Promise.all([
-        api.get(`${API.FEES.BASE}?studentId=${selectedChild}&academicYear=${ayId}`),
-        api.get(`/api/payments/cashfree/mine?studentId=${selectedChild}`),
-      ]);
+      const feeResponse = await api.get(`${API.FEES.BASE}?studentId=${selectedChild}&academicYear=${ayId}&page=${page}&limit=20`);
       setFees(feeResponse.data || []);
-      setGatewayPayments(paymentResponse.data || []);
+      setTotal(feeResponse.meta?.total || 0);
+      setSummary({
+        annualTotal: feeResponse.meta?.annualTotal || 0,
+        totalPaid: feeResponse.meta?.totalPaid || 0,
+        totalDue: feeResponse.meta?.totalDue || 0,
+      });
     } catch {} finally { setLoading(false); }
-  }, [selectedChild, ayId]);
+  }, [selectedChild, ayId, page]);
 
   useEffect(() => {
     if (selectedChild && ayId) fetchFees();
   }, [selectedChild, ayId, fetchFees]);
+
+  useEffect(() => {
+    if (!selectedChild) return;
+    api.get(`/api/payments/cashfree/mine?studentId=${selectedChild}&page=${gatewayPage}&limit=20`)
+      .then(response => {
+        setGatewayPayments(response.data || []);
+        setGatewayTotal(response.meta?.total || 0);
+      })
+      .catch(() => {
+        setGatewayPayments([]);
+        setGatewayTotal(0);
+      });
+  }, [selectedChild, gatewayPage]);
 
   useEffect(() => {
     const orderId = new URLSearchParams(window.location.search).get('order_id');
@@ -116,10 +136,6 @@ export default function ParentFees() {
     label: `${c.firstName} ${c.lastName}`,
   }));
 
-  const totalDue = fees.reduce((sum, fee) => sum + (fee.outstandingAmount ?? (fee.status === 'Paid' ? 0 : fee.finalAmount)), 0);
-  const totalPaid = fees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0);
-  const annualTotal = fees.reduce((sum, fee) => sum + (fee.finalAmount || 0), 0);
-
   const columns = [
     {
       key: 'period', label: 'Period',
@@ -167,7 +183,7 @@ export default function ParentFees() {
 
       <div className="flex gap-3 mb-6">
         {children.length > 1 && (
-          <Select options={childOptions} value={selectedChild} onChange={e => setSelectedChild(e.target.value)} className="w-52" label="Child" />
+          <Select options={childOptions} value={selectedChild} onChange={e => { setSelectedChild(e.target.value); setPage(1); setGatewayPage(1); }} className="w-52" label="Child" />
         )}
       </div>
 
@@ -181,9 +197,9 @@ export default function ParentFees() {
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         {[
-          { label: 'Annual Fees', value: `₹${annualTotal.toLocaleString()}`, color: 'text-sky-400' },
-          { label: 'Total Paid', value: `₹${totalPaid.toLocaleString()}`, color: 'text-emerald-400' },
-          { label: 'Outstanding', value: `₹${totalDue.toLocaleString()}`, color: totalDue > 0 ? 'text-rose-400' : 'text-white' },
+          { label: 'Annual Fees', value: `₹${summary.annualTotal.toLocaleString()}`, color: 'text-sky-400' },
+          { label: 'Total Paid', value: `₹${summary.totalPaid.toLocaleString()}`, color: 'text-emerald-400' },
+          { label: 'Outstanding', value: `₹${summary.totalDue.toLocaleString()}`, color: summary.totalDue > 0 ? 'text-rose-400' : 'text-white' },
         ].map(s => (
           <Card key={s.label}>
             <p className="text-xs text-slate-400 uppercase tracking-wider">{s.label}</p>
@@ -192,11 +208,11 @@ export default function ParentFees() {
         ))}
       </div>
 
-      {totalDue > 0 && (
+      {summary.totalDue > 0 && (
         <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
           <p className="text-sm text-rose-300">
-            You have outstanding fees of <strong>₹{totalDue.toLocaleString()}</strong>. Choose an installment below to pay online.
+            You have outstanding fees of <strong>₹{summary.totalDue.toLocaleString()}</strong>. Choose an installment below to pay online.
           </p>
         </div>
       )}
@@ -207,6 +223,7 @@ export default function ParentFees() {
 
       <Card className="!p-0">
         <Table columns={columns} data={fees} loading={loading} emptyMessage="No fee records found" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       <section className="mt-6">
@@ -224,6 +241,7 @@ export default function ParentFees() {
             </div>
           ))}
         </Card>
+        <Pagination page={gatewayPage} total={gatewayTotal} limit={20} onPageChange={setGatewayPage} />
       </section>
 
       {viewPayments && (

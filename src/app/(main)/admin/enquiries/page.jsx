@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import { Search, RefreshCw, Eye, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Table, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Status' },
@@ -53,7 +53,7 @@ export default function EnquiriesPage() {
     if (!ayId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, limit: 20, academicYear: ayId });
+      const params = new URLSearchParams({ page: String(page), limit: '20', academicYear: ayId });
       if (search) params.set('search', search);
       if (statusFilter) params.set('status', statusFilter);
       const res = await api.get(`${API.ENQUIRIES.BASE}?${params}`);
@@ -119,23 +119,20 @@ export default function EnquiriesPage() {
             className="pl-9 pr-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             placeholder="Search by name, phone..."
             value={search} onChange={e => setSearch(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && fetchEnquiries()}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                if (page === 1) fetchEnquiries();
+                else setPage(1);
+              }
+            }}
           />
         </div>
-        <Select options={STATUS_OPTIONS} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-44" />
+        <Select options={STATUS_OPTIONS} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} className="w-44" />
         <Button variant="ghost" onClick={fetchEnquiries}><RefreshCw className="w-4 h-4" /></Button>
       </div>
       <Card className="!p-0">
         <Table columns={columns} data={enquiries} loading={loading} emptyMessage="No enquiries found" />
-        {total > 20 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800">
-            <span className="text-xs text-slate-500">Page {page}</span>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</Button>
-              <Button size="sm" variant="ghost" disabled={enquiries.length < 20} onClick={() => setPage(p => p + 1)}>Next</Button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       {viewEnquiry && (

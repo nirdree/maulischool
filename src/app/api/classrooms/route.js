@@ -5,22 +5,35 @@ import AcademicYear from '@/models/AcademicYear';
 import Employee from '@/models/Employee';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
 
 export const GET = protect(async (request) => {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
+    const pagination = parsePagination(searchParams);
+    if (pagination?.error) return r.badRequest(pagination.error);
     const filter = {};
     const academicYear = searchParams.get('academicYear');
     const isActive     = searchParams.get('isActive');
 
     if (academicYear)          filter.academicYear = academicYear;
     if (isActive !== null)     filter.isActive     = isActive === 'true';
+    const search = searchParams.get('search')?.trim();
+    if (search) {
+      const expression = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ displayName: expression }, { className: expression }];
+    }
 
-    const classrooms = await Classroom.find(filter)
+    const query = Classroom.find(filter)
       .populate({ path: 'classTeacher', select: 'name employeeId', model: Employee })
       .populate({ path: 'academicYear', select: 'name', model: AcademicYear })
       .sort({ order: 1, className: 1, section: 1 });
+    if (pagination) query.skip(pagination.skip).limit(pagination.limit);
+    const [classrooms, total] = await Promise.all([
+      query,
+      pagination ? Classroom.countDocuments(filter) : Promise.resolve(null),
+    ]);
 
     const counts = await Student.aggregate([
       { $match: { classroom: { $in: classrooms.map(c => c._id) }, status: { $nin: ['Left', 'Alumni'] } } },
@@ -28,7 +41,10 @@ export const GET = protect(async (request) => {
     ]);
     const countMap = Object.fromEntries(counts.map(c => [c._id.toString(), c.count]));
 
-    return r.ok(classrooms.map(c => ({ ...c.toObject(), studentCount: countMap[c._id.toString()] || 0 })));
+    const data = classrooms.map(c => ({ ...c.toObject(), studentCount: countMap[c._id.toString()] || 0 }));
+    return pagination
+      ? r.ok(data, 'Classrooms fetched', paginationMeta(total, pagination))
+      : r.ok(data);
   } catch (err) {
     return r.serverError(err.message);
   }

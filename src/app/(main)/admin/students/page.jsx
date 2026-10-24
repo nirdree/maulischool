@@ -27,7 +27,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
-  PageContent, PageHeader, Card, Table, Button, Input, Select, Badge, Modal,
+  PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
 
 // ─── Constants ───────────────────────────────────────────────
@@ -233,7 +233,12 @@ export default function StudentsPage() {
             placeholder="Name, admission no, parent..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchStudents()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (page === 1) fetchStudents();
+                else setPage(1);
+              }
+            }}
           />
         </div>
         <Select options={STATUS_OPTIONS} value={statusFilter}
@@ -245,15 +250,7 @@ export default function StudentsPage() {
 
       <Card className="!p-0">
         <Table columns={columns} data={students} loading={loading} emptyMessage="No students found" />
-        {pages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800">
-            <span className="text-xs text-slate-500">Page {page} of {pages} · {total} total</span>
-            <div className="flex gap-2">
-              <Button size="sm" variant="ghost" disabled={page === 1}     onClick={() => setPage((p) => p - 1)}>Prev</Button>
-              <Button size="sm" variant="ghost" disabled={page >= pages}  onClick={() => setPage((p) => p + 1)}>Next</Button>
-            </div>
-          </div>
-        )}
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       <AdmissionModal

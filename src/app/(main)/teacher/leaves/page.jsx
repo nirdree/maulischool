@@ -13,7 +13,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
-  PageContent, PageHeader, Card, Table, Button, Input, Select, leaveStatusBadge, Badge, Modal,
+  PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, leaveStatusBadge, Badge, Modal,
 } from '@/components/ui.jsx';
 import { useAuth } from '@/context/AuthContext';
 
@@ -23,6 +23,9 @@ export default function TeacherLeaves() {
   const { user } = useAuth();
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({ pendingCount: 0, approvedCount: 0, approvedDays: 0 });
   const [ayId, setAyId] = useState('');
   const [ayError, setAyError] = useState('');
   const [applyOpen, setApplyOpen] = useState(false);
@@ -49,14 +52,22 @@ export default function TeacherLeaves() {
   const fetchLeaves = useCallback(async () => {
     setLoading(true);
     try {
-      const query = ayId ? `?academicYear=${encodeURIComponent(ayId)}` : '';
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      if (ayId) params.set('academicYear', ayId);
+      const query = `?${params}`;
       const res = await api.get(`${API.LEAVES.BASE}${query}`);
       setLeaves(Array.isArray(res?.data) ? res.data : []);
+      setTotal(res.meta?.total || 0);
+      setSummary({
+        pendingCount: res.meta?.pendingCount || 0,
+        approvedCount: res.meta?.approvedCount || 0,
+        approvedDays: res.meta?.approvedDays || 0,
+      });
     } catch (err) {
       console.error('Failed to load leave applications', err);
       setLeaves([]);
     } finally { setLoading(false); }
-  }, [ayId]);
+  }, [ayId, page]);
 
   useEffect(() => { fetchLeaves(); }, [fetchLeaves]);
 
@@ -69,10 +80,6 @@ export default function TeacherLeaves() {
   };
 
   // Summary counts
-  const pending = leaves.filter(l => l.status === 'Pending').length;
-  const approved = leaves.filter(l => l.status === 'Approved').length;
-  const totalDays = leaves.filter(l => l.status === 'Approved').reduce((s, l) => s + l.totalDays, 0);
-
   const columns = [
     { key: 'leaveType', label: 'Type', render: (l) => <Badge label={l.leaveType} color="indigo" /> },
     {
@@ -121,9 +128,9 @@ export default function TeacherLeaves() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Pending', value: pending, color: 'text-amber-400' },
-          { label: 'Approved', value: approved, color: 'text-emerald-400' },
-          { label: 'Approved Days', value: totalDays, color: 'text-sky-400' },
+          { label: 'Pending', value: summary.pendingCount, color: 'text-amber-400' },
+          { label: 'Approved', value: summary.approvedCount, color: 'text-emerald-400' },
+          { label: 'Approved Days', value: summary.approvedDays, color: 'text-sky-400' },
         ].map(s => (
           <Card key={s.label}>
             <p className="text-xs text-slate-400 uppercase tracking-wider">{s.label}</p>
@@ -134,6 +141,7 @@ export default function TeacherLeaves() {
 
       <Card className="!p-0">
         <Table columns={columns} data={leaves} loading={loading} emptyMessage="No leave applications" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       <ApplyLeaveModal

@@ -19,7 +19,7 @@ import {
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
-  PageContent, PageHeader, Card, Table, Button,
+  PageContent, PageHeader, Card, Table, Pagination, Button,
   Input, Select, leaveStatusBadge, Badge, Modal,
 } from '@/components/ui.jsx';
 
@@ -30,6 +30,9 @@ export default function LeavesAdminPage() {
   const [employees, setEmployees] = useState([]);
   const [ayId, setAyId]           = useState('');
   const [loading, setLoading]     = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({ pendingCount: 0, approvedCount: 0 });
 
   // filters
   const [statusFilter,    setStatusFilter]    = useState('Pending');
@@ -59,14 +62,19 @@ export default function LeavesAdminPage() {
     if (!ayId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ academicYear: ayId });
+      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
       if (statusFilter)   params.set('status',     statusFilter);
       if (employeeFilter) params.set('employeeId', employeeFilter);
       if (typeFilter)     params.set('leaveType',  typeFilter);
       const res = await api.get(`${API.LEAVES.BASE}?${params}`);
       setLeaves(res.data || []);
+      setTotal(res.meta?.total || 0);
+      setSummary({
+        pendingCount: res.meta?.pendingCount || 0,
+        approvedCount: res.meta?.approvedCount || 0,
+      });
     } catch {} finally { setLoading(false); }
-  }, [ayId, statusFilter, employeeFilter, typeFilter]);
+  }, [ayId, statusFilter, employeeFilter, typeFilter, page]);
 
   useEffect(() => { if (ayId) fetchLeaves(); }, [fetchLeaves]);
 
@@ -107,9 +115,6 @@ export default function LeavesAdminPage() {
     { value: '', label: 'All Employees' },
     ...employees.map(e => ({ value: e._id, label: `${e.name} (${e.employeeId})` })),
   ];
-
-  const pendingCount  = leaves.filter(l => l.status === 'Pending').length;
-  const approvedCount = leaves.filter(l => l.status === 'Approved').length;
 
   const columns = [
     {
@@ -181,7 +186,7 @@ export default function LeavesAdminPage() {
     <PageContent>
       <PageHeader
         title="Leave Management"
-        subtitle={`${pendingCount} pending · ${approvedCount} approved`}
+        subtitle={`${summary.pendingCount} pending · ${summary.approvedCount} approved`}
         actions={
           <div className="flex gap-2">
             <Button variant="ghost" onClick={() => setSummaryOpen(true)}>
@@ -196,14 +201,15 @@ export default function LeavesAdminPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4">
-        <Select options={statusOptions}   value={statusFilter}   onChange={e => setStatusFilter(e.target.value)}   className="w-36" />
-        <Select options={typeOptions}     value={typeFilter}     onChange={e => setTypeFilter(e.target.value)}     className="w-36" />
-        <Select options={employeeOptions} value={employeeFilter} onChange={e => setEmployeeFilter(e.target.value)} className="w-52" />
+        <Select options={statusOptions}   value={statusFilter}   onChange={e => { setStatusFilter(e.target.value); setPage(1); }}   className="w-36" />
+        <Select options={typeOptions}     value={typeFilter}     onChange={e => { setTypeFilter(e.target.value); setPage(1); }}     className="w-36" />
+        <Select options={employeeOptions} value={employeeFilter} onChange={e => { setEmployeeFilter(e.target.value); setPage(1); }} className="w-52" />
         <Button variant="ghost" onClick={fetchLeaves}><RefreshCw className="w-4 h-4" /></Button>
       </div>
 
       <Card className="!p-0">
         <Table columns={columns} data={leaves} loading={loading} emptyMessage="No leave applications found" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       {/* Modals */}

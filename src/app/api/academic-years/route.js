@@ -2,12 +2,23 @@ import { connectDB } from '@/lib/mongodb';
 import AcademicYear from '@/models/AcademicYear';
 import { r } from '@/lib/response';
 import { authorize } from '@/lib/auth';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
 
-export async function GET() {
+export async function GET(request) {
   try {
     await connectDB();
-    const years = await AcademicYear.find().sort({ startDate: -1 });
-    return r.ok(years);
+    const { searchParams } = new URL(request.url);
+    const pagination = parsePagination(searchParams);
+    if (pagination?.error) return r.badRequest(pagination.error);
+    const query = AcademicYear.find().sort({ startDate: -1 });
+    if (pagination) query.skip(pagination.skip).limit(pagination.limit);
+    const [years, total] = await Promise.all([
+      query,
+      pagination ? AcademicYear.countDocuments() : Promise.resolve(null),
+    ]);
+    return pagination
+      ? r.ok(years, 'Academic years fetched', paginationMeta(total, pagination))
+      : r.ok(years);
   } catch (err) {
     return r.serverError(err.message);
   }

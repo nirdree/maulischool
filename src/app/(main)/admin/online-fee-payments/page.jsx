@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Download, RefreshCw, Search } from 'lucide-react';
 import api from '@/api/client';
-import { PageContent, PageHeader, Card, Button, Input, Select } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Pagination, Button, Input, Select } from '@/components/ui.jsx';
 
 const STATUSES = ['', 'Pending', 'Processing', 'Paid', 'Failed', 'Refunded'];
 const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
@@ -21,12 +21,14 @@ export default function OnlineFeePaymentsPage() {
   const [classrooms, setClassrooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const loadPayments = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
       if (search.trim()) params.set('search', search.trim());
       if (status) params.set('status', status);
       if (academicYear) params.set('academicYear', academicYear);
@@ -37,12 +39,13 @@ export default function OnlineFeePaymentsPage() {
       const result = await api.get(`/api/payments/cashfree/admin?${params}`);
       setPayments(result.data?.payments || []);
       setStats(result.data?.stats || []);
+      setTotal(result.meta?.total || 0);
     } catch (requestError) {
       setError(requestError.message || 'Unable to load payments');
     } finally {
       setLoading(false);
     }
-  }, [search, status, academicYear, classId, paymentMethod, fromDate, toDate]);
+  }, [search, status, academicYear, classId, paymentMethod, fromDate, toDate, page]);
 
   useEffect(() => { loadPayments(); }, [loadPayments]);
   useEffect(() => {
@@ -89,18 +92,18 @@ export default function OnlineFeePaymentsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <Input value={search} onChange={event => setSearch(event.target.value)} onKeyDown={event => event.key === 'Enter' && loadPayments()} placeholder="Student, admission, receipt, Cashfree order" className="pl-9" />
+          <Input value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} onKeyDown={event => event.key === 'Enter' && loadPayments()} placeholder="Student, admission, receipt, Cashfree order" className="pl-9" />
         </div>
-        <Select value={status} onChange={event => setStatus(event.target.value)} options={STATUSES.map(value => ({ value, label: value || 'All statuses' }))} className="sm:w-48" />
-        <Select value={academicYear} onChange={event => setAcademicYear(event.target.value)} options={[{ value: '', label: 'All academic years' }, ...academicYears.map(year => ({ value: year._id, label: year.name }))]} />
-        <Select value={classId} onChange={event => setClassId(event.target.value)} options={[{ value: '', label: 'All classes' }, ...classrooms.map(classroom => ({ value: classroom._id, label: classroom.displayName }))]} />
-        <Select value={paymentMethod} onChange={event => setPaymentMethod(event.target.value)} options={[
+        <Select value={status} onChange={event => { setStatus(event.target.value); setPage(1); }} options={STATUSES.map(value => ({ value, label: value || 'All statuses' }))} className="sm:w-48" />
+        <Select value={academicYear} onChange={event => { setAcademicYear(event.target.value); setPage(1); }} options={[{ value: '', label: 'All academic years' }, ...academicYears.map(year => ({ value: year._id, label: year.name }))]} />
+        <Select value={classId} onChange={event => { setClassId(event.target.value); setPage(1); }} options={[{ value: '', label: 'All classes' }, ...classrooms.map(classroom => ({ value: classroom._id, label: classroom.displayName }))]} />
+        <Select value={paymentMethod} onChange={event => { setPaymentMethod(event.target.value); setPage(1); }} options={[
           { value: '', label: 'All payment methods' }, { value: 'upi', label: 'UPI' },
           { value: 'credit_card', label: 'Credit card' }, { value: 'debit_card', label: 'Debit card' },
           { value: 'net_banking', label: 'Net banking' }, { value: 'wallet', label: 'Wallet' },
         ]} />
-        <Input type="date" value={fromDate} onChange={event => setFromDate(event.target.value)} aria-label="From date" />
-        <Input type="date" value={toDate} onChange={event => setToDate(event.target.value)} aria-label="To date" />
+        <Input type="date" value={fromDate} onChange={event => { setFromDate(event.target.value); setPage(1); }} aria-label="From date" />
+        <Input type="date" value={toDate} onChange={event => { setToDate(event.target.value); setPage(1); }} aria-label="To date" />
         <Button onClick={loadPayments}><Search className="w-4 h-4 mr-1" /> Apply filters</Button>
       </div>
 
@@ -124,6 +127,7 @@ export default function OnlineFeePaymentsPage() {
                 </tr>)}
           </tbody>
         </table>
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
     </PageContent>
   );

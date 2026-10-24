@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Table, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
@@ -24,6 +24,8 @@ export default function SubjectsPage() {
   const [ayId, setAyId] = useState('');
   const [loading, setLoading] = useState(true);
   const [classFilter, setClassFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
   const [editSubject, setEditSubject] = useState(null);
 
@@ -45,15 +47,16 @@ export default function SubjectsPage() {
   const fetchSubjects = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
       if (classFilter) params.set('classId', classFilter);
       if (ayId) params.set('academicYear', ayId);
       const res = await api.get(`${API.SUBJECTS.BASE}?${params}`);
       setSubjects(res.data || []);
+      setTotal(res.meta?.total || 0);
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { if (ayId) fetchSubjects(); }, [classFilter, ayId]);
+  useEffect(() => { if (ayId) fetchSubjects(); }, [classFilter, ayId, page]);
 
   const handleToggle = async (id) => {
     await api.patch(API.SUBJECTS.TOGGLE(id));
@@ -98,14 +101,15 @@ export default function SubjectsPage() {
     <PageContent>
       <PageHeader
         title="Subjects"
-        subtitle={`${subjects.length} subjects`}
+        subtitle={`${total} subjects`}
         actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Add Subject</Button>}
       />
       <div className="flex gap-3 mb-4">
-        <Select options={classOptions} value={classFilter} onChange={e => setClassFilter(e.target.value)} className="w-48" />
+        <Select options={classOptions} value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }} className="w-48" />
       </div>
       <Card className="!p-0">
         <Table columns={columns} data={subjects} loading={loading} emptyMessage="No subjects found" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       <SubjectModal
