@@ -33,6 +33,8 @@ const feePaymentSchema = new mongoose.Schema({
   student:       { type: mongoose.Schema.Types.ObjectId, ref: 'Student', required: true },
   receiptNo:     { type: String, unique: true },
   amountPaid:    { type: Number, required: true },
+  amountRefunded: { type: Number, default: 0, min: 0 },
+  refundReferences: { type: [String], default: [] },
   paymentDate:   { type: Date, required: true, default: Date.now },
   paymentMode:   {
     type: String,
@@ -40,6 +42,7 @@ const feePaymentSchema = new mongoose.Schema({
     required: true,
   },
   transactionId: { type: String },
+  gatewayOrderId: { type: String, unique: true, sparse: true },
   collectedBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   notes:         { type: String },
   academicYear:  { type: mongoose.Schema.Types.ObjectId, ref: 'AcademicYear', required: true },

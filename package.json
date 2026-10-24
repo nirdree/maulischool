@@ -10,12 +10,14 @@
     "create:admin": "node scripts/create-admin.mjs"
   },
   "dependencies": {
+    "@cashfreepayments/cashfree-js": "^1.0.7",
     "axios": "^1.15.1",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.8.0",
     "mongoose": "^8.9.3",
     "next": "16.1.6",
+    "pdfkit": "^0.20.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^3.8.1"

@@ -7,7 +7,7 @@ import {
   GraduationCap, LayoutDashboard, Users, UserCheck, School, BookOpen,
   CheckSquare, FileText, DollarSign, Banknote, CalendarDays, Bell, Clock,
   ArrowUpCircle, Settings, BarChart3, CalendarRange, LogOut, Menu, X,
-  ChevronRight, ClipboardList,
+  ChevronRight, ClipboardList, CreditCard,
 } from 'lucide-react';
 
 // ─── Role config ─────────────────────────────────────────────────────────────
@@ -32,6 +32,7 @@ const ALL_NAV = [
   { label: 'Marks',          path: 'marks',           icon: FileText,        roles: ['parent'] },
   { label: 'Homework',       path: 'homework',        icon: ClipboardList,   roles: ['teacher', 'parent'] },
   { label: 'Fees',           path: 'fees',            icon: DollarSign,      roles: ['admin', 'principal', 'parent'] },
+  { label: 'Online Fee Payments', path: 'online-fee-payments', icon: CreditCard, roles: ['admin', 'principal'] },
   { label: 'Payroll',        path: 'payroll',         icon: Banknote,        roles: ['admin'] },
   { label: 'Leaves',         path: 'leaves',          icon: CalendarDays,    roles: ['admin', 'principal', 'teacher'] },
   { label: 'Notices',        path: 'notices',         icon: Bell,            roles: ['admin', 'principal', 'teacher', 'parent'] },
@@ -117,7 +118,7 @@ function SidebarContent({ isOpen, isMobile, theme, user, navItems, prefix, pathn
               {isOpen && (
                 <>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {label}
+                    {user.role === 'parent' && path === 'fees' ? 'Fees & Payments' : label}
                   </span>
                   <ChevronRight size={12} style={{ opacity: active || hovered ? 0.6 : 0, transition: 'opacity 0.18s' }} />
                 </>
