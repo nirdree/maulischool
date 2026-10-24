@@ -8,7 +8,7 @@ const respond = (status, success, message, data = null, meta = null) => {
 };
 
 export const r = {
-  ok:          (data, message = 'Success')            => respond(200, true,  message, data),
+  ok:          (data, message = 'Success', meta = null) => respond(200, true,  message, data, meta),
   created:     (data, message = 'Created')            => respond(201, true,  message, data),
   noContent:   ()                                     => new NextResponse(null, { status: 204 }),
   badRequest:  (message = 'Bad request')              => respond(400, false, message),

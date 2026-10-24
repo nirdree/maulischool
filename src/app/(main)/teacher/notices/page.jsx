@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Badge } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Pagination, Badge } from '@/components/ui.jsx';
 
 function priorityColor(p) {
   return { Urgent: 'red', Important: 'yellow', Normal: 'slate' }[p] || 'slate';
@@ -25,6 +25,8 @@ export default function TeacherNotices() {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,9 +35,12 @@ export default function TeacherNotices() {
       try {
         const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
         const ayId = ay?.data?._id || '';
-        const res = await api.get(`${API.NOTICES.BASE}${ayId ? `?academicYear=${encodeURIComponent(ayId)}` : ''}`);
+        const params = new URLSearchParams({ page: String(page), limit: '20' });
+        if (ayId) params.set('academicYear', ayId);
+        const res = await api.get(`${API.NOTICES.BASE}?${params}`);
         if (cancelled) return;
         setNotices(Array.isArray(res?.data) ? res.data : []);
+        setTotal(res.meta?.total || 0);
         setError('');
       } catch (err) {
         if (!cancelled) {
@@ -48,7 +53,7 @@ export default function TeacherNotices() {
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [page]);
 
   if (loading) return (
     <div className="flex items-center justify-center h-full">
@@ -58,7 +63,7 @@ export default function TeacherNotices() {
 
   return (
     <PageContent>
-      <PageHeader title="Notices" subtitle={`${notices.length} active notices`} />
+      <PageHeader title="Notices" subtitle={`${total} active notices`} />
 
       {error && (
         <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
@@ -102,6 +107,7 @@ export default function TeacherNotices() {
           ))}
         </div>
       )}
+      <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
     </PageContent>
   );
 }

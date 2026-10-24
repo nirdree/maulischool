@@ -13,22 +13,25 @@ import { useEffect, useState } from 'react';
 import { Plus, Star, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Table, Button, Input, Badge, Modal } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Badge, Modal } from '@/components/ui.jsx';
 
 export default function AcademicYearsPage() {
   const [years, setYears] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const fetchYears = async () => {
     setLoading(true);
     try {
-      const res = await api.get(API.ACADEMIC_YEARS.BASE);
+      const res = await api.get(`${API.ACADEMIC_YEARS.BASE}?page=${page}&limit=20`);
       setYears(res.data || []);
+      setTotal(res.meta?.total || 0);
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchYears(); }, []);
+  useEffect(() => { fetchYears(); }, [page]);
 
   const handleSetCurrent = async (id) => {
     await api.patch(API.ACADEMIC_YEARS.SET_CURRENT(id));
@@ -79,6 +82,7 @@ export default function AcademicYearsPage() {
       />
       <Card className="!p-0">
         <Table columns={columns} data={years} loading={loading} emptyMessage="No academic years found" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       <AddYearModal open={addOpen} onClose={() => setAddOpen(false)} onSuccess={() => { fetchYears(); setAddOpen(false); }} />

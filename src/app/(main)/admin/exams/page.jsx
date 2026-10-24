@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, ClipboardList } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Table, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
 
 const EXAM_TYPES = ['UnitTest1', 'UnitTest2', 'MidTerm', 'FinalExam', 'Project', 'Other'];
 
@@ -27,6 +27,8 @@ export default function ExamsAdminPage() {
   const [ayId, setAyId] = useState('');
   const [loading, setLoading] = useState(true);
   const [classFilter, setClassFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
   const [marksExam, setMarksExam] = useState(null);
 
@@ -45,14 +47,15 @@ export default function ExamsAdminPage() {
     if (!ayId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ academicYear: ayId });
+      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
       if (classFilter) params.set('classId', classFilter);
       const res = await api.get(`${API.EXAMS.BASE}?${params}`);
       setExams(res.data || []);
+      setTotal(res.meta?.total || 0);
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { if (ayId) fetchExams(); }, [classFilter, ayId]);
+  useEffect(() => { if (ayId) fetchExams(); }, [classFilter, ayId, page]);
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this exam and all marks?')) return;
@@ -89,14 +92,15 @@ export default function ExamsAdminPage() {
     <PageContent>
       <PageHeader
         title="Exams & Marks"
-        subtitle={`${exams.length} exams`}
+        subtitle={`${total} exams`}
         actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Create Exam</Button>}
       />
       <div className="flex gap-3 mb-4">
-        <Select options={classOptions} value={classFilter} onChange={e => setClassFilter(e.target.value)} className="w-48" />
+        <Select options={classOptions} value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }} className="w-48" />
       </div>
       <Card className="!p-0">
         <Table columns={columns} data={exams} loading={loading} emptyMessage="No exams found" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       <ExamModal

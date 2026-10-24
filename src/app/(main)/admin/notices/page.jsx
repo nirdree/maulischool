@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Table, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
 
 function priorityColor(p) {
   return { Urgent: 'red', Important: 'yellow', Normal: 'slate' }[p] || 'slate';
@@ -31,6 +31,8 @@ export default function NoticesAdminPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [editNotice, setEditNotice] = useState(null);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,8 +64,10 @@ export default function NoticesAdminPage() {
 
     setLoading(true);
     try {
-      const res = await api.get(`${API.NOTICES.BASE}?academicYear=${encodeURIComponent(ayId)}`);
+      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
+      const res = await api.get(`${API.NOTICES.BASE}?${params}`);
       setNotices(Array.isArray(res?.data) ? res.data : []);
+      setTotal(res.meta?.total || 0);
       setError('');
     } catch (err) {
       setNotices([]);
@@ -71,7 +75,7 @@ export default function NoticesAdminPage() {
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (ayId) fetchNotices(); }, [ayId]);
+  useEffect(() => { if (ayId) fetchNotices(); }, [ayId, page]);
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this notice?')) return;
@@ -108,7 +112,7 @@ export default function NoticesAdminPage() {
     <PageContent>
       <PageHeader
         title="Notices"
-        subtitle={`${notices.length} notices`}
+        subtitle={`${total} notices`}
         actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Publish Notice</Button>}
       />
       {error && (
@@ -118,6 +122,7 @@ export default function NoticesAdminPage() {
       )}
       <Card className="!p-0">
         <Table columns={columns} data={notices} loading={loading} emptyMessage="No notices" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       <NoticeModal

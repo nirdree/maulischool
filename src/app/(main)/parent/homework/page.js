@@ -10,7 +10,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Select, Badge } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Pagination, Select, Badge } from '@/components/ui.jsx';
 
 export default function ParentHomework() {
   const [children, setChildren] = useState([]);
@@ -18,6 +18,8 @@ export default function ParentHomework() {
   const [homework, setHomework] = useState([]);
   const [ayId, setAyId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -34,15 +36,22 @@ export default function ParentHomework() {
 
   useEffect(() => {
     if (selectedChild && ayId) fetchHomework();
-  }, [selectedChild, ayId]);
+  }, [selectedChild, ayId, page]);
 
   const fetchHomework = async () => {
     const child = children.find(c => c._id === selectedChild);
     if (!child?.classroom?._id) return;
     setLoading(true);
     try {
-      const res = await api.get(`${API.HOMEWORK.BASE}?classId=${child.classroom._id}&academicYear=${ayId}`);
+      const params = new URLSearchParams({
+        classId: child.classroom._id,
+        academicYear: ayId,
+        page: String(page),
+        limit: '20',
+      });
+      const res = await api.get(`${API.HOMEWORK.BASE}?${params}`);
       setHomework(res.data || []);
+      setTotal(res.meta?.total || 0);
     } catch {} finally { setLoading(false); }
   };
 
@@ -61,7 +70,7 @@ export default function ParentHomework() {
 
       <div className="flex gap-3 mb-6">
         {children.length > 1 && (
-          <Select options={childOptions} value={selectedChild} onChange={e => setSelectedChild(e.target.value)} className="w-64" label="Child" />
+          <Select options={childOptions} value={selectedChild} onChange={e => { setSelectedChild(e.target.value); setPage(1); }} className="w-64" label="Child" />
         )}
       </div>
 
@@ -91,6 +100,7 @@ export default function ParentHomework() {
           )}
         </div>
       )}
+      <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
     </PageContent>
   );
 }

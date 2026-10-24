@@ -3,24 +3,34 @@ import { Exam } from '@/models/Exam';
 import Subject from '@/models/Subject';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
 
 export const GET = protect(async (request) => {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
+    const pagination = parsePagination(searchParams);
+    if (pagination?.error) return r.badRequest(pagination.error);
     const filter = {};
     if (searchParams.get('classId'))      filter.classroom    = searchParams.get('classId');
     if (searchParams.get('subjectId'))    filter.subject      = searchParams.get('subjectId');
     if (searchParams.get('examType'))     filter.examType     = searchParams.get('examType');
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
-    const exams = await Exam.find(filter)
+    const query = Exam.find(filter)
       .populate('classroom', 'displayName')
       .populate('subject',   'name totalMarks')
       .populate('teacher',   'name')
       .sort({ examDate: -1 });
+    if (pagination) query.skip(pagination.skip).limit(pagination.limit);
+    const [exams, total] = await Promise.all([
+      query,
+      pagination ? Exam.countDocuments(filter) : Promise.resolve(null),
+    ]);
 
-    return r.ok(exams);
+    return pagination
+      ? r.ok(exams, 'Exams fetched', paginationMeta(total, pagination))
+      : r.ok(exams);
   } catch (err) {
     return r.serverError(err.message);
   }

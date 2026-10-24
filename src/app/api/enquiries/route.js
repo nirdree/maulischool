@@ -2,6 +2,7 @@ import { connectDB } from '@/lib/mongodb';
 import Enquiry from '@/models/Enquiry';
 import { r } from '@/lib/response';
 import { authorize } from '@/lib/auth';
+import { parsePagination, paginationMeta } from '@/lib/pagination';
 
 // Public — no auth
 export async function POST(request) {
@@ -23,8 +24,8 @@ export const GET = authorize('admin', 'principal')(async (request) => {
     await connectDB();
     const { searchParams } = new URL(request.url);
 
-    const page   = Number(searchParams.get('page')  || 1);
-    const limit  = Number(searchParams.get('limit') || 50);
+    const pagination = parsePagination(searchParams, { enabledByDefault: true, defaultLimit: 50 });
+    if (pagination.error) return r.badRequest(pagination.error);
     const filter = {};
 
     if (searchParams.get('status'))       filter.status        = searchParams.get('status');
@@ -46,10 +47,10 @@ export const GET = authorize('admin', 'principal')(async (request) => {
       .populate('classApplying', 'displayName')
       .populate('academicYear',  'name')
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+      .skip(pagination.skip)
+      .limit(pagination.limit);
 
-    return r.ok(enquiries, 'Enquiries fetched', { total, page, limit });
+    return r.ok(enquiries, 'Enquiries fetched', paginationMeta(total, pagination));
   } catch (err) {
     return r.serverError(err.message);
   }

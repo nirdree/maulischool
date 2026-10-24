@@ -22,7 +22,7 @@ import {
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
-  PageContent, PageHeader, Card, Table, Button,
+  PageContent, PageHeader, Card, Table, Pagination, Button,
   Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
 
@@ -40,6 +40,9 @@ export default function PayrollPage() {
   const [employees, setEmployees] = useState([]);
   const [ayId,      setAyId]      = useState('');
   const [loading,   setLoading]   = useState(true);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [summary, setSummary] = useState({ totalPayable: 0, totalPaid: 0 });
 
   // filters
   const [monthFilter,  setMonthFilter]  = useState(currentMonth);
@@ -70,14 +73,19 @@ export default function PayrollPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        month: monthFilter, year: yearFilter, academicYear: ayId,
+        month: monthFilter, year: yearFilter, academicYear: ayId, page: String(page), limit: '20',
       });
       if (statusFilter) params.set('status',     statusFilter);
       if (empFilter)    params.set('employeeId', empFilter);
       const res = await api.get(`${API.PAYROLL.BASE}?${params}`);
       setPayroll(res.data || []);
+      setTotal(res.meta?.total || 0);
+      setSummary({
+        totalPayable: res.meta?.totalPayable || 0,
+        totalPaid: res.meta?.totalPaid || 0,
+      });
     } catch {} finally { setLoading(false); }
-  }, [ayId, monthFilter, yearFilter, statusFilter, empFilter]);
+  }, [ayId, monthFilter, yearFilter, statusFilter, empFilter, page]);
 
   useEffect(() => { if (ayId) fetchPayroll(); }, [fetchPayroll]);
 
@@ -109,9 +117,7 @@ export default function PayrollPage() {
     ...employees.map(e => ({ value: e._id, label: `${e.name} (${e.employeeId})` })),
   ];
 
-  const totalPayable = payroll.reduce((s, p) => s + (p.netSalary || 0), 0);
-  const totalPaid    = payroll.filter(p => p.status === 'Paid').reduce((s, p) => s + (p.netSalary || 0), 0);
-  const totalPending = totalPayable - totalPaid;
+  const totalPending = summary.totalPayable - summary.totalPaid;
 
   const columns = [
     {
@@ -204,7 +210,7 @@ export default function PayrollPage() {
     <PageContent>
       <PageHeader
         title="Payroll"
-        subtitle={`${MONTHS[monthFilter - 1]} ${yearFilter} · ${payroll.length} records`}
+        subtitle={`${MONTHS[monthFilter - 1]} ${yearFilter} · ${total} records`}
         actions={
           <div className="flex gap-2 flex-wrap">
             <Button variant="warning" onClick={() => setAutoGenOpen(true)}>
@@ -220,8 +226,8 @@ export default function PayrollPage() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Total Payable', value: `₹${totalPayable.toLocaleString()}`, color: 'text-white' },
-          { label: 'Disbursed',     value: `₹${totalPaid.toLocaleString()}`,    color: 'text-emerald-400' },
+          { label: 'Total Payable', value: `₹${summary.totalPayable.toLocaleString()}`, color: 'text-white' },
+          { label: 'Disbursed',     value: `₹${summary.totalPaid.toLocaleString()}`,    color: 'text-emerald-400' },
           { label: 'Pending',       value: `₹${totalPending.toLocaleString()}`, color: 'text-rose-400' },
         ].map(s => (
           <Card key={s.label}>
@@ -233,15 +239,16 @@ export default function PayrollPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-4 items-center">
-        <Select options={monthOptions}  value={monthFilter}  onChange={e => setMonthFilter(Number(e.target.value))}  className="w-36" />
-        <Select options={yearOptions}   value={yearFilter}   onChange={e => setYearFilter(Number(e.target.value))}   className="w-28" />
-        <Select options={statusOptions} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}          className="w-36" />
-        <Select options={empOptions}    value={empFilter}    onChange={e => setEmpFilter(e.target.value)}             className="w-52" />
+        <Select options={monthOptions}  value={monthFilter}  onChange={e => { setMonthFilter(Number(e.target.value)); setPage(1); }}  className="w-36" />
+        <Select options={yearOptions}   value={yearFilter}   onChange={e => { setYearFilter(Number(e.target.value)); setPage(1); }}   className="w-28" />
+        <Select options={statusOptions} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}          className="w-36" />
+        <Select options={empOptions}    value={empFilter}    onChange={e => { setEmpFilter(e.target.value); setPage(1); }}             className="w-52" />
         <Button variant="ghost" onClick={fetchPayroll}><RefreshCw className="w-4 h-4" /></Button>
       </div>
 
       <Card className="!p-0">
         <Table columns={columns} data={payroll} loading={loading} emptyMessage="No payroll records for this period" />
+        <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
 
       {/* Modals */}
