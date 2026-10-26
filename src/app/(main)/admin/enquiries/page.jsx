@@ -65,7 +65,7 @@ export default function EnquiriesPage() {
   useEffect(() => { if (ayId) fetchEnquiries(); }, [page, statusFilter, ayId]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this enquiry?')) return;
+    if (!(await confirm('Delete this enquiry?'))) return;
     await api.delete(API.ENQUIRIES.BY_ID(id));
     fetchEnquiries();
   };

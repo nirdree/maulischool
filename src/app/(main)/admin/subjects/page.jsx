@@ -64,7 +64,7 @@ export default function SubjectsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this subject?')) return;
+    if (!(await confirm('Delete this subject?'))) return;
     await api.delete(API.SUBJECTS.BY_ID(id));
     fetchSubjects();
   };

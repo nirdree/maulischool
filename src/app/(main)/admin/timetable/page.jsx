@@ -189,7 +189,7 @@ export default function TimetableAdminPage() {
 
   // ── Load timetable when class changes ──────────────────────────────────────
   const handleClassChange = async (classId) => {
-    if (dirty && !confirm('You have unsaved changes. Switch class anyway?')) return;
+    if (dirty && !(await confirm('You have unsaved changes. Switch class anyway?'))) return;
     setClassFilter(classId);
     setServerConflicts([]);
     setDirty(false);
@@ -343,7 +343,7 @@ export default function TimetableAdminPage() {
   // ── Delete timetable ───────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!classFilter) return;
-    if (!confirm('Delete the entire timetable for this class? This cannot be undone.')) return;
+    if (!(await confirm('Delete the entire timetable for this class? This cannot be undone.'))) return;
     try {
       await api.delete(`${API.TIMETABLE.BY_CLASS(classFilter)}?academicYear=${ayId}`);
       setSchedule(makeEmptySchedule(workingDays, numPeriods, globalTimes));

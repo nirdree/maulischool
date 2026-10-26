@@ -58,7 +58,7 @@ export default function HomeworkPage() {
   useEffect(() => { if (ayId) fetchHomework(); }, [classFilter, ayId, page]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this homework?')) return;
+    if (!(await confirm('Delete this homework?'))) return;
     await api.delete(API.HOMEWORK.BY_ID(id));
     fetchHomework();
   };

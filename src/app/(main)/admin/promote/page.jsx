@@ -51,7 +51,7 @@ export default function PromotePage() {
   };
 
   const handleExecute = async () => {
-    if (!confirm('Execute promotion? This cannot be undone.')) return;
+    if (!(await confirm('Execute promotion? This cannot be undone.'))) return;
     setExecuting(true);
     try {
       const promoArr = Object.entries(promotions).map(([studentId, val]) => ({

@@ -39,7 +39,7 @@ export default function AcademicYearsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this academic year?')) return;
+    if (!(await confirm('Delete this academic year?'))) return;
     try {
       await api.delete(API.ACADEMIC_YEARS.BY_ID(id));
       fetchYears();

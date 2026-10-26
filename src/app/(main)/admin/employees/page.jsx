@@ -85,7 +85,7 @@ export default function EmployeesPage() {
   useEffect(() => { fetchEmployees(); }, [roleFilter, statusFilter, page]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this employee? Their login account will also be removed.')) return;
+    if (!(await confirm('Delete this employee? Their login account will also be removed.'))) return;
     try {
       await api.delete(API.EMPLOYEES.BY_ID(id));
       fetchEmployees();

@@ -72,7 +72,7 @@ export default function TeacherLeaves() {
   useEffect(() => { fetchLeaves(); }, [fetchLeaves]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Cancel this leave application?')) return;
+    if (!(await confirm('Cancel this leave application?'))) return;
     try {
       await api.delete(API.LEAVES.BY_ID(id));
       fetchLeaves();

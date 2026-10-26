@@ -90,7 +90,7 @@ export default function PayrollPage() {
   useEffect(() => { if (ayId) fetchPayroll(); }, [fetchPayroll]);
 
   const handlePay = async (id) => {
-    if (!window.confirm('Mark as Paid? This will LOCK the record — no further edits, attendance changes, or leave approvals will be allowed for this month.')) return;
+    if (!(await window.confirm('Mark as Paid? This will LOCK the record — no further edits, attendance changes, or leave approvals will be allowed for this month.'))) return;
     try {
       await api.patch(API.PAYROLL.PAY(id));
       fetchPayroll();
@@ -493,7 +493,7 @@ function AutoGenerateModal({ ayId, defaultMonth, defaultYear, employees, onClose
   };
 
   const handleGenerate = async () => {
-    if (!window.confirm(`Generate payroll for ${MONTHS[form.month - 1]} ${form.year} for all active employees?`)) return;
+    if (!(await window.confirm(`Generate payroll for ${MONTHS[form.month - 1]} ${form.year} for all active employees?`))) return;
     setSaving(true);
     try {
       const res = await api.post(`${API.PAYROLL.BASE}/generate-all`, { ...form, academicYear: ayId });

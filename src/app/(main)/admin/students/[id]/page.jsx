@@ -169,7 +169,7 @@ const id = params.id;
   const parentBlocked = student.fatherUser?.status === 'inactive' || student.motherUser?.status === 'inactive';
 
   const handleBlockParent = async (blocked) => {
-    if (!confirm(`${blocked ? 'Block' : 'Unblock'} parent login?`)) return;
+    if (!(await confirm(`${blocked ? 'Block' : 'Unblock'} parent login?`))) return;
     try {
       await api.patch(API.STUDENTS.BLOCK_PARENT(id), { target: 'both', blocked });
       load();

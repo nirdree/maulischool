@@ -78,7 +78,7 @@ export default function NoticesAdminPage() {
   useEffect(() => { if (ayId) fetchNotices(); }, [ayId, page]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this notice?')) return;
+    if (!(await confirm('Delete this notice?'))) return;
     await api.delete(API.NOTICES.BY_ID(id));
     fetchNotices();
   };

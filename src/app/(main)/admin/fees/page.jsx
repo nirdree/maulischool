@@ -168,7 +168,7 @@ export default function FeesPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Delete ${selected.length} fee records?`)) return;
+    if (!(await window.confirm(`Delete ${selected.length} fee records?`))) return;
     try {
       await Promise.all(selected.map(id => api.delete(`${API.FEES.BASE}/${id}`)));
       fetchFees();

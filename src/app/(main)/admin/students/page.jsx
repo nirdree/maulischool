@@ -102,7 +102,7 @@ export default function StudentsPage() {
   useEffect(() => { if (ayId) fetchStudents(); }, [page, statusFilter, classFilter, ayId]);
 
   const handleBlockParent = async (id, blocked) => {
-    if (!confirm(`${blocked ? 'Block' : 'Unblock'} parent login for this student?`)) return;
+    if (!(await confirm(`${blocked ? 'Block' : 'Unblock'} parent login for this student?`))) return;
     try {
       await api.patch(API.STUDENTS.BLOCK_PARENT(id), { target: 'both', blocked });
       fetchStudents();
@@ -110,7 +110,7 @@ export default function StudentsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this student? Orphaned parent accounts will also be removed.')) return;
+    if (!(await confirm('Delete this student? Orphaned parent accounts will also be removed.'))) return;
     try {
       await api.delete(API.STUDENTS.BY_ID(id));
       fetchStudents();

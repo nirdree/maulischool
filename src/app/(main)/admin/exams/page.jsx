@@ -58,7 +58,7 @@ export default function ExamsAdminPage() {
   useEffect(() => { if (ayId) fetchExams(); }, [classFilter, ayId, page]);
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this exam and all marks?')) return;
+    if (!(await confirm('Delete this exam and all marks?'))) return;
     await api.delete(API.EXAMS.BY_ID(id));
     fetchExams();
   };

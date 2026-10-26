@@ -535,7 +535,7 @@ function SubjectsPanel({ classroomId, allTeachers, ayId, onChange }) {
 
   // Remove subject
   const handleRemove = async (subjectId) => {
-    if (!confirm('Remove this subject?')) return;
+    if (!(await confirm('Remove this subject?'))) return;
     try {
       await api.delete(`${API.CLASSROOMS.BY_ID(classroomId)}/subjects/${subjectId}`);
       fetchSubjects();
