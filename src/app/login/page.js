@@ -1,16 +1,25 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { ROLE_HOME, useAuth } from '@/context/AuthContext';
 import { Eye, EyeOff, GraduationCap, Loader2 } from 'lucide-react';
 
+<<<<<<< Updated upstream
 const ROLE_HOME = {
   admin:     '/admin/dashboard',
   principal: '/admin/dashboard',
   teacher:   '/teacher/dashboard',
   parent:    '/parent/dashboard',
 };
+=======
+const DEMO_CREDS = [
+  { label: 'Admin',     email: 'admin@school.com',        password: 'Admin@123' },
+  { label: 'Principal', email: 'principal@school.com',    password: 'Principal@123' },
+  { label: 'Teacher',   email: 'priya.patel@school.com',  password: 'Teacher@123' },
+  { label: 'Parent',    email: 'anil.gupta@gmail.com',    password: 'Parent@123' },
+];
+>>>>>>> Stashed changes
 
 export default function LoginPage() {
   return (
@@ -21,7 +30,7 @@ export default function LoginPage() {
 }
 
 function LoginForm() {
-  const { login, loading } = useAuth();
+  const { login, loading, user, initialized } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -34,6 +43,12 @@ function LoginForm() {
   const safeTo =
     from && from !== '/unauthorized' && from !== '/login' ? from : null;
 
+  useEffect(() => {
+    if (!initialized || !user) return;
+    const dashboard = ROLE_HOME[user.role];
+    if (dashboard) router.replace(dashboard);
+  }, [initialized, user, router]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -41,12 +56,33 @@ function LoginForm() {
     const result = await login(form.email, form.password);
 
     if (result.success) {
-      router.replace(safeTo || ROLE_HOME[result.role] || '/');
+      const rolePrefix = ['admin', 'principal'].includes(result.role)
+        ? '/admin/'
+        : `/${result.role}/`;
+      const roleRedirect =
+        safeTo?.startsWith(rolePrefix) ? safeTo : ROLE_HOME[result.role];
+      router.replace(roleRedirect || '/');
     } else {
       setError(result.message || 'Invalid credentials');
     }
   };
 
+<<<<<<< Updated upstream
+=======
+  const fillDemo = (cred) => {
+    setForm({ email: cred.email, password: cred.password });
+    setError('');
+  };
+
+  if (initialized && user && ROLE_HOME[user.role]) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-300">
+        Loading your dashboard...
+      </div>
+    );
+  }
+
+>>>>>>> Stashed changes
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />

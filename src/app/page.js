@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { ROLE_HOME, useAuth } from "@/context/AuthContext";
 import {
   GraduationCap, Shield, Heart, Camera, Target, Monitor,
   Music, Gamepad2, CircleDot, Star, Theater, Bus,
@@ -103,6 +105,8 @@ const cardBase = {
    MAIN
 ═══════════════════════════════════════════════════════════ */
 export default function MauliSchoolPage() {
+  const { user, initialized } = useAuth();
+  const router = useRouter();
   const [menuOpen,   setMenuOpen]   = useState(false);
   const [scrolled,   setScrolled]   = useState(false);
   const [showTop,    setShowTop]    = useState(false);
@@ -119,6 +123,12 @@ export default function MauliSchoolPage() {
   };
   const [form, setForm] = useState(blankForm);
   const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  useEffect(() => {
+    if (!initialized || !user) return;
+    const dashboard = ROLE_HOME[user.role];
+    if (dashboard) router.replace(dashboard);
+  }, [initialized, user, router]);
 
   useEffect(() => {
     const fn = () => { setScrolled(window.scrollY > 40); setShowTop(window.scrollY > 500); };
@@ -153,6 +163,8 @@ export default function MauliSchoolPage() {
   /* ── nav hover helpers ── */
   const hoverAmber = (e) => { e.currentTarget.style.color = S.amber; e.currentTarget.style.background = S.amberDim; };
   const leaveGray  = (e) => { e.currentTarget.style.color = S.muted;  e.currentTarget.style.background = "transparent"; };
+
+  if (initialized && user && ROLE_HOME[user.role]) return null;
 
   return (
     <>

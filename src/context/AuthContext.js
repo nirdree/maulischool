@@ -4,6 +4,13 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 
+export const ROLE_HOME = {
+  admin: '/admin/dashboard',
+  principal: '/admin/dashboard',
+  teacher: '/teacher/dashboard',
+  parent: '/parent/dashboard',
+};
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
