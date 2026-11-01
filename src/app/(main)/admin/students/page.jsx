@@ -21,7 +21,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import {
   Plus, Search, RefreshCw, Edit2, Trash2,
   KeyRound, ShieldOff, ShieldCheck, CheckCircle2,
-  UserPlus, LogOut, UserX, UserCheck, ChevronRight, X,
+  UserPlus, LogOut, UserX, UserCheck, ChevronRight, X, Eye, EyeOff, MoreVertical, Filter,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import api from '@/api/client';
@@ -72,6 +72,7 @@ export default function StudentsPage() {
   const [pwTarget,      setPwTarget]      = useState(null);
   const [statusTarget,  setStatusTarget]  = useState(null);  // { student, desiredStatus }
   const [leaveTarget,   setLeaveTarget]   = useState(null);  // student obj for leave modal
+  const [filterOpen,    setFilterOpen]    = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -130,6 +131,75 @@ export default function StudentsPage() {
   ];
   const pages = Math.ceil(total / 20);
 
+  // Row actions popover (controlled, closes on outside click)
+  const RowActions = ({ s }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+    useEffect(() => {
+      const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+      document.addEventListener('mousedown', onDoc);
+      return () => document.removeEventListener('mousedown', onDoc);
+    }, []);
+    const parentBlocked = s.fatherUser?.status === 'inactive' || s.motherUser?.status === 'inactive';
+    const hasParent     = !!(s.fatherUser || s.motherUser);
+    return (
+      <div className="relative" ref={ref}>
+        <Button size="sm" variant="ghost" title="Actions" onClick={() => setOpen((v) => !v)}>
+          <MoreVertical className="w-4 h-4" />
+        </Button>
+        {open && (
+          <div className="absolute right-0 mt-2 z-50 rounded-lg bg-slate-900 border border-slate-700 shadow-lg py-1 min-w-[200px]">
+            {s.status === 'UnderReview' && (
+              <>
+                <button onClick={() => { setOpen(false); handleQuickStatus(s._id, 'Approved'); }}
+                  className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span className="text-sm">Approve</span>
+                </button>
+                <button onClick={() => { setOpen(false); handleQuickStatus(s._id, 'Rejected'); }}
+                  className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+                  <X className="w-4 h-4" />
+                  <span className="text-sm">Reject</span>
+                </button>
+              </>
+            )}
+            {s.status === 'Approved' && (
+              <button onClick={() => { setOpen(false); setLeaveTarget(s); }}
+                className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm">Mark Left</span>
+              </button>
+            )}
+            <button onClick={() => { setOpen(false); setEditTarget(s); }}
+              className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+              <Edit2 className="w-4 h-4" />
+              <span className="text-sm">Edit</span>
+            </button>
+            {hasParent && (
+              <>
+                <button onClick={() => { setOpen(false); handleBlockParent(s._id, !parentBlocked); }}
+                  className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+                  {parentBlocked ? <ShieldCheck className="w-4 h-4" /> : <ShieldOff className="w-4 h-4" />}
+                  <span className="text-sm">{parentBlocked ? 'Unblock Parent' : 'Block Parent'}</span>
+                </button>
+                <button onClick={() => { setOpen(false); setPwTarget(s); }}
+                  className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+                  <KeyRound className="w-4 h-4" />
+                  <span className="text-sm">Reset Parent Password</span>
+                </button>
+              </>
+            )}
+            <button onClick={() => { setOpen(false); handleDelete(s._id); }}
+              className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-rose-400 hover:text-white">
+              <Trash2 className="w-4 h-4" />
+              <span className="text-sm">Delete</span>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const columns = [
     { key: 'admissionNo', label: 'Adm No' },
     {
@@ -177,43 +247,7 @@ export default function StudentsPage() {
     },
     {
       key: 'actions', label: '',
-      render: (s) => {
-        const parentBlocked = s.fatherUser?.status === 'inactive' || s.motherUser?.status === 'inactive';
-        const hasParent     = !!(s.fatherUser || s.motherUser);
-        return (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {s.status === 'UnderReview' && (
-              <>
-                <Button size="sm" variant="success" onClick={() => handleQuickStatus(s._id, 'Approved')}>Approve</Button>
-                <Button size="sm" variant="danger"  onClick={() => handleQuickStatus(s._id, 'Rejected')}>Reject</Button>
-              </>
-            )}
-            {s.status === 'Approved' && (
-              <Button size="sm" variant="secondary" onClick={() => setLeaveTarget(s)}>
-                <LogOut className="w-3 h-3 mr-1" /> Mark Left
-              </Button>
-            )}
-            <Button size="sm" variant="ghost" title="Edit" onClick={() => setEditTarget(s)}>
-              <Edit2 className="w-3 h-3" />
-            </Button>
-            {hasParent && (
-              <>
-                <Button size="sm" variant={parentBlocked ? 'success' : 'secondary'}
-                  title={parentBlocked ? 'Unblock parent' : 'Block parent'}
-                  onClick={() => handleBlockParent(s._id, !parentBlocked)}>
-                  {parentBlocked ? <ShieldCheck className="w-3 h-3" /> : <ShieldOff className="w-3 h-3" />}
-                </Button>
-                <Button size="sm" variant="ghost" title="Reset parent password" onClick={() => setPwTarget(s)}>
-                  <KeyRound className="w-3 h-3" />
-                </Button>
-              </>
-            )}
-            <Button size="sm" variant="danger" title="Delete" onClick={() => handleDelete(s._id)}>
-              <Trash2 className="w-3 h-3" />
-            </Button>
-          </div>
-        );
-      },
+      render: (s) => <RowActions s={s} />,
     },
   ];
 
@@ -222,10 +256,21 @@ export default function StudentsPage() {
       <PageHeader
         title="Students"
         subtitle={`${total} student${total !== 1 ? 's' : ''}`}
-        actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Add Student</Button>}
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+            <Button onClick={() => setAddOpen(true)}>
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Student</span>
+            </Button>
+          </>
+        }
       />
 
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className="hidden sm:flex flex-wrap gap-3 mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -247,6 +292,19 @@ export default function StudentsPage() {
           onChange={(e) => { setClassFilter(e.target.value); setPage(1); }} className="w-44" />
         <Button variant="ghost" onClick={fetchStudents}><RefreshCw className="w-4 h-4" /></Button>
       </div>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Input label="Search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, admission no, parent..." />
+          <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} options={STATUS_OPTIONS} />
+          <Select label="Class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)} options={classOptions} />
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setSearch(''); setStatusFilter(''); setClassFilter(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { setPage(1); fetchStudents(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
 
       <Card className="!p-0">
         <Table columns={columns} data={students} loading={loading} emptyMessage="No students found" />
@@ -286,7 +344,7 @@ export default function StudentsPage() {
 // ─── Parent Search Widget ─────────────────────────────────────
 // Reusable typeahead to pick an existing parent or enter new details
 
-function ParentSearchWidget({ label, value, onChange }) {
+function ParentSearchWidget({ label, value, onChange, errors }) {
   // value = { mode: 'existing'|'new'|null, user?, name, phone, email, occupation, password }
   const [query,    setQuery]    = useState('');
   const [results,  setResults]  = useState([]);
@@ -413,11 +471,14 @@ function ParentSearchWidget({ label, value, onChange }) {
             <p className="text-xs text-slate-400">New account details</p>
             <button onClick={clearSelection} className="text-xs text-slate-500 hover:text-slate-300">Clear</button>
           </div>
-          <Input label="Full Name *" value={value.name || ''} onChange={(e) => set('name', e.target.value)} placeholder="Parent name" />
-          <Input label="Phone"       value={value.phone || ''} onChange={(e) => set('phone', e.target.value)} placeholder="9999999999" />
-          <Input label="Email"       type="email" value={value.email || ''} onChange={(e) => set('email', e.target.value)} placeholder="parent@example.com" />
-          <Input label="Occupation"  value={value.occupation || ''} onChange={(e) => set('occupation', e.target.value)} placeholder="Engineer" />
-          <Input label="Login Password" type="password" value={value.password || ''} onChange={(e) => set('password', e.target.value)} placeholder="Default: phone number" className="col-span-2" />
+          <Input label="Full Name *" value={value.name || ''} onChange={(e) => set('name', e.target.value)} placeholder="Parent name" error={errors?.name} />
+          <Input label="Phone *" value={value.phone || ''} onChange={(e) => {
+            const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+            set('phone', cleaned);
+          }} placeholder="9999999999" error={errors?.phone} />
+          <Input label="Email *" type="email" value={value.email || ''} onChange={(e) => set('email', e.target.value)} placeholder="parent@example.com" error={errors?.email} />
+          <Input label="Occupation"  value={value.occupation || ''} onChange={(e) => set('occupation', e.target.value)} placeholder="Engineer" error={errors?.occupation} />
+          <Input label="Login Password" type="password" value={value.password || ''} onChange={(e) => set('password', e.target.value)} placeholder="Default: phone number" className="col-span-2" error={errors?.password} />
           <p className="col-span-2 text-xs text-slate-500">
             A parent login account will be created. Password defaults to phone number if left blank.
           </p>
@@ -490,9 +551,12 @@ const EMPTY_STUDENT = {
   previousSchoolName: '', previousClass: '', isRTE: false, rteFee: 0,
 };
 
+import { validateStudent, BLOOD_GROUPS, validateStudentName, validateStudentMiddleName, validateStudentDOB, validateStudentClassroom, validateBloodGroup, validateMax50, validatePlaceOfBirth, validatePenNumber, validateStudentRteFee, validateParentName, validateParentPhone, validateParentEmail, validateParentOccupation, validateParentPassword } from '@/lib/validation';
+
 function AdmissionModal({ open, onClose, classrooms, ayId, onSuccess }) {
   const [tab,     setTab]     = useState(0);
   const [form,    setForm]    = useState(EMPTY_STUDENT);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [father,  setFather]  = useState(null);
   const [mother,  setMother]  = useState(null);
   const [saving,  setSaving]  = useState(false);
@@ -502,11 +566,36 @@ function AdmissionModal({ open, onClose, classrooms, ayId, onSuccess }) {
   useEffect(() => {
     if (open) {
       setTab(0); setForm(EMPTY_STUDENT); setFather(null); setMother(null);
-      setError(''); setCreated(null);
+      setError(''); setCreated(null); setFieldErrors({});
     }
   }, [open]);
 
-  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k, v) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    let msg = null;
+    switch (k) {
+      case 'firstName':   msg = validateStudentName(v, 'First Name'); break;
+      case 'lastName':    msg = validateStudentName(v, 'Last Name'); break;
+      case 'middleName':  msg = validateStudentMiddleName(v); break;
+      case 'gender':      msg = validateGender(v); break;
+      case 'dateOfBirth': msg = validateStudentDOB(v); break;
+      case 'classroom':   msg = validateStudentClassroom(v); break;
+      case 'rteFee':      msg = validateStudentRteFee(v); break;
+      case 'bloodGroup':  msg = validateBloodGroup(v); break;
+      case 'religion':    msg = validateMax50(v, 'Religion'); break;
+      case 'caste':       msg = validateMax50(v, 'Caste'); break;
+      case 'motherTongue': msg = validateMax50(v, 'Mother Tongue'); break;
+      case 'placeOfBirth': msg = validatePlaceOfBirth(v); break;
+      case 'penNumber':    msg = validatePenNumber(v); break;
+      default: break;
+    }
+    setFieldErrors((fe) => {
+      const next = { ...fe };
+      if (msg) next[k] = msg; else delete next[k];
+      if (Object.keys(next).length === 0) setError('');
+      return next;
+    });
+  };
 
   const buildPayload = () => {
     const payload = { ...form, academicYear: ayId };
@@ -540,16 +629,145 @@ function AdmissionModal({ open, onClose, classrooms, ayId, onSuccess }) {
     return payload;
   };
 
+  // Tab gating helpers
+  const validateNewParent = (p) => {
+    const e = {};
+    e.name = validateParentName(p?.name);
+    e.phone = validateParentPhone(p?.phone);
+    e.email = validateParentEmail(p?.email);
+    e.occupation = validateParentOccupation(p?.occupation);
+    e.password = validateParentPassword(p?.password);
+    Object.keys(e).forEach((k) => { if (e[k] == null) delete e[k]; });
+    return e;
+  };
+
+  const validateCurrentTab = () => {
+    // Validate only fields in the current tab; show inline errors and block forward nav
+    if (tab === 0) {
+      const { errors } = validateStudent(form);
+      const pick = ['firstName','lastName','middleName','gender','dateOfBirth','classroom','rteFee','bloodGroup','religion','caste','motherTongue','placeOfBirth','penNumber'];
+      const subset = {};
+      pick.forEach((k) => { if (errors[k]) subset[k] = errors[k]; });
+      setFieldErrors((fe) => ({ ...fe, ...subset }));
+      return Object.keys(subset).length === 0;
+    }
+    if (tab === 1) {
+      if (father?.mode === 'existing') return true;
+      const e = validateNewParent(father || {});
+      setFieldErrors((fe) => ({ ...fe, _father: e }));
+      return Object.keys(e).length === 0;
+    }
+    if (tab === 2) {
+      if (mother?.mode === 'existing') return true;
+      const e = validateNewParent(mother || {});
+      setFieldErrors((fe) => ({ ...fe, _mother: e }));
+      return Object.keys(e).length === 0;
+    }
+    return true; // Previous School tab has no required fields
+  };
+
+  const handleNext = () => { if (validateCurrentTab()) setTab((t) => t + 1); };
+
+  // Live parent error recompute on change
+  const rebuildParentErrors = (f, m) => {
+    const out = {};
+    if (f?.mode === 'new') out._father = validateNewParent(f);
+    if (m?.mode === 'new') out._mother = validateNewParent(m);
+    const fPhone = f?.mode === 'new' ? (f.phone || '').trim() : '';
+    const mPhone = m?.mode === 'new' ? (m.phone || '').trim() : '';
+    const fEmail = f?.mode === 'new' ? (f.email || '').trim().toLowerCase() : '';
+    const mEmail = m?.mode === 'new' ? (m.email || '').trim().toLowerCase() : '';
+    if (fPhone && mPhone && fPhone === mPhone) {
+      out._father = out._father || {}; out._mother = out._mother || {};
+      out._father.phone = 'Father and Mother phone must be different.';
+      out._mother.phone = 'Father and Mother phone must be different.';
+    }
+    if (fEmail && mEmail && fEmail === mEmail) {
+      out._father = out._father || {}; out._mother = out._mother || {};
+      out._father.email = 'Father and Mother email must be different.';
+      out._mother.email = 'Father and Mother email must be different.';
+    }
+    return out;
+  };
+
+  const handleFatherChange = (next) => {
+    setFather(next);
+    const pe = rebuildParentErrors(next, mother);
+    setFieldErrors((fe) => {
+      const copy = { ...fe };
+      delete copy._father; delete copy._mother;
+      if (pe._father) copy._father = pe._father;
+      if (pe._mother) copy._mother = pe._mother;
+      return copy;
+    });
+  };
+
+  const handleMotherChange = (next) => {
+    setMother(next);
+    const pe = rebuildParentErrors(father, next);
+    setFieldErrors((fe) => {
+      const copy = { ...fe };
+      delete copy._father; delete copy._mother;
+      if (pe._father) copy._father = pe._father;
+      if (pe._mother) copy._mother = pe._mother;
+      return copy;
+    });
+  };
+
   const handleSubmit = async () => {
     setError('');
-    if (!form.firstName || !form.lastName) { setError('First and last name are required.'); return; }
-    if (!form.dateOfBirth)                 { setError('Date of birth is required.');        return; }
-    if (!form.classroom)                   { setError('Please select a classroom.');        return; }
-    if (!form.gender)                      { setError('Gender is required.');               return; }
+    const { valid, errors } = validateStudent(form);
+
+    // Parent validations for new accounts
+    const parentErrors = {};
+    const validateNewParent = (p) => {
+      const e = {};
+      e.name = validateParentName(p?.name);
+      e.phone = validateParentPhone(p?.phone);
+      e.email = validateParentEmail(p?.email);
+      e.occupation = validateParentOccupation(p?.occupation);
+      e.password = validateParentPassword(p?.password);
+      Object.keys(e).forEach((k) => { if (e[k] == null) delete e[k]; });
+      return e;
+    };
+
+    if (father?.mode === 'new') parentErrors._father = validateNewParent(father);
+    if (mother?.mode === 'new') parentErrors._mother = validateNewParent(mother);
+
+    // Cross-parent uniqueness: phone/email must differ
+    const fPhone = father?.mode === 'new' ? (father.phone || '').trim() : '';
+    const mPhone = mother?.mode === 'new' ? (mother.phone || '').trim() : '';
+    const fEmail = father?.mode === 'new' ? (father.email || '').trim().toLowerCase() : '';
+    const mEmail = mother?.mode === 'new' ? (mother.email || '').trim().toLowerCase() : '';
+    if (fPhone && mPhone && fPhone === mPhone) {
+      parentErrors._father = parentErrors._father || {};
+      parentErrors._mother = parentErrors._mother || {};
+      parentErrors._father.phone = 'Father and Mother phone must be different.';
+      parentErrors._mother.phone = 'Father and Mother phone must be different.';
+    }
+    if (fEmail && mEmail && fEmail === mEmail) {
+      parentErrors._father = parentErrors._father || {};
+      parentErrors._mother = parentErrors._mother || {};
+      parentErrors._father.email = 'Father and Mother email must be different.';
+      parentErrors._mother.email = 'Father and Mother email must be different.';
+    }
+
+    const combinedErrors = { ...errors, ...parentErrors };
+    if (!valid || Object.keys(parentErrors).some((k) => Object.keys(parentErrors[k] || {}).length)) {
+      setFieldErrors(combinedErrors);
+      return;
+    }
+
+    setFieldErrors({});
 
     setSaving(true);
     try {
-      const res = await api.post(API.STUDENTS.BASE, buildPayload());
+      const payload = buildPayload();
+      // Default parent password to phone when blank
+      if (father?.mode === 'new') payload.fatherPassword = father.password || father.phone || '';
+      if (mother?.mode === 'new') payload.motherPassword = mother.password || mother.phone || '';
+
+      const res = await api.post(API.STUDENTS.BASE, payload);
       setCreated(res.data);
       onSuccess();
     } catch (err) {
@@ -575,7 +793,12 @@ function AdmissionModal({ open, onClose, classrooms, ayId, onSuccess }) {
       {/* Tabs */}
       <div className="flex gap-1 mb-6 bg-slate-800 rounded-lg p-1">
         {STUDENT_TABS.map((t, i) => (
-          <button key={t} onClick={() => setTab(i)}
+          <button
+            key={t}
+            onClick={() => {
+              if (i <= tab) { setTab(i); return; }
+              if (i === tab + 1) { if (validateCurrentTab()) setTab(i); }
+            }}
             className={`flex-1 text-sm py-1.5 rounded-md transition-colors ${tab === i ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
             {t}
           </button>
@@ -588,39 +811,42 @@ function AdmissionModal({ open, onClose, classrooms, ayId, onSuccess }) {
 
       {tab === 0 && (
         <div className="grid grid-cols-2 gap-4">
-          <Input label="First Name *"   value={form.firstName}   onChange={(e) => set('firstName',   e.target.value)} placeholder="Arjun" />
-          <Input label="Last Name *"    value={form.lastName}    onChange={(e) => set('lastName',    e.target.value)} placeholder="Sharma" />
-          <Input label="Middle Name"    value={form.middleName}  onChange={(e) => set('middleName',  e.target.value)} placeholder="Kumar" />
-          <Select label="Gender *" value={form.gender} onChange={(e) => set('gender', e.target.value)} options={GENDER_OPTIONS} />
-          <Input label="Date of Birth *" type="date" value={form.dateOfBirth} onChange={(e) => set('dateOfBirth', e.target.value)} />
+          <Input label="First Name *"   value={form.firstName}   onChange={(e) => set('firstName',   e.target.value)} placeholder="Arjun" error={fieldErrors.firstName} />
+          <Input label="Last Name *"    value={form.lastName}    onChange={(e) => set('lastName',    e.target.value)} placeholder="Sharma" error={fieldErrors.lastName} />
+          <Input label="Middle Name"    value={form.middleName}  onChange={(e) => set('middleName',  e.target.value)} placeholder="Kumar" error={fieldErrors.middleName} />
+          <Select label="Gender *" value={form.gender} onChange={(e) => set('gender', e.target.value)} options={GENDER_OPTIONS} error={fieldErrors.gender} />
+          <Input label="Date of Birth *" type="date" max={new Date(Date.now()-24*60*60*1000).toISOString().split('T')[0]} value={form.dateOfBirth} onChange={(e) => set('dateOfBirth', e.target.value)} error={fieldErrors.dateOfBirth} />
           <Select label="Classroom *" value={form.classroom} onChange={(e) => {
             const selected = classrooms.find(c => c._id === e.target.value);
             set('classroom', e.target.value);
             if (!form.rteFee && selected?.rteFee) set('rteFee', selected.rteFee);
-          }} options={classOptions} />
+          }} options={classOptions} error={fieldErrors.classroom} />
           <label className="flex items-center gap-2 text-sm text-slate-300">
             <input type="checkbox" checked={form.isRTE} onChange={e => set('isRTE', e.target.checked)} />
             RTE student
           </label>
-          <Input label="Government Contribution (₹)" type="number" min="0" value={form.rteFee} onChange={(e) => set('rteFee', e.target.value)} />
-          <Input label="Blood Group"    value={form.bloodGroup}   onChange={(e) => set('bloodGroup',   e.target.value)} placeholder="B+" />
-          <Input label="Religion"       value={form.religion}     onChange={(e) => set('religion',     e.target.value)} placeholder="Hindu" />
-          <Input label="Caste"          value={form.caste}        onChange={(e) => set('caste',        e.target.value)} placeholder="General" />
-          <Input label="Mother Tongue"  value={form.motherTongue} onChange={(e) => set('motherTongue', e.target.value)} placeholder="Marathi" />
-          <Input label="Place of Birth" value={form.placeOfBirth} onChange={(e) => set('placeOfBirth', e.target.value)} placeholder="Pune" />
-          <Input label="PEN Number"     value={form.penNumber}    onChange={(e) => set('penNumber',    e.target.value)} placeholder="Optional" />
+          <Input label="Government Contribution (₹)" type="number" inputMode="decimal" min={0} step={0.01} value={form.rteFee} onChange={(e) => {
+            const cleaned = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+            set('rteFee', cleaned);
+          }} onKeyDown={(e) => { if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault(); }} error={fieldErrors.rteFee} />
+          <Select label="Blood Group" value={form.bloodGroup} onChange={(e) => set('bloodGroup', e.target.value)} options={[{ value: '', label: 'Select' }, ...BLOOD_GROUPS.map(bg => ({ value: bg, label: bg }))]} error={fieldErrors.bloodGroup} />
+          <Input label="Religion"       value={form.religion}     onChange={(e) => set('religion',     e.target.value)} placeholder="Hindu" error={fieldErrors.religion} />
+          <Input label="Caste"          value={form.caste}        onChange={(e) => set('caste',        e.target.value)} placeholder="General" error={fieldErrors.caste} />
+          <Input label="Mother Tongue"  value={form.motherTongue} onChange={(e) => set('motherTongue', e.target.value)} placeholder="Marathi" error={fieldErrors.motherTongue} />
+          <Input label="Place of Birth" value={form.placeOfBirth} onChange={(e) => set('placeOfBirth', e.target.value)} placeholder="Pune" error={fieldErrors.placeOfBirth} />
+          <Input label="PEN Number"     value={form.penNumber}    onChange={(e) => set('penNumber',    e.target.value)} placeholder="Optional" error={fieldErrors.penNumber} />
         </div>
       )}
 
       {tab === 1 && (
         <div className="grid grid-cols-2 gap-4">
-          <ParentSearchWidget label="Father" value={father} onChange={setFather} />
+          <ParentSearchWidget label="Father" value={father} onChange={handleFatherChange} errors={fieldErrors._father || {}} />
         </div>
       )}
 
       {tab === 2 && (
         <div className="grid grid-cols-2 gap-4">
-          <ParentSearchWidget label="Mother" value={mother} onChange={setMother} />
+          <ParentSearchWidget label="Mother" value={mother} onChange={handleMotherChange} errors={fieldErrors._mother || {}} />
         </div>
       )}
 
@@ -636,7 +862,7 @@ function AdmissionModal({ open, onClose, classrooms, ayId, onSuccess }) {
         <div className="flex gap-2">
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
           {tab < STUDENT_TABS.length - 1
-            ? <Button onClick={() => setTab((t) => t + 1)}>Next →</Button>
+            ? <Button onClick={handleNext}>Next →</Button>
             : <Button onClick={handleSubmit} disabled={saving}>{saving ? 'Creating…' : 'Create Admission'}</Button>
           }
         </div>
@@ -656,6 +882,7 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
   const [mother, setMother] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     if (!student) return;
@@ -688,6 +915,49 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
 
   const handleSubmit = async () => {
     setError('');
+
+    // Validate student profile fields
+    const { valid, errors } = validateStudent(form);
+
+    // Status-specific
+    if (form.status === 'Left' && !form.leavingDate) errors.leavingDate = 'Leaving Date is required.';
+
+    // Validate parents (new accounts) and cross uniqueness
+    const parentErrors = {};
+    const validateNew = (p) => {
+      const e = {};
+      e.name = validateParentName(p?.name);
+      e.phone = validateParentPhone(p?.phone);
+      e.email = validateParentEmail(p?.email);
+      e.occupation = validateParentOccupation(p?.occupation);
+      e.password = validateParentPassword(p?.password);
+      Object.keys(e).forEach((k) => { if (e[k] == null) delete e[k]; });
+      return e;
+    };
+    if (father?.mode === 'new') parentErrors._father = validateNew(father);
+    if (mother?.mode === 'new') parentErrors._mother = validateNew(mother);
+    const fPhone = father?.mode === 'new' ? (father.phone || '').trim() : '';
+    const mPhone = mother?.mode === 'new' ? (mother.phone || '').trim() : '';
+    const fEmail = father?.mode === 'new' ? (father.email || '').trim().toLowerCase() : '';
+    const mEmail = mother?.mode === 'new' ? (mother.email || '').trim().toLowerCase() : '';
+    if (fPhone && mPhone && fPhone === mPhone) {
+      parentErrors._father = parentErrors._father || {}; parentErrors._mother = parentErrors._mother || {};
+      parentErrors._father.phone = 'Father and Mother phone must be different.';
+      parentErrors._mother.phone = 'Father and Mother phone must be different.';
+    }
+    if (fEmail && mEmail && fEmail === mEmail) {
+      parentErrors._father = parentErrors._father || {}; parentErrors._mother = parentErrors._mother || {};
+      parentErrors._father.email = 'Father and Mother email must be different.';
+      parentErrors._mother.email = 'Father and Mother email must be different.';
+    }
+
+    const combinedErrors = { ...errors, ...parentErrors };
+    if (!valid || Object.keys(combinedErrors).length) {
+      setFieldErrors(combinedErrors);
+      return;
+    }
+
+    setFieldErrors({});
     setSaving(true);
     try {
       const { status, rejectionRemark, holdRemark, leavingReason, leavingDate, ...profileData } = form;
@@ -710,7 +980,8 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
           slot: 'father',
           existingUserId: father?.existingUserId,
           email: father?.email, name: father?.name,
-          phone: father?.phone, password: father?.password,
+          phone: father?.phone,
+          password: father?.password || father?.phone || '',
         });
       }
 
@@ -722,7 +993,8 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
           slot: 'mother',
           existingUserId: mother?.existingUserId,
           email: mother?.email, name: mother?.name,
-          phone: mother?.phone, password: mother?.password,
+          phone: mother?.phone,
+          password: mother?.password || mother?.phone || '',
         });
       }
 
@@ -745,11 +1017,122 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
     { value: 'Alumni',      label: 'Alumni'       },
   ];
 
+  // Edit validation helpers
+  const setEditField = (k, v) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    let msg = null;
+    switch (k) {
+      case 'firstName':   msg = validateStudentName(v, 'First Name'); break;
+      case 'lastName':    msg = validateStudentName(v, 'Last Name'); break;
+      case 'middleName':  msg = validateStudentMiddleName(v); break;
+      case 'gender':      msg = validateGender(v); break;
+      case 'dateOfBirth': msg = validateStudentDOB(v); break;
+      case 'classroom':   msg = validateStudentClassroom(v); break;
+      case 'rteFee':      msg = validateStudentRteFee(v); break;
+      case 'bloodGroup':  msg = validateBloodGroup(v); break;
+      case 'religion':    msg = validateMax50(v, 'Religion'); break;
+      case 'caste':       msg = validateMax50(v, 'Caste'); break;
+      case 'motherTongue': msg = validateMax50(v, 'Mother Tongue'); break;
+      case 'placeOfBirth': msg = validatePlaceOfBirth(v); break;
+      case 'penNumber':    msg = validatePenNumber(v); break;
+      case 'leavingDate':  msg = form.status === 'Left' && !v ? 'Leaving Date is required.' : null; break;
+      default: break;
+    }
+    setFieldErrors((fe) => {
+      const next = { ...fe };
+      if (msg) next[k] = msg; else delete next[k];
+      return next;
+    });
+  };
+  const validateNewParentEdit = (p) => {
+    const e = {};
+    e.name = validateParentName(p?.name);
+    e.phone = validateParentPhone(p?.phone);
+    e.email = validateParentEmail(p?.email);
+    e.occupation = validateParentOccupation(p?.occupation);
+    e.password = validateParentPassword(p?.password);
+    Object.keys(e).forEach((k) => { if (e[k] == null) delete e[k]; });
+    return e;
+  };
+  const rebuildParentErrorsEdit = (f, m) => {
+    const out = {};
+    if (f?.mode === 'new') out._father = validateNewParentEdit(f);
+    if (m?.mode === 'new') out._mother = validateNewParentEdit(m);
+    const fPhone = f?.mode === 'new' ? (f.phone || '').trim() : '';
+    const mPhone = m?.mode === 'new' ? (m.phone || '').trim() : '';
+    const fEmail = f?.mode === 'new' ? (f.email || '').trim().toLowerCase() : '';
+    const mEmail = m?.mode === 'new' ? (m.email || '').trim().toLowerCase() : '';
+    if (fPhone && mPhone && fPhone === mPhone) {
+      out._father = out._father || {}; out._mother = out._mother || {};
+      out._father.phone = 'Father and Mother phone must be different.';
+      out._mother.phone = 'Father and Mother phone must be different.';
+    }
+    if (fEmail && mEmail && fEmail === mEmail) {
+      out._father = out._father || {}; out._mother = out._mother || {};
+      out._father.email = 'Father and Mother email must be different.';
+      out._mother.email = 'Father and Mother email must be different.';
+    }
+    return out;
+  };
+  const handleEditFatherChange = (next) => {
+    setFather(next);
+    const pe = rebuildParentErrorsEdit(next, mother);
+    setFieldErrors((fe) => {
+      const copy = { ...fe };
+      delete copy._father; delete copy._mother;
+      if (pe._father) copy._father = pe._father;
+      if (pe._mother) copy._mother = pe._mother;
+      return copy;
+    });
+  };
+  const handleEditMotherChange = (next) => {
+    setMother(next);
+    const pe = rebuildParentErrorsEdit(father, next);
+    setFieldErrors((fe) => {
+      const copy = { ...fe };
+      delete copy._father; delete copy._mother;
+      if (pe._father) copy._father = pe._father;
+      if (pe._mother) copy._mother = pe._mother;
+      return copy;
+    });
+  };
+  const validateEditCurrentTab = () => {
+    if (tab === 0) {
+      const { errors } = validateStudent(form);
+      const pick = ['firstName','lastName','middleName','gender','dateOfBirth','classroom','rteFee','bloodGroup','religion','caste','motherTongue','placeOfBirth','penNumber'];
+      const subset = {};
+      pick.forEach((k) => { if (errors[k]) subset[k] = errors[k]; });
+      if (form.status === 'Left' && !form.leavingDate) subset.leavingDate = 'Leaving Date is required.';
+      setFieldErrors((fe) => ({ ...fe, ...subset }));
+      return Object.keys(subset).length === 0;
+    }
+    if (tab === 1) {
+      if (father?.mode === 'existing') return true;
+      const e = validateNewParentEdit(father || {});
+      setFieldErrors((fe) => ({ ...fe, _father: e }));
+      return Object.keys(e).length === 0;
+    }
+    if (tab === 2) {
+      if (mother?.mode === 'existing') return true;
+      const e = validateNewParentEdit(mother || {});
+      setFieldErrors((fe) => ({ ...fe, _mother: e }));
+      return Object.keys(e).length === 0;
+    }
+    return true;
+  };
+
+  const handleEditNext = () => { if (validateEditCurrentTab()) setTab((t) => t + 1); };
+
   return (
     <Modal open={open} onClose={onClose} title="Edit Student" width="max-w-2xl">
       <div className="flex gap-1 mb-6 bg-slate-800 rounded-lg p-1 flex-wrap">
         {EDIT_TABS.map((t, i) => (
-          <button key={t} onClick={() => setTab(i)}
+          <button
+            key={t}
+            onClick={() => {
+              if (i <= tab) { setTab(i); return; }
+              if (i === tab + 1) { if (validateEditCurrentTab()) setTab(i); }
+            }}
             className={`flex-1 text-xs py-1.5 rounded-md transition-colors min-w-[60px] ${tab === i ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}>
             {t}
           </button>
@@ -762,62 +1145,66 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
 
       {tab === 0 && (
         <div className="grid grid-cols-2 gap-4">
-          <Input label="First Name *"   value={form.firstName || ''}   onChange={(e) => set('firstName',   e.target.value)} />
-          <Input label="Last Name *"    value={form.lastName || ''}    onChange={(e) => set('lastName',    e.target.value)} />
-          <Input label="Middle Name"    value={form.middleName || ''}  onChange={(e) => set('middleName',  e.target.value)} />
-          <Select label="Gender" value={form.gender} onChange={(e) => set('gender', e.target.value)} options={GENDER_OPTIONS} />
-          <Input label="Date of Birth" type="date" value={form.dateOfBirth || ''} onChange={(e) => set('dateOfBirth', e.target.value)} />
+          <Input label="First Name *"   value={form.firstName || ''}   onChange={(e) => setEditField('firstName',   e.target.value)} error={fieldErrors.firstName} />
+          <Input label="Last Name *"    value={form.lastName || ''}    onChange={(e) => setEditField('lastName',    e.target.value)} error={fieldErrors.lastName} />
+          <Input label="Middle Name"    value={form.middleName || ''}  onChange={(e) => setEditField('middleName',  e.target.value)} error={fieldErrors.middleName} />
+          <Select label="Gender" value={form.gender} onChange={(e) => setEditField('gender', e.target.value)} options={GENDER_OPTIONS} error={fieldErrors.gender} />
+          <Input label="Date of Birth" type="date" value={form.dateOfBirth || ''} onChange={(e) => setEditField('dateOfBirth', e.target.value)} error={fieldErrors.dateOfBirth} />
           <Select label="Classroom" value={form.classroom || ''} onChange={(e) => {
             const selected = classrooms.find(c => c._id === e.target.value);
-            set('classroom', e.target.value);
-            if (!form.rteFee && selected?.rteFee) set('rteFee', selected.rteFee);
-          }} options={classOptions} />
+            setEditField('classroom', e.target.value);
+            if (!form.rteFee && selected?.rteFee) setEditField('rteFee', selected.rteFee);
+          }} options={classOptions} error={fieldErrors.classroom} />
           <label className="flex items-center gap-2 text-sm text-slate-300">
-            <input type="checkbox" checked={!!form.isRTE} onChange={(e) => set('isRTE', e.target.checked)} />
+            <input type="checkbox" checked={!!form.isRTE} onChange={(e) => setEditField('isRTE', e.target.checked)} />
             RTE student
           </label>
-          <Input label="Government Contribution (₹)" type="number" min="0" value={form.rteFee ?? 0} onChange={(e) => set('rteFee', e.target.value)} />
-          <Input label="Blood Group"    value={form.bloodGroup || ''}   onChange={(e) => set('bloodGroup',   e.target.value)} />
-          <Input label="Religion"       value={form.religion || ''}     onChange={(e) => set('religion',     e.target.value)} />
-          <Input label="Caste"          value={form.caste || ''}        onChange={(e) => set('caste',        e.target.value)} />
-          <Input label="Mother Tongue"  value={form.motherTongue || ''} onChange={(e) => set('motherTongue', e.target.value)} />
-          <Input label="Place of Birth" value={form.placeOfBirth || ''} onChange={(e) => set('placeOfBirth', e.target.value)} />
-          <Input label="PEN Number"     value={form.penNumber || ''}    onChange={(e) => set('penNumber',    e.target.value)} />
+          <Input label="Government Contribution (₹)" type="number" min="0" value={form.rteFee ?? 0} onChange={(e) => setEditField('rteFee', e.target.value)} error={fieldErrors.rteFee} />
+          <Input label="Blood Group"    value={form.bloodGroup || ''}   onChange={(e) => setEditField('bloodGroup',   e.target.value)} error={fieldErrors.bloodGroup} />
+          <Input label="Religion"       value={form.religion || ''}     onChange={(e) => setEditField('religion',     e.target.value)} error={fieldErrors.religion} />
+          <Input label="Caste"          value={form.caste || ''}        onChange={(e) => setEditField('caste',        e.target.value)} error={fieldErrors.caste} />
+          <Input label="Mother Tongue"  value={form.motherTongue || ''} onChange={(e) => setEditField('motherTongue', e.target.value)} error={fieldErrors.motherTongue} />
+          <Input label="Place of Birth" value={form.placeOfBirth || ''} onChange={(e) => setEditField('placeOfBirth', e.target.value)} error={fieldErrors.placeOfBirth} />
+          <Input label="PEN Number"     value={form.penNumber || ''}    onChange={(e) => setEditField('penNumber',    e.target.value)} error={fieldErrors.penNumber} />
         </div>
       )}
 
       {tab === 1 && (
         <div className="grid grid-cols-2 gap-4">
-          <ParentSearchWidget label="Father" value={father} onChange={setFather} />
+          <ParentSearchWidget label="Father" value={father} onChange={(v) => {
+            handleEditFatherChange(v);
+          }} errors={fieldErrors._father || {}} />
         </div>
       )}
 
       {tab === 2 && (
         <div className="grid grid-cols-2 gap-4">
-          <ParentSearchWidget label="Mother" value={mother} onChange={setMother} />
+          <ParentSearchWidget label="Mother" value={mother} onChange={(v) => {
+            handleEditMotherChange(v);
+          }} errors={fieldErrors._mother || {}} />
         </div>
       )}
 
       {tab === 3 && (
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Previous School" value={form.previousSchoolName || ''} onChange={(e) => set('previousSchoolName', e.target.value)} className="col-span-2" />
-          <Input label="Previous Class"  value={form.previousClass || ''}      onChange={(e) => set('previousClass',      e.target.value)} />
+          <Input label="Previous School" value={form.previousSchoolName || ''} onChange={(e) => setEditField('previousSchoolName', e.target.value)} className="col-span-2" />
+          <Input label="Previous Class"  value={form.previousClass || ''}      onChange={(e) => setEditField('previousClass',      e.target.value)} />
         </div>
       )}
 
       {tab === 4 && (
         <div className="grid grid-cols-2 gap-4">
-          <Select label="Status" value={form.status} onChange={(e) => set('status', e.target.value)} options={statusOptions} className="col-span-2" />
+          <Select label="Status" value={form.status} onChange={(e) => setEditField('status', e.target.value)} options={statusOptions} className="col-span-2" />
           {form.status === 'Rejected' && (
-            <Input label="Rejection Remark" value={form.rejectionRemark || ''} onChange={(e) => set('rejectionRemark', e.target.value)} className="col-span-2" />
+            <Input label="Rejection Remark" value={form.rejectionRemark || ''} onChange={(e) => setEditField('rejectionRemark', e.target.value)} className="col-span-2" />
           )}
           {form.status === 'OnHold' && (
-            <Input label="Hold Remark" value={form.holdRemark || ''} onChange={(e) => set('holdRemark', e.target.value)} className="col-span-2" />
+            <Input label="Hold Remark" value={form.holdRemark || ''} onChange={(e) => setEditField('holdRemark', e.target.value)} className="col-span-2" />
           )}
           {form.status === 'Left' && (
             <>
-              <Input label="Leaving Date"   type="date" value={form.leavingDate   || ''} onChange={(e) => set('leavingDate',   e.target.value)} />
-              <Input label="Leaving Reason" value={form.leavingReason || ''}             onChange={(e) => set('leavingReason', e.target.value)} />
+              <Input label="Leaving Date"   type="date" value={form.leavingDate   || ''} onChange={(e) => setEditField('leavingDate',   e.target.value)} error={fieldErrors.leavingDate} />
+              <Input label="Leaving Reason" value={form.leavingReason || ''}             onChange={(e) => setEditField('leavingReason', e.target.value)} />
             </>
           )}
           <div className="col-span-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
@@ -829,7 +1216,10 @@ function EditStudentModal({ open, onClose, student, classrooms, onSuccess }) {
 
       <div className="flex justify-end gap-3 mt-6">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSubmit} disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</Button>
+        {tab < EDIT_TABS.length - 1
+          ? <Button onClick={handleEditNext}>Next →</Button>
+          : <Button onClick={handleSubmit} disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</Button>
+        }
       </div>
     </Modal>
   );
@@ -897,10 +1287,14 @@ function ParentPasswordModal({ open, onClose, student, onSuccess }) {
   const [confirm,  setConfirm]  = useState('');
   const [saving,   setSaving]   = useState(false);
   const [error,    setError]    = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showPw, setShowPw] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (!open) return;
-    setPassword(''); setConfirm(''); setError('');
+    setPassword(''); setConfirm(''); setError(''); setFieldErrors({});
+    setShowPw(false); setShowConfirm(false);
     if (student?.fatherUser)      setTarget('father');
     else if (student?.motherUser) setTarget('mother');
   }, [open, student]);
@@ -911,11 +1305,48 @@ function ParentPasswordModal({ open, onClose, student, onSuccess }) {
     String(student.fatherUser._id || student.fatherUser) ===
     String(student.motherUser._id || student.motherUser);
 
+  const validatePasswordLocal = (p) => {
+    if (!p) return 'Password is required.';
+    if (p.length < 6) return 'Minimum 6 characters.';
+    return null;
+  };
+  const validateConfirmLocal = (c, p) => {
+    if (!c) return 'Confirm your password.';
+    if (c !== p) return 'Passwords do not match.';
+    return null;
+  };
+
+  const onPasswordChange = (p) => {
+    setPassword(p);
+    const pwErr = validatePasswordLocal(p);
+    const cfErr = confirm ? validateConfirmLocal(confirm, p) : null;
+    setFieldErrors((fe) => {
+      const next = { ...fe };
+      if (pwErr) next.password = pwErr; else delete next.password;
+      if (cfErr) next.confirm  = cfErr;  else if (confirm) delete next.confirm;
+      return next;
+    });
+  };
+
+  const onConfirmChange = (c) => {
+    setConfirm(c);
+    const cfErr = validateConfirmLocal(c, password);
+    setFieldErrors((fe) => {
+      const next = { ...fe };
+      if (cfErr) next.confirm = cfErr; else delete next.confirm;
+      return next;
+    });
+  };
+
   const handleSubmit = async () => {
     setError('');
-    if (!password)           { setError('Enter a new password.');    return; }
-    if (password.length < 6) { setError('Minimum 6 characters.');    return; }
-    if (password !== confirm) { setError('Passwords do not match.'); return; }
+    const pwErr = validatePasswordLocal(password);
+    const cfErr = validateConfirmLocal(confirm, password);
+    const errs = {};
+    if (pwErr) errs.password = pwErr;
+    if (cfErr) errs.confirm  = cfErr;
+    if (Object.keys(errs).length) { setFieldErrors(errs); return; }
+
     setSaving(true);
     try {
       await api.patch(API.STUDENTS.PARENT_PASSWORD(student._id), { target, password });
@@ -955,8 +1386,18 @@ function ParentPasswordModal({ open, onClose, student, onSuccess }) {
         <p className="mb-4 text-xs text-slate-500">Both parents share the same account ({student.fatherUser?.email}).</p>
       )}
       <div className="flex flex-col gap-4">
-        <Input label="New Password *" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Min 6 characters" />
-        <Input label="Confirm Password *" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repeat new password" onKeyDown={(e) => e.key === 'Enter' && handleSubmit()} />
+        <div className="relative">
+          <Input label="New Password *" type={showPw ? 'text' : 'password'} value={password} onChange={(e) => onPasswordChange(e.target.value)} placeholder="Min 6 characters" error={fieldErrors.password} className="pr-10" />
+          <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-3 top-8 text-slate-400 hover:text-slate-200" aria-label={showPw ? 'Hide password' : 'Show password'}>
+            {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        <div className="relative">
+          <Input label="Confirm Password *" type={showConfirm ? 'text' : 'password'} value={confirm} onChange={(e) => onConfirmChange(e.target.value)} placeholder="Repeat new password" error={fieldErrors.confirm} className="pr-10" onKeyDown={(e) => e.key === 'Enter' && handleSubmit()} />
+          <button type="button" onClick={() => setShowConfirm((s) => !s)} className="absolute right-3 top-8 text-slate-400 hover:text-slate-200" aria-label={showConfirm ? 'Hide password' : 'Show password'}>
+            {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
       <div className="flex justify-end gap-3 mt-6">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>

@@ -25,7 +25,7 @@ import {
   Edit2, KeyRound, ShieldOff, ShieldCheck, RefreshCw,
   CheckCircle2, XCircle, Clock, AlertCircle, ChevronDown,
   TrendingUp, TrendingDown, Minus, X, Search, UserPlus, ChevronRight,
-  LogOut, FileText, Download,
+  LogOut, FileText, Download, MoreVertical,
 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
@@ -71,9 +71,9 @@ const EXAM_TYPE_LABELS = {
 const fmt = (date) => date ? new Date(date).toLocaleDateString('en-IN') : '—';
 const fmtMoney = (n) => `₹${(n || 0).toLocaleString('en-IN')}`;
 
-function StatCard({ label, value, sub, color = 'text-white' }) {
+function StatCard({ label, value, sub, color = 'text-white', className = '' }) {
   return (
-    <div className="bg-slate-800 rounded-xl p-4 flex flex-col gap-1">
+    <div className={`bg-slate-800 rounded-xl p-4 flex flex-col gap-1 ${className}`}>
       <span className="text-xs text-slate-500 uppercase tracking-wider">{label}</span>
       <span className={`text-2xl font-semibold ${color}`}>{value}</span>
       {sub && <span className="text-xs text-slate-500">{sub}</span>}
@@ -127,11 +127,21 @@ const id = params.id;
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState('');
 
-  // modal states
+  // modal/menu states
   const [editOpen,   setEditOpen]   = useState(false);
   const [pwOpen,     setPwOpen]     = useState(false);
   const [leaveOpen,  setLeaveOpen]  = useState(false);
   const [linkOpen,   setLinkOpen]   = useState(null); // 'father'|'mother'
+  const [menuOpen,   setMenuOpen]   = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function onDocClick(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    }
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -180,45 +190,49 @@ const id = params.id;
     <PageContent>
       {/* ── Header ── */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => router.back()} className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
         <div className="flex-1">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-xl font-semibold text-white">
               {student.firstName} {student.middleName} {student.lastName}
             </h1>
-            <Badge label={student.status} color={STATUS_COLOR[student.status] || 'gray'} />
             <span className="text-sm text-slate-500">{student.admissionNo}</span>
           </div>
           <p className="text-sm text-slate-500 mt-0.5">
             {student.classroom?.displayName} · {student.academicYear?.name}
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button size="sm" variant="ghost" onClick={load}><RefreshCw className="w-4 h-4" /></Button>
-          <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
-            <Edit2 className="w-3 h-3 mr-1" /> Edit
+        <div className="relative" ref={menuRef}>
+          <Button size="sm" variant="ghost" onClick={() => setMenuOpen(v => !v)}>
+            <MoreVertical className="w-4 h-4" />
           </Button>
-          {student.status === 'Approved' && (
-            <Button size="sm" variant="secondary" onClick={() => setLeaveOpen(true)}>
-              <LogOut className="w-3 h-3 mr-1" /> Mark Left
-            </Button>
-          )}
-          {hasParent && (
-            <>
-              <Button
-                size="sm"
-                variant={parentBlocked ? 'success' : 'secondary'}
-                onClick={() => handleBlockParent(!parentBlocked)}
-              >
-                {parentBlocked ? <ShieldCheck className="w-3 h-3 mr-1" /> : <ShieldOff className="w-3 h-3 mr-1" />}
-                {parentBlocked ? 'Unblock Parent' : 'Block Parent'}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setPwOpen(true)}>
-                <KeyRound className="w-3 h-3 mr-1" /> Password
-              </Button>
-            </>
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-20 py-1">
+              <div className="px-3 py-2 border-b border-slate-800">
+                <span className="block text-xs text-slate-500">Status</span>
+                <div className="mt-1"><Badge label={student.status} color={STATUS_COLOR[student.status] || 'gray'} /></div>
+              </div>
+              <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800" onClick={() => { setMenuOpen(false); load(); }}>
+                <RefreshCw className="w-4 h-4 text-slate-400" /> Refresh
+              </button>
+              <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800" onClick={() => { setMenuOpen(false); setEditOpen(true); }}>
+                <Edit2 className="w-4 h-4 text-slate-400" /> Edit
+              </button>
+              {student.status === 'Approved' && (
+                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800" onClick={() => { setMenuOpen(false); setLeaveOpen(true); }}>
+                  <LogOut className="w-4 h-4 text-slate-400" /> Mark Left
+                </button>
+              )}
+              {hasParent && (
+                <>
+                  <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800" onClick={() => { setMenuOpen(false); handleBlockParent(!parentBlocked); }}>
+                    {parentBlocked ? <ShieldCheck className="w-4 h-4 text-slate-400" /> : <ShieldOff className="w-4 h-4 text-slate-400" />} {parentBlocked ? 'Unblock Parent' : 'Block Parent'}
+                  </button>
+                  <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800" onClick={() => { setMenuOpen(false); setPwOpen(true); }}>
+                    <KeyRound className="w-4 h-4 text-slate-400" /> Password
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -281,32 +295,28 @@ const id = params.id;
 function OverviewTab({ student, attendance, fees, exams, onLinkParent }) {
   return (
     <div className="space-y-8">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          label="Attendance"
-          value={`${attendance.percentage}%`}
-          sub={`${attendance.Present} present / ${attendance.total} days`}
-          color={attendance.percentage >= 75 ? 'text-emerald-400' : 'text-red-400'}
-        />
-        <StatCard
-          label="Fees Due"
-          value={fmtMoney(fees.pending + fees.overdue)}
-          sub={fees.overdue > 0 ? `₹${fees.overdue.toLocaleString('en-IN')} overdue` : 'All current'}
-          color={(fees.pending + fees.overdue) > 0 ? 'text-amber-400' : 'text-emerald-400'}
-        />
-        <StatCard
-          label="Overall %"
-          value={`${exams.overallPercentage}%`}
-          sub={`${exams.totalExams} exam${exams.totalExams !== 1 ? 's' : ''} taken`}
-          color={exams.overallPercentage >= 75 ? 'text-emerald-400' : exams.overallPercentage >= 50 ? 'text-amber-400' : 'text-red-400'}
-        />
-        <StatCard
-          label="Roll No"
-          value={student.rollNumber || '—'}
-          sub={student.classroom?.displayName}
-        />
-      </div>
+      {/* Compact Overview (single card like "Attendance this year") */}
+      <Card>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Overview</h3>
+        <div className="flex items-center gap-6 overflow-x-auto pb-1">
+          <div className="min-w-[80px] text-center">
+            <div className={`text-lg font-extrabold ${attendance.percentage >= 75 ? 'text-emerald-400' : 'text-rose-400'}`}>{attendance.percentage}%</div>
+            <div className="text-[11px] text-slate-500">Attendance</div>
+          </div>
+          <div className="min-w-[80px] text-center">
+            <div className={`${(fees.pending + fees.overdue) > 0 ? 'text-amber-400' : 'text-emerald-400'} text-lg font-extrabold`}>{fmtMoney(fees.pending + fees.overdue)}</div>
+            <div className="text-[11px] text-slate-500">Fees Due</div>
+          </div>
+          <div className="min-w-[80px] text-center">
+            <div className={`${exams.overallPercentage >= 75 ? 'text-emerald-400' : exams.overallPercentage >= 50 ? 'text-amber-400' : 'text-rose-400'} text-lg font-extrabold`}>{exams.overallPercentage}%</div>
+            <div className="text-[11px] text-slate-500">Overall %</div>
+          </div>
+          <div className="min-w-[80px] text-center">
+            <div className="text-lg font-extrabold text-sky-400">{student.rollNumber || '—'}</div>
+            <div className="text-[11px] text-slate-500">Roll No</div>
+          </div>
+        </div>
+      </Card>
 
       {/* Personal Info */}
       <Card>

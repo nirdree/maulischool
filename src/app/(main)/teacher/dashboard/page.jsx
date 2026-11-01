@@ -92,37 +92,30 @@ export default function TeacherDashboard() {
         subtitle="Here's your teaching overview for today"
       />
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          label="My Class"
-          value={myClass?.displayName || '—'}
-          icon={Users}
-          color="emerald"
-          trend={`Capacity: ${myClass?.capacity || 0}`}
-        />
-        <StatCard
-          label="Present Today"
-          value={todayAttendance.present}
-          icon={CheckSquare}
-          color="sky"
-          trend={`${todayAttendance.absent} absent`}
-        />
-        <StatCard
-          label="Pending Leaves"
-          value={pendingLeaves}
-          icon={CalendarDays}
-          color="amber"
-          trend={`${approvedLeaves} approved`}
-        />
-        <StatCard
-          label="Recent Homework"
-          value={homework.length}
-          icon={ClipboardList}
-          color="violet"
-          trend="Assigned by you"
-        />
-      </div>
+      {/* Overview — single compact row */}
+      <Card>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Overview</h3>
+        <div className="flex items-center gap-6 overflow-x-auto pb-1">
+          <div className="min-w-[120px] text-center">
+            <div className="text-lg font-extrabold text-emerald-400">{myClass?.displayName || '—'}</div>
+            <div className="text-[11px] text-slate-500">My Class</div>
+          </div>
+          <div className="min-w-[90px] text-center">
+            <div className="text-lg font-extrabold text-sky-400">{todayAttendance.present}</div>
+            <div className="text-[11px] text-slate-500">Present</div>
+          </div>
+          <div className="min-w-[110px] text-center">
+            <div className="text-lg font-extrabold text-amber-400">{pendingLeaves}</div>
+            <div className="text-[11px] text-slate-500">Pending Leaves</div>
+          </div>
+          <div className="min-w-[90px] text-center">
+            <div className="text-lg font-extrabold text-violet-400">{homework.length}</div>
+            <div className="text-[11px] text-slate-500">Homework</div>
+          </div>
+        </div>
+      </Card>
+
+      <div className="h-4" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Today's Attendance Summary */}

@@ -20,6 +20,7 @@ import {
   PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
 import { useAuth } from '@/context/AuthContext';
+import { validateExam } from '@/lib/validation.js';
 const EXAM_TYPES = ['UnitTest1', 'UnitTest2', 'MidTerm', 'FinalExam', 'Project', 'Other'];
 
 export default function ExamsPage() {
@@ -119,13 +120,36 @@ export default function ExamsPage() {
 }
 
 function ExamCreateModal({ open, onClose, classrooms, ayId, onSuccess, user }) {
-  const [form, setForm] = useState({
+  const initialForm = {
     name: '', examType: 'UnitTest1', classroom: '', subject: '',
     totalMarks: '', examDate: '', description: '',
-  });
+  };
+  const [form, setForm] = useState(initialForm);
   const [subjects, setSubjects] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const resetForm = () => {
+    setForm(initialForm);
+    setSubjects([]);
+    setErrors({});
+    setTouched({});
+    setSubmitted(false);
+  };
+
+  // Recompute all errors when form changes; display gated by touched/submitted
+  useEffect(() => {
+    const v = validateExam(form);
+    setErrors(v.errors || {});
+  }, [form]);
+
+  // Reset when modal opens
+  useEffect(() => {
+    if (open) resetForm();
+  }, [open]);
 
   const handleClassChange = async (classId) => {
     set('classroom', classId);
@@ -148,31 +172,83 @@ function ExamCreateModal({ open, onClose, classrooms, ayId, onSuccess, user }) {
   };
 
   const handleSubmit = async () => {
+    setSubmitted(true);
+    const v = validateExam(form);
+    setErrors(v.errors || {});
+    if (!v.valid) return;
     setSaving(true);
     try {
       await api.post(API.EXAMS.BASE, { ...form, academicYear: ayId });
+      resetForm();
       onSuccess();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };
 
+
   return (
     <Modal open={open} onClose={onClose} title="Create Exam">
       <div className="space-y-4">
-        <Input label="Exam Name *" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Unit Test 1" />
-        <Select label="Exam Type *" value={form.examType} onChange={e => set('examType', e.target.value)}
-          options={EXAM_TYPES.map(t => ({ value: t, label: t }))} />
-        <Select label="Class *" value={form.classroom} onChange={e => handleClassChange(e.target.value)}
-          options={[{ value: '', label: 'Select Class' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))]} />
-        <Select label="Subject *" value={form.subject} onChange={e => set('subject', e.target.value)}
-          options={[{ value: '', label: 'Select Subject' }, ...subjects.map(s => ({ value: s._id, label: s.name }))]} />
+        <Input
+          label="Exam Name *"
+          value={form.name}
+          onChange={e => { const v = e.target.value; set('name', v); }}
+          onBlur={() => setTouched(t => ({ ...t, name: true }))}
+          placeholder="Unit Test 1"
+          error={(submitted || touched.name) ? errors.name : null}
+        />
+        <Select
+          label="Exam Type *"
+          value={form.examType}
+          onChange={e => { const v = e.target.value; set('examType', v); }}
+          onBlur={() => setTouched(t => ({ ...t, examType: true }))}
+          options={EXAM_TYPES.map(t => ({ value: t, label: t }))}
+          error={(submitted || touched.examType) ? errors.examType : null}
+        />
+        <Select
+          label="Class *"
+          value={form.classroom}
+          onChange={e => handleClassChange(e.target.value)}
+          onBlur={() => setTouched(t => ({ ...t, classroom: true }))}
+          options={[{ value: '', label: 'Select Class' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))]}
+          error={(submitted || touched.classroom) ? errors.classroom : null}
+        />
+        <Select
+          label="Subject *"
+          value={form.subject}
+          onChange={e => { const v = e.target.value; set('subject', v); }}
+          onBlur={() => setTouched(t => ({ ...t, subject: true }))}
+          options={[{ value: '', label: 'Select Subject' }, ...subjects.map(s => ({ value: s._id, label: s.name }))]}
+          error={(submitted || touched.subject) ? errors.subject : null}
+        />
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Total Marks *" type="number" value={form.totalMarks} onChange={e => set('totalMarks', e.target.value)} placeholder="25" />
-          <Input label="Exam Date *" type="date" value={form.examDate} onChange={e => set('examDate', e.target.value)} />
+          <Input
+            label="Total Marks *"
+            type="number"
+            value={form.totalMarks}
+            onChange={e => { const v = e.target.value; set('totalMarks', v); }}
+            onBlur={() => setTouched(t => ({ ...t, totalMarks: true }))}
+            onKeyDown={e => { if (['e','E','+','-','.'].includes(e.key)) e.preventDefault(); }}
+            placeholder="25"
+            error={(submitted || touched.totalMarks) ? errors.totalMarks : null}
+          />
+          <Input
+            label="Exam Date *"
+            type="date"
+            value={form.examDate}
+            onChange={e => { const v = e.target.value; set('examDate', v); }}
+            onBlur={() => setTouched(t => ({ ...t, examDate: true }))}
+            error={(submitted || touched.examDate) ? errors.examDate : null}
+          />
         </div>
-        <Input label="Description" value={form.description} onChange={e => set('description', e.target.value)} placeholder="Optional" />
+        <Input
+          label="Description"
+          value={form.description}
+          onChange={e => set('description', e.target.value)}
+          placeholder="Optional"
+        />
       </div>
       <div className="flex justify-end gap-3 mt-6">
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button variant="ghost" onClick={() => { resetForm(); onClose(); }}>Cancel</Button>
         <Button onClick={handleSubmit} disabled={saving}>{saving ? 'Saving...' : 'Create'}</Button>
       </div>
     </Modal>

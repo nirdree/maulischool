@@ -14,7 +14,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   CheckCircle, XCircle, RefreshCw, Plus, Edit2,
-  Trash2, Eye, BarChart2, AlertCircle, Lock,
+  Trash2, Eye, BarChart2, AlertCircle, Lock, Filter,
 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
@@ -22,6 +22,7 @@ import {
   PageContent, PageHeader, Card, Table, Pagination, Button,
   Input, Select, leaveStatusBadge, Badge, Modal,
 } from '@/components/ui.jsx';
+import { validateApplyLeave } from '@/lib/validation.js';
 
 const LEAVE_TYPES = ['Sick', 'Casual', 'Earned', 'Maternity', 'Unpaid', 'Other'];
 
@@ -46,6 +47,7 @@ export default function LeavesAdminPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [summaryOpen,   setSummaryOpen]   = useState(false);
   const [viewLeave,     setViewLeave]     = useState(null);
+  const [filterOpen,    setFilterOpen]    = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -189,10 +191,14 @@ export default function LeavesAdminPage() {
         subtitle={`${summary.pendingCount} pending · ${summary.approvedCount} approved`}
         actions={
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => setSummaryOpen(true)}>
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+            <Button variant="ghost" onClick={() => setSummaryOpen(true)} className="hidden sm:inline-flex">
               <BarChart2 className="w-4 h-4 mr-1" /> Summary
             </Button>
-            <Button onClick={() => setAddOpen(true)}>
+            <Button onClick={() => setAddOpen(true)} className="hidden sm:inline-flex">
               <Plus className="w-4 h-4 mr-1" /> Apply Leave
             </Button>
           </div>
@@ -200,7 +206,7 @@ export default function LeavesAdminPage() {
       />
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className="hidden sm:flex flex-wrap gap-3 mb-4">
         <Select options={statusOptions}   value={statusFilter}   onChange={e => { setStatusFilter(e.target.value); setPage(1); }}   className="w-36" />
         <Select options={typeOptions}     value={typeFilter}     onChange={e => { setTypeFilter(e.target.value); setPage(1); }}     className="w-36" />
         <Select options={employeeOptions} value={employeeFilter} onChange={e => { setEmployeeFilter(e.target.value); setPage(1); }} className="w-52" />
@@ -211,6 +217,30 @@ export default function LeavesAdminPage() {
         <Table columns={columns} data={leaves} loading={loading} emptyMessage="No leave applications found" />
         <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />
       </Card>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Select label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={statusOptions} />
+          <Select label="Type" value={typeFilter} onChange={e => setTypeFilter(e.target.value)} options={typeOptions} />
+          <Select label="Employee" value={employeeFilter} onChange={e => setEmployeeFilter(e.target.value)} options={employeeOptions} />
+        </div>
+        <div className="mt-6 border-t border-slate-700 pt-4">
+          <p className="text-xs text-slate-400 mb-2">Quick actions</p>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => { setAddOpen(true); setFilterOpen(false); }}>
+              <Plus className="w-4 h-4 mr-1" /> Apply Leave
+            </Button>
+            <Button variant="ghost" onClick={() => { setSummaryOpen(true); setFilterOpen(false); }}>
+              <BarChart2 className="w-4 h-4 mr-1" /> Summary
+            </Button>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setStatusFilter(''); setTypeFilter(''); setEmployeeFilter(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { setPage(1); fetchLeaves(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
 
       {/* Modals */}
       {addOpen && (
@@ -284,16 +314,25 @@ function LeaveFormModal({ leave, employees, ayId, onClose, onSuccess }) {
   });
   const [saving, setSaving] = useState(false);
   const [lockError, setLockError] = useState('');
-  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setLockError(''); };
+  const [errors, setErrors] = useState({});
+  const set = (k, v) => {
+    setForm(f => {
+      const next = { ...f, [k]: v };
+      setLockError('');
+      const { errors } = validateApplyLeave(next);
+      setErrors(errors);
+      return next;
+    });
+  };
 
   const totalDays = form.fromDate && form.toDate
     ? Math.max(0, Math.ceil((new Date(form.toDate) - new Date(form.fromDate)) / 86400000) + 1)
     : 0;
 
   const handleSubmit = async () => {
-    if (!form.employee || !form.fromDate || !form.toDate || !form.reason) {
-      return alert('Please fill all required fields');
-    }
+    const { valid, errors } = validateApplyLeave(form);
+    setErrors(errors);
+    if (!valid) return;
     setSaving(true);
     setLockError('');
     try {
@@ -328,16 +367,18 @@ function LeaveFormModal({ leave, employees, ayId, onClose, onSuccess }) {
         </div>
       )}
       <div className="space-y-3">
-        <Select label="Employee *" value={form.employee}
+        <Select label="Employee *" error={errors.employee} value={form.employee}
           onChange={e => set('employee', e.target.value)} options={employeeOptions}
           disabled={isEdit} />
-        <Select label="Leave Type *" value={form.leaveType}
+        <Select label="Leave Type *" error={errors.leaveType} value={form.leaveType}
           onChange={e => set('leaveType', e.target.value)} options={typeOptions} />
         <div className="grid grid-cols-2 gap-3">
           <Input label="From Date *" type="date" value={form.fromDate}
-            onChange={e => set('fromDate', e.target.value)} />
+            max={form.toDate || undefined}
+            onChange={e => set('fromDate', e.target.value)} error={errors.fromDate} />
           <Input label="To Date *" type="date" value={form.toDate}
-            onChange={e => set('toDate', e.target.value)} />
+            min={form.fromDate || undefined}
+            onChange={e => set('toDate', e.target.value)} error={errors.toDate} />
         </div>
         {totalDays > 0 && (
           <div className="text-sm text-slate-400">
@@ -349,10 +390,11 @@ function LeaveFormModal({ leave, employees, ayId, onClose, onSuccess }) {
           <textarea
             value={form.reason}
             onChange={e => set('reason', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`w-full px-3 py-2 rounded-lg bg-slate-800 border text-white text-sm focus:outline-none focus:ring-2 ${errors.reason ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-700 focus:ring-indigo-500'}`}
             rows={3}
             placeholder="Reason for leave..."
           />
+          {errors.reason && <p className="text-xs text-rose-400 mt-1">{errors.reason}</p>}
         </div>
       </div>
       <div className="flex justify-end gap-3 mt-6">

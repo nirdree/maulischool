@@ -45,7 +45,7 @@ export default function ParentFees() {
         const kids = res.data || [];
         setChildren(kids);
         if (kids.length > 0) setSelectedChild(kids[0]._id);
-      } catch {}
+      } catch (err) { console.error(err); alert(err); }
     })();
   }, []);
 
@@ -60,7 +60,7 @@ export default function ParentFees() {
         totalPaid: feeResponse.meta?.totalPaid || 0,
         totalDue: feeResponse.meta?.totalDue || 0,
       });
-    } catch {} finally { setLoading(false); }
+    } catch (err) { console.error(err); alert(err); } finally { setLoading(false); }
   }, [selectedChild, ayId, page]);
 
   useEffect(() => {
@@ -182,9 +182,7 @@ export default function ParentFees() {
       <PageHeader title="Fees & Payments" subtitle="View installment balances, online payments, and receipts" />
 
       <div className="flex gap-3 mb-6">
-        {children.length > 1 && (
-          <Select options={childOptions} value={selectedChild} onChange={e => { setSelectedChild(e.target.value); setPage(1); setGatewayPage(1); }} className="w-52" label="Child" />
-        )}
+        <Select options={childOptions} value={selectedChild} onChange={e => { setSelectedChild(e.target.value); setPage(1); setGatewayPage(1); }} className="w-52" label="Child" />
       </div>
 
       {/* Summary */}
@@ -195,18 +193,24 @@ export default function ParentFees() {
               <span className="ml-3 text-slate-400">Academic year {ayName || '—'}</span>
             </div>}
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {[
-          { label: 'Annual Fees', value: `₹${summary.annualTotal.toLocaleString()}`, color: 'text-sky-400' },
-          { label: 'Total Paid', value: `₹${summary.totalPaid.toLocaleString()}`, color: 'text-emerald-400' },
-          { label: 'Outstanding', value: `₹${summary.totalDue.toLocaleString()}`, color: summary.totalDue > 0 ? 'text-rose-400' : 'text-white' },
-        ].map(s => (
-          <Card key={s.label}>
-            <p className="text-xs text-slate-400 uppercase tracking-wider">{s.label}</p>
-            <p className={`text-xl font-bold mt-1 ${s.color}`}>{s.value}</p>
-          </Card>
-        ))}
-      </div>
+      {/* Fees Overview — single compact card */}
+      <Card>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Fees Overview</h3>
+        <div className="flex items-center gap-6 overflow-x-auto pb-1">
+          <div className="min-w-[110px] text-center">
+            <div className="text-lg font-extrabold text-sky-400">₹{summary.annualTotal.toLocaleString()}</div>
+            <div className="text-[11px] text-slate-500">Annual Fees</div>
+          </div>
+          <div className="min-w-[110px] text-center">
+            <div className="text-lg font-extrabold text-emerald-400">₹{summary.totalPaid.toLocaleString()}</div>
+            <div className="text-[11px] text-slate-500">Total Paid</div>
+          </div>
+          <div className="min-w-[110px] text-center">
+            <div className={`text-lg font-extrabold ${summary.totalDue > 0 ? 'text-rose-400' : 'text-slate-400'}`}>₹{summary.totalDue.toLocaleString()}</div>
+            <div className="text-[11px] text-slate-500">Outstanding</div>
+          </div>
+        </div>
+      </Card>
 
       {summary.totalDue > 0 && (
         <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center gap-2">

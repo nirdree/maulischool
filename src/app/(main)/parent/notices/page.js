@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Pagination, Badge } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Pagination, Badge, Select } from '@/components/ui.jsx';
 
 function priorityColor(p) {
   return { Urgent: 'red', Important: 'yellow', Normal: 'slate' }[p] || 'slate';
@@ -21,21 +21,46 @@ export default function ParentNotices() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
+  // child filtering state
+  const [children, setChildren] = useState([]);
+  const [selectedChild, setSelectedChild] = useState('');
+  const [academicYearId, setAcademicYearId] = useState('');
+
+  // load AY + children once
   useEffect(() => {
     (async () => {
       try {
-        const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
+        const [ayRes] = await Promise.all([
+          api.get(API.ACADEMIC_YEARS.CURRENT)
+        ]);
+        const ayId = ayRes.data?._id || '';
+        const kidsRes = await api.get(`${API.STUDENTS.BASE}?academicYear=${ayId}`);
+        const kids = kidsRes.data || [];
+        setAcademicYearId(ayId);
+        setChildren(kids);
+        if (kids.length > 0) setSelectedChild(kids[0]._id);
+      } catch (err) { console.error(err); alert(err); }
+    })();
+  }, []);
+
+  // load notices when page/filters change
+  useEffect(() => {
+    if (!academicYearId) return;
+    setLoading(true);
+    (async () => {
+      try {
         const params = new URLSearchParams({
           page: String(page),
           limit: '20',
-          academicYear: ay.data?._id || '',
+          academicYear: academicYearId,
+          // API does not currently support studentId; keep here for future
         });
         const res = await api.get(`${API.NOTICES.BASE}?${params}`);
         setNotices(res.data || []);
         setTotal(res.meta?.total || 0);
-      } catch {} finally { setLoading(false); }
+      } catch (err) { console.error(err); alert(err); } finally { setLoading(false); }
     })();
-  }, [page]);
+  }, [page, academicYearId, selectedChild]);
 
   const urgent = notices.filter(n => n.priority === 'Urgent');
   const important = notices.filter(n => n.priority === 'Important');
@@ -84,9 +109,24 @@ export default function ParentNotices() {
     </div>
   );
 
+  const childOptions = children.map(c => ({
+    value: c._id,
+    label: `${c.firstName || ''} ${c.lastName || ''} (${c.classroom?.displayName || ''})`.trim()
+  }));
+
   return (
     <PageContent>
       <PageHeader title="School Notices" subtitle={`${total} active notices`} />
+
+      <div className="flex gap-3 mb-6">
+        <Select
+          options={childOptions}
+          value={selectedChild}
+          onChange={e => { setSelectedChild(e.target.value); setPage(1); }}
+          className="w-52"
+          label="Child"
+        />
+      </div>
 
       {notices.length === 0 ? (
         <Card>

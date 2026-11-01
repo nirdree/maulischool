@@ -19,6 +19,7 @@ import {
   PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
 import { useAuth } from '@/context/AuthContext';
+import { validateHomework } from '@/lib/validation.js';
 
 export default function HomeworkPage() {
   const { user } = useAuth();
@@ -133,10 +134,24 @@ export default function HomeworkPage() {
 function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess }) {
   const { user } = useAuth();
   const isEdit = !!homework;
-  const [form, setForm] = useState({ title: '', description: '', classroom: '', subject: '', dueDate: '' });
+  const initialForm = { title: '', description: '', classroom: '', subject: '', dueDate: '' };
+  const [form, setForm] = useState(initialForm);
   const [subjects, setSubjects] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  const resetForm = () => {
+    setForm(initialForm);
+    setSubjects([]);
+    setErrors({});
+    setTouched({});
+    setSubmitted(false);
+  };
+
+  // Prefill on edit; reset on create/open
   useEffect(() => {
     if (homework) {
       setForm({
@@ -147,11 +162,16 @@ function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess })
         dueDate: homework.dueDate ? homework.dueDate.split('T')[0] : '',
       });
       if (homework.classroom?._id) loadSubjects(homework.classroom._id);
-    } else {
-      setForm({ title: '', description: '', classroom: '', subject: '', dueDate: '' });
-      setSubjects([]);
+    } else if (open) {
+      resetForm();
     }
   }, [homework, open]);
+
+  // Recompute errors when form changes
+  useEffect(() => {
+    const v = validateHomework(form);
+    setErrors(v.errors || {});
+  }, [form]);
 
   const loadSubjects = async (classId) => {
     try {
@@ -166,8 +186,6 @@ function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess })
     } catch { }
   };
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-
   const handleClassChange = (classId) => {
     set('classroom', classId);
     set('subject', '');
@@ -175,6 +193,10 @@ function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess })
   };
 
   const handleSubmit = async () => {
+    setSubmitted(true);
+    const v = validateHomework(form);
+    setErrors(v.errors || {});
+    if (!v.valid) return;
     setSaving(true);
     try {
       const payload = { ...form, academicYear: ayId, teacher: user?.employeeId };
@@ -183,6 +205,7 @@ function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess })
       } else {
         await api.post(API.HOMEWORK.BASE, payload);
       }
+      resetForm();
       onSuccess();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };
@@ -190,33 +213,56 @@ function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess })
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Homework' : 'Assign Homework'}>
       <div className="space-y-4">
-        <Input label="Title *" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Chapter 5 Exercise" />
+        <Input
+          label="Title *"
+          value={form.title}
+          onChange={e => set('title', e.target.value)}
+          onBlur={() => setTouched(t => ({ ...t, title: true }))}
+          placeholder="Chapter 5 Exercise"
+          error={(submitted || touched.title) ? errors.title : null}
+        />
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1">Description</label>
           <textarea
             value={form.description}
             onChange={e => set('description', e.target.value)}
+            onBlur={() => setTouched(t => ({ ...t, description: true }))}
             className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             rows={3}
             placeholder="Details about the assignment..."
           />
+          {(submitted || touched.description) && errors.description && (
+            <p className="text-xs text-rose-400 mt-1">{errors.description}</p>
+          )}
         </div>
         <Select
           label="Class *"
           value={form.classroom}
           onChange={e => handleClassChange(e.target.value)}
+          onBlur={() => setTouched(t => ({ ...t, classroom: true }))}
           options={[{ value: '', label: 'Select Class' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))]}
+          error={(submitted || touched.classroom) ? errors.classroom : null}
         />
         <Select
           label="Subject *"
           value={form.subject}
           onChange={e => set('subject', e.target.value)}
+          onBlur={() => setTouched(t => ({ ...t, subject: true }))}
           options={[{ value: '', label: 'Select Subject' }, ...subjects.map(s => ({ value: s._id, label: s.name }))]}
+          error={(submitted || touched.subject) ? errors.subject : null}
         />
-        <Input label="Due Date *" type="date" value={form.dueDate} onChange={e => set('dueDate', e.target.value)} />
+        <Input
+          label="Due Date *"
+          type="date"
+          value={form.dueDate}
+          onChange={e => set('dueDate', e.target.value)}
+          onBlur={() => setTouched(t => ({ ...t, dueDate: true }))}
+          min={new Date().toISOString().slice(0,10)}
+          error={(submitted || touched.dueDate) ? errors.dueDate : null}
+        />
       </div>
       <div className="flex justify-end gap-3 mt-6">
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button variant="ghost" onClick={() => { resetForm(); onClose(); }}>Cancel</Button>
         <Button onClick={handleSubmit} disabled={saving}>{saving ? 'Saving...' : isEdit ? 'Update' : 'Assign'}</Button>
       </div>
     </Modal>

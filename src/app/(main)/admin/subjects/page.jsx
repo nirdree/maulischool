@@ -11,11 +11,12 @@
  *   GET    /api/employees         — populate teacher dropdown
  */
 "use client";
-import { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, MoreVertical, Filter } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
+import { validateSubject, validateSubjectName, validateSubjectClassroom, validateSubjectTeacher, validateSubjectTotalMarks } from '@/lib/validation';
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
@@ -28,6 +29,7 @@ export default function SubjectsPage() {
   const [total, setTotal] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
   const [editSubject, setEditSubject] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -74,6 +76,42 @@ export default function SubjectsPage() {
     ...classrooms.map(c => ({ value: c._id, label: c.displayName })),
   ];
 
+  const RowActions = ({ s }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+    useEffect(() => {
+      const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+      document.addEventListener('mousedown', onDoc);
+      return () => document.removeEventListener('mousedown', onDoc);
+    }, []);
+    return (
+      <div className="relative" ref={ref}>
+        <Button size="sm" variant="ghost" title="Actions" onClick={() => setOpen(v => !v)}>
+          <MoreVertical className="w-4 h-4" />
+        </Button>
+        {open && (
+          <div className="absolute right-0 mt-2 z-50 rounded-lg bg-slate-900 border border-slate-700 shadow-lg py-1 min-w-[200px]">
+            <button onClick={() => { setOpen(false); setEditSubject(s); }}
+              className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+              <Edit2 className="w-4 h-4" />
+              <span className="text-sm">Edit</span>
+            </button>
+            <button onClick={() => { setOpen(false); handleToggle(s._id); }}
+              className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+              {s.isActive ? <ToggleRight className="w-4 h-4 text-emerald-400" /> : <ToggleLeft className="w-4 h-4 text-slate-400" />}
+              <span className="text-sm">{s.isActive ? 'Deactivate' : 'Activate'}</span>
+            </button>
+            <button onClick={() => { setOpen(false); handleDelete(s._id); }}
+              className="w-full px-3 py-2 flex items-center gap-2 rounded-md hover:bg-slate-800 text-slate-200">
+              <Trash2 className="w-4 h-4" />
+              <span className="text-sm">Delete</span>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const columns = [
     { key: 'name', label: 'Subject', render: (s) => <span className="font-medium text-white">{s.name}</span> },
     { key: 'classroom', label: 'Class', render: (s) => s.classroom?.displayName || '—' },
@@ -85,15 +123,7 @@ export default function SubjectsPage() {
     },
     {
       key: 'actions', label: '',
-      render: (s) => (
-        <div className="flex gap-2">
-          <Button size="sm" variant="ghost" onClick={() => setEditSubject(s)}><Edit2 className="w-3 h-3" /></Button>
-          <Button size="sm" variant="ghost" onClick={() => handleToggle(s._id)}>
-            {s.isActive ? <ToggleRight className="w-4 h-4 text-emerald-400" /> : <ToggleLeft className="w-4 h-4 text-slate-400" />}
-          </Button>
-          <Button size="sm" variant="danger" onClick={() => handleDelete(s._id)}><Trash2 className="w-3 h-3" /></Button>
-        </div>
-      ),
+      render: (s) => (<RowActions s={s} />),
     },
   ];
 
@@ -102,9 +132,20 @@ export default function SubjectsPage() {
       <PageHeader
         title="Subjects"
         subtitle={`${total} subjects`}
-        actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Add Subject</Button>}
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+            <Button onClick={() => setAddOpen(true)}>
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Subject</span>
+            </Button>
+          </>
+        }
       />
-      <div className="flex gap-3 mb-4">
+      <div className="hidden sm:flex gap-3 mb-4">
         <Select options={classOptions} value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }} className="w-48" />
       </div>
       <Card className="!p-0">
@@ -121,6 +162,19 @@ export default function SubjectsPage() {
         ayId={ayId}
         onSuccess={() => { fetchSubjects(); setAddOpen(false); setEditSubject(null); }}
       />
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Select label="Class" value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+            options={classOptions} />
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setClassFilter(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { setPage(1); fetchSubjects(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
     </PageContent>
   );
 }
@@ -129,8 +183,10 @@ function SubjectModal({ open, onClose, subject, classrooms, teachers, ayId, onSu
   const isEdit = !!subject;
   const [form, setForm] = useState({ name: '', classroom: '', teacher: '', totalMarks: 100 });
   const [saving, setSaving] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
+    setFieldErrors({});
     if (subject) {
       setForm({
         name: subject.name || '',
@@ -143,38 +199,85 @@ function SubjectModal({ open, onClose, subject, classrooms, teachers, ayId, onSu
     }
   }, [subject]);
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  // Auto-select teacher when exactly one available and none chosen
+  useEffect(() => {
+    if (!form.teacher && teachers.length === 1) {
+      setForm(f => ({ ...f, teacher: teachers[0]._id }));
+    }
+  }, [teachers, form.teacher]);
+
+  const set = (k, v) => {
+    setForm(f => ({ ...f, [k]: v }));
+    let msg = null;
+    switch (k) {
+      case 'name':       msg = validateSubjectName(v); break;
+      case 'classroom':  msg = validateSubjectClassroom(v); break;
+      case 'teacher':    msg = validateSubjectTeacher(v); break;
+      case 'totalMarks': msg = validateSubjectTotalMarks(v); break;
+      default: break;
+    }
+    setFieldErrors((fe) => {
+      const next = { ...fe };
+      if (msg) next[k] = msg; else delete next[k];
+      return next;
+    });
+  };
 
   const handleSubmit = async () => {
+    const { valid, errors } = validateSubject(form);
+    if (!valid) { setFieldErrors(errors); return; }
+    setFieldErrors({});
+
     setSaving(true);
     try {
-      const payload = { ...form, academicYear: ayId };
+      const payload = { ...form, academicYear: ayId, totalMarks: Number(form.totalMarks ?? 0) };
       if (isEdit) {
         await api.put(API.SUBJECTS.BY_ID(subject._id), payload);
       } else {
         await api.post(API.SUBJECTS.BASE, payload);
       }
       onSuccess();
-    } catch (err) { alert(err.message); } finally { setSaving(false); }
+    } catch (err) { alert(err.response?.data?.message || err.message); } finally { setSaving(false); }
   };
 
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Subject' : 'Add Subject'}>
       <div className="space-y-4">
-        <Input label="Subject Name *" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Mathematics" />
+        <Input label="Subject Name *" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Mathematics" error={fieldErrors.name} />
         <Select
           label="Classroom *"
           value={form.classroom}
           onChange={e => set('classroom', e.target.value)}
           options={[{ value: '', label: 'Select Class' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))]}
+          error={fieldErrors.classroom}
         />
         <Select
-          label="Teacher"
+          label="Teacher *"
           value={form.teacher}
           onChange={e => set('teacher', e.target.value)}
-          options={[{ value: '', label: 'No Teacher' }, ...teachers.map(t => ({ value: t._id, label: t.name }))]}
+          options={[...teachers.map(t => ({ value: t._id, label: t.name }))]}
+          error={fieldErrors.teacher}
         />
-        <Input label="Total Marks" type="number" value={form.totalMarks} onChange={e => set('totalMarks', e.target.value)} />
+        <Input
+          label="Total Marks *"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          max={500}
+          step={1}
+          value={form.totalMarks}
+          onChange={(e) => {
+            const cleaned = e.target.value.replace(/\D/g, '');
+            const next = cleaned === '' ? '' : String(Math.min(500, parseInt(cleaned, 10)));
+            set('totalMarks', next);
+            const msg = validateSubjectTotalMarks(next);
+            setFieldErrors(errs => ({ ...errs, totalMarks: msg || undefined }));
+          }}
+          onKeyDown={(e) => {
+            if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '.') e.preventDefault();
+          }}
+          error={fieldErrors.totalMarks}
+        />
       </div>
       <div className="flex justify-end gap-3 mt-6">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>

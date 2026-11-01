@@ -8,10 +8,10 @@
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { Clock, Coffee, AlertTriangle } from 'lucide-react';
+import { Clock, Coffee, AlertTriangle, Filter } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Select } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Select, Button, Modal } from '@/components/ui.jsx';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
@@ -118,6 +118,7 @@ export default function TeacherTimetable() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [ayId, setAyId] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // ── Bootstrap ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -179,7 +180,7 @@ export default function TeacherTimetable() {
 
       {/* ── Class selector ── */}
       <div className="flex flex-wrap items-end gap-3 mb-5">
-        <div className="w-52">
+        <div className="w-52 hidden sm:block">
           <Select
             label="Class"
             options={classOptions}
@@ -187,6 +188,9 @@ export default function TeacherTimetable() {
             onChange={e => setClassFilter(e.target.value)}
           />
         </div>
+        <Button className="sm:hidden" variant="ghost" onClick={() => setFiltersOpen(true)}>
+          <Filter className="w-4 h-4" /> Filters
+        </Button>
         {selectedClass && (
           <div className="flex items-center gap-1.5 text-xs text-slate-500 pb-1">
             <Clock className="w-3.5 h-3.5" />
@@ -217,7 +221,7 @@ export default function TeacherTimetable() {
         </Card>
       ) : (
         /* ── Timetable grid ── */
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar-thin">
           <table className="border-collapse" style={{ minWidth: `${120 + numPeriods * 172}px` }}>
             {/* Period header row */}
             <thead>
@@ -260,6 +264,20 @@ export default function TeacherTimetable() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {filtersOpen && (
+        <Modal open onClose={() => setFiltersOpen(false)} title="Filters">
+          <Select
+            label="Class"
+            options={classOptions}
+            value={classFilter}
+            onChange={e => setClassFilter(e.target.value)}
+          />
+          <div className="flex justify-end mt-6">
+            <Button onClick={() => setFiltersOpen(false)}>Done</Button>
+          </div>
+        </Modal>
       )}
     </PageContent>
   );

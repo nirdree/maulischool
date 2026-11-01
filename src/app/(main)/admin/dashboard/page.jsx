@@ -36,7 +36,7 @@ const COLOR_MAP = {
   rose:   { bg: 'linear-gradient(135deg, #f43f5e, #fb7185)', glow: '#f43f5e55', text: '#fb7185', soft: 'rgba(244,63,94,0.12)' },
 };
 
-function StatCard({ label, value, icon: Icon, color = 'indigo', trend }) {
+function StatCard({ label, value, icon: Icon, color = 'indigo', trend, compact = false, minWidth }) {
   const c = COLOR_MAP[color] ?? COLOR_MAP.indigo;
   const [hovered, setHovered] = useState(false);
   return (
@@ -45,36 +45,37 @@ function StatCard({ label, value, icon: Icon, color = 'indigo', trend }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: hovered ? '#0f172a' : '#0c1628',
-        borderRadius: 16, padding: '20px',
+        borderRadius: 16, padding: compact ? 12 : 20,
         border: `1px solid ${hovered ? c.text + '44' : 'rgba(255,255,255,0.05)'}`,
         boxShadow: hovered ? `0 8px 32px ${c.glow}` : '0 2px 8px rgba(0,0,0,0.3)',
         transition: 'all 0.25s ease',
         cursor: 'default',
+        minWidth: minWidth,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: compact ? 10 : 16 }}>
         <div style={{
-          width: 40, height: 40, borderRadius: 10,
+          width: compact ? 28 : 40, height: compact ? 28 : 40, borderRadius: 10,
           background: c.bg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: `0 4px 12px ${c.glow}`,
           flexShrink: 0,
         }}>
-          <Icon size={18} color="white" />
+          <Icon size={compact ? 14 : 18} color="white" />
         </div>
         <span style={{
-          fontSize: 10, fontWeight: 600, letterSpacing: '0.06em',
+          fontSize: compact ? 9 : 10, fontWeight: 600, letterSpacing: '0.06em',
           textTransform: 'uppercase', color: '#475569',
         }}>
           {label}
         </span>
       </div>
       <div>
-        <p style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, color: '#f8fafc', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+        <p style={{ fontSize: compact ? 18 : 'clamp(22px, 3vw, 30px)', fontWeight: 800, color: '#f8fafc', margin: '0 0 4px', letterSpacing: '-0.02em' }}>
           {value ?? '—'}
         </p>
         {trend && (
-          <p style={{ fontSize: 11, color: c.text, margin: 0, fontWeight: 500 }}>{trend}</p>
+          <p style={{ fontSize: compact ? 10 : 11, color: c.text, margin: 0, fontWeight: 500 }}>{trend}</p>
         )}
       </div>
     </div>
@@ -166,17 +167,30 @@ export default function AdminDashboard() {
     <PageContent>
       <PageHeader title="Dashboard" subtitle="School management overview" />
 
-      {/* ── Stat Cards ── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))',
-        gap: 16, marginBottom: 24,
-      }}>
-        <StatCard label="Total Students"   value={stats?.total}       icon={Users}      color="indigo"  trend={`${stats?.approved ?? 0} approved`} />
-        <StatCard label="Active Employees" value={employees?.active}  icon={UserCheck}  color="emerald" trend={`${employees?.total ?? 0} total`} />
-        <StatCard label="Fee Collected"    value={fees?.collected ? `₹${(fees.collected / 1000).toFixed(0)}K` : '—'} icon={DollarSign} color="amber" trend="This year" />
-        <StatCard label="Pending Leaves"   value={overview?.leaves?.pending} icon={CalendarDays} color="rose" trend="Awaiting action" />
-      </div>
+      {/* ── Compact Overview Card (single, like Attendance This Year) ── */}
+      <Card>
+        <h3 style={{
+          fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+          color: '#cbd5e1', margin: '0 0 12px'
+        }}>Overview</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24, overflowX: 'auto', paddingBottom: 6 }}>
+          {[{
+            label: 'Total Students', value: stats?.total ?? 0, color: '#818cf8'
+          }, {
+            label: 'Active Employees', value: employees?.active ?? 0, color: '#34d399'
+          }, {
+            label: 'Fee Collected', value: fees?.collected ? `₹${fees.collected.toLocaleString('en-IN')}` : '₹0', color: '#fbbf24'
+          }, {
+            label: 'Pending Leaves', value: overview?.leaves?.pending ?? 0, color: '#fb7185'
+          }].map((item) => (
+            <div key={item.label} style={{ minWidth: 80, textAlign: 'center' }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: item.color, marginBottom: 4 }}>{item.value}</div>
+              <div style={{ fontSize: 11, color: '#64748b' }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <div style={{ height: 16 }} />
 
       {/* ── 2-column cards grid ── */}
       <div style={{

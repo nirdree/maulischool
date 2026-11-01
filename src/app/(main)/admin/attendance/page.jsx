@@ -12,10 +12,10 @@
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { Save, RefreshCw, Users, UserCheck } from 'lucide-react';
+import { Save, RefreshCw, Users, UserCheck, Filter } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Button, Select, Badge } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Button, Select, Badge, Input, Modal } from '@/components/ui.jsx';
 
 const STUDENT_STATUSES = ['Present', 'Absent', 'Late', 'HalfDay', 'Holiday'];
 const EMPLOYEE_STATUSES = ['Present', 'Absent', 'Late', 'HalfDay', 'OnLeave', 'Holiday'];
@@ -36,6 +36,7 @@ export default function AttendanceAdminPage() {
   const [ayId, setAyId] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -119,7 +120,12 @@ export default function AttendanceAdminPage() {
 
   return (
     <PageContent>
-      <PageHeader title="Attendance" subtitle="Mark and view attendance" />
+      <PageHeader title="Attendance" subtitle="Mark and view attendance" actions={
+        <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+          <Filter className="w-4 h-4" />
+          <span className="hidden sm:inline">Filters</span>
+        </Button>
+      } />
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
@@ -132,7 +138,7 @@ export default function AttendanceAdminPage() {
       </div>
 
       {/* Controls */}
-      <div className="flex flex-wrap gap-3 mb-4 items-end">
+      <div className="hidden sm:flex flex-wrap gap-3 mb-4 items-end">
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1">Date</label>
           <input type="date" value={date} onChange={e => setDate(e.target.value)}
@@ -153,6 +159,20 @@ export default function AttendanceAdminPage() {
           </Button>
         </div>
       </div>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Input type="date" label="Date" value={date} onChange={e => setDate(e.target.value)} />
+          {tab === 'students' && (
+            <Select label="Class" value={classFilter} onChange={e => setClassFilter(e.target.value)} options={classOptions} />
+          )}
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setClassFilter(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { tab === 'students' ? fetchStudentAttendance() : fetchEmployeeAttendance(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
 
       <Card className="!p-0">
         {loading ? (

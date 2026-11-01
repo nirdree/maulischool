@@ -13,6 +13,7 @@ import { Plus, Edit2, Trash2 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
+import { validatePublishNotice } from '@/lib/validation.js';
 
 function priorityColor(p) {
   return { Urgent: 'red', Important: 'yellow', Normal: 'slate' }[p] || 'slate';
@@ -140,34 +141,52 @@ function NoticeModal({ open, onClose, notice, ayId, onSuccess }) {
   const isEdit = !!notice;
   const [form, setForm] = useState({ title: '', content: '', priority: 'Normal', targetRoles: ['parent', 'teacher'], publishDate: new Date().toISOString().split('T')[0], expiryDate: '' });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (notice) {
-      setForm({
+      const next = {
         title: notice.title || '',
         content: notice.content || '',
         priority: notice.priority || 'Normal',
         targetRoles: notice.targetRoles || ['parent', 'teacher'],
         publishDate: notice.publishDate ? notice.publishDate.split('T')[0] : new Date().toISOString().split('T')[0],
         expiryDate: notice.expiryDate ? notice.expiryDate.split('T')[0] : '',
-      });
+      };
+      setForm(next);
+      setErrors(validatePublishNotice(next).errors);
     } else {
-      setForm({ title: '', content: '', priority: 'Normal', targetRoles: ['parent', 'teacher'], publishDate: new Date().toISOString().split('T')[0], expiryDate: '' });
+      const next = { title: '', content: '', priority: 'Normal', targetRoles: ['parent', 'teacher'], publishDate: new Date().toISOString().split('T')[0], expiryDate: '' };
+      setForm(next);
+      setErrors(validatePublishNotice(next).errors);
     }
   }, [notice]);
 
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k, v) => {
+    setForm(f => {
+      const next = { ...f, [k]: v };
+      setErrors(validatePublishNotice(next).errors);
+      return next;
+    });
+  };
 
   const toggleRole = (role) => {
-    setForm(f => ({
-      ...f,
-      targetRoles: f.targetRoles.includes(role)
-        ? f.targetRoles.filter(r => r !== role)
-        : [...f.targetRoles, role],
-    }));
+    setForm(f => {
+      const next = {
+        ...f,
+        targetRoles: f.targetRoles.includes(role)
+          ? f.targetRoles.filter(r => r !== role)
+          : [...f.targetRoles, role],
+      };
+      setErrors(validatePublishNotice(next).errors);
+      return next;
+    });
   };
 
   const handleSubmit = async () => {
+    const { valid, errors } = validatePublishNotice(form);
+    setErrors(errors);
+    if (!valid) return;
     setSaving(true);
     try {
       if (isEdit) {
@@ -182,18 +201,19 @@ function NoticeModal({ open, onClose, notice, ayId, onSuccess }) {
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? 'Edit Notice' : 'Publish Notice'}>
       <div className="space-y-4">
-        <Input label="Title *" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Notice title..." />
+        <Input label="Title *" error={errors.title} value={form.title} onChange={e => set('title', e.target.value)} placeholder="Notice title..." />
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1">Content *</label>
           <textarea
             value={form.content}
             onChange={e => set('content', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`w-full px-3 py-2 rounded-lg bg-slate-800 border text-white text-sm focus:outline-none focus:ring-2 ${errors.content ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-700 focus:ring-indigo-500'}`}
             rows={4}
             placeholder="Notice content..."
           />
+          {errors.content && <p className="text-xs text-rose-400 mt-1">{errors.content}</p>}
         </div>
-        <Select label="Priority" value={form.priority} onChange={e => set('priority', e.target.value)}
+        <Select label="Priority" error={errors.priority} value={form.priority} onChange={e => set('priority', e.target.value)}
           options={['Normal','Important','Urgent'].map(p => ({ value: p, label: p }))} />
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-2">Target Audience</label>
@@ -206,10 +226,14 @@ function NoticeModal({ open, onClose, notice, ayId, onSuccess }) {
               </label>
             ))}
           </div>
+          {errors.targetRoles && <p className="text-xs text-rose-400 mt-1">{errors.targetRoles}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Input label="Publish Date" type="date" value={form.publishDate} onChange={e => set('publishDate', e.target.value)} />
-          <Input label="Expiry Date" type="date" value={form.expiryDate} onChange={e => set('expiryDate', e.target.value)} />
+          <Input label="Publish Date *" type="date" value={form.publishDate}
+            onChange={e => set('publishDate', e.target.value)} error={errors.publishDate} />
+          <Input label="Expiry Date *" type="date" value={form.expiryDate}
+            min={form.publishDate || undefined}
+            onChange={e => set('expiryDate', e.target.value)} error={errors.expiryDate} />
         </div>
       </div>
       <div className="flex justify-end gap-3 mt-6">

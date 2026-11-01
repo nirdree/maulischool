@@ -159,8 +159,10 @@ export default function ParentTimetable() {
           setWorkingDays([]);
           setNumPeriods(0);
         }
-      } catch {
+      } catch (err) {
+        console.error(err);
         setError(true);
+        alert(err);
         setSchedule([]);
       } finally {
         setLoading(false);
@@ -193,16 +195,14 @@ export default function ParentTimetable() {
 
       {/* ── Child selector ── */}
       <div className="flex flex-wrap items-end gap-3 mb-5">
-        {children.length > 1 && (
-          <div className="w-64">
-            <Select
-              label="Child"
-              options={childOptions}
-              value={selectedChild}
-              onChange={e => setSelectedChild(e.target.value)}
-            />
-          </div>
-        )}
+        <div className="w-64">
+          <Select
+            label="Child"
+            options={childOptions}
+            value={selectedChild}
+            onChange={e => setSelectedChild(e.target.value)}
+          />
+        </div>
         {numPeriods > 0 && (
           <div className="flex items-center gap-1.5 text-xs text-slate-500 pb-1">
             <Clock className="w-3.5 h-3.5" />

@@ -57,7 +57,8 @@ export default function ParentDashboard() {
           setAttendanceSummary(summaries);
         }
       } catch (err) {
-        console.log(err);
+        console.error(err);
+        alert(err);
       } finally {
         setLoading(false);
       }
@@ -81,61 +82,32 @@ export default function ParentDashboard() {
         subtitle="Your children's school overview"
       />
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">Children</p>
-              <p className="text-2xl font-bold text-white mt-1">{children.length}</p>
-              <p className="text-xs text-slate-500 mt-1">Enrolled</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-violet-500/10">
-              <GraduationCap className="w-5 h-5 text-violet-400" />
-            </div>
+      {/* Overview — single compact card like "Attendance this year" */}
+      <Card>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Overview</h3>
+        <div className="flex items-center gap-6 overflow-x-auto pb-1">
+          <div className="min-w-[80px] text-center">
+            <div className="text-lg font-extrabold text-violet-400">{children.length}</div>
+            <div className="text-[11px] text-slate-500">Children</div>
           </div>
-        </Card>
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">Pending Fees</p>
-              <p className="text-2xl font-bold text-white mt-1">₹{(totalPendingFees / 1000).toFixed(1)}K</p>
-              <p className="text-xs text-rose-400 mt-1">{pendingFees.length} unpaid</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-rose-500/10">
-              <DollarSign className="w-5 h-5 text-rose-400" />
-            </div>
+          <div className="min-w-[110px] text-center">
+            <div className="text-lg font-extrabold text-rose-400">₹{totalPendingFees.toLocaleString()}</div>
+            <div className="text-[11px] text-slate-500">Pending Fees</div>
           </div>
-        </Card>
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">Notices</p>
-              <p className="text-2xl font-bold text-white mt-1">{notices.length}</p>
-              <p className="text-xs text-slate-500 mt-1">Active</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-amber-500/10">
-              <Bell className="w-5 h-5 text-amber-400" />
-            </div>
+          <div className="min-w-[80px] text-center">
+            <div className="text-lg font-extrabold text-amber-400">{notices.length}</div>
+            <div className="text-[11px] text-slate-500">Notices</div>
           </div>
-        </Card>
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs text-slate-400 uppercase tracking-wider">Attendance</p>
-              <p className="text-2xl font-bold text-white mt-1">
-                {attendanceSummary.length > 0 && attendanceSummary[0].data
-                  ? `${attendanceSummary[0].data.percentage}%`
-                  : '—'}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">This month</p>
+          <div className="min-w-[100px] text-center">
+            <div className={`text-lg font-extrabold ${attendanceSummary.length > 0 && attendanceSummary[0].data && attendanceSummary[0].data.percentage >= 75 ? 'text-emerald-400' : 'text-slate-400'}`}>
+              {attendanceSummary.length > 0 && attendanceSummary[0].data ? `${attendanceSummary[0].data.percentage}%` : '—'}
             </div>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-emerald-500/10">
-              <CheckSquare className="w-5 h-5 text-emerald-400" />
-            </div>
+            <div className="text-[11px] text-slate-500">Attendance</div>
           </div>
-        </Card>
-      </div>
+        </div>
+      </Card>
+
+      <div className="h-4" />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Children Summary */}

@@ -46,7 +46,7 @@ export default function ParentAttendance() {
         const kids = res.data || [];
         setChildren(kids);
         if (kids.length > 0) setSelectedChild(kids[0]._id);
-      } catch {}
+      } catch (err) { console.error(err); alert(err); }
     })();
   }, []);
 
@@ -67,7 +67,7 @@ export default function ParentAttendance() {
       ]);
       setRecords(recRes.data || []);
       setSummary((sumRes.data || [])[0] || null);
-    } catch {} finally { setLoading(false); }
+    } catch (err) { console.error(err); alert(err); } finally { setLoading(false); }
   };
 
   const childOptions = children.map(c => ({
@@ -90,9 +90,9 @@ export default function ParentAttendance() {
       <PageHeader title="Attendance" subtitle="Monthly attendance tracker" />
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <Select options={childOptions} value={selectedChild} onChange={e => setSelectedChild(e.target.value)} className="w-64" label="Child" />
-        <Select options={monthOptions} value={month} onChange={e => setMonth(Number(e.target.value))} className="w-36" label="Month" />
+      <div className="grid grid-cols-2 gap-3 mb-6 items-end max-w-[520px]">
+        <Select options={childOptions} value={selectedChild} onChange={e => setSelectedChild(e.target.value)} className="w-full" label="Child" />
+        <Select options={monthOptions} value={month} onChange={e => setMonth(Number(e.target.value))} className="w-full" label="Month" />
       </div>
 
       {/* Summary Cards */}

@@ -48,7 +48,7 @@ export default function ParentMarks() {
         const kids = res.data || [];
         setChildren(kids);
         if (kids.length > 0) setSelectedChild(kids[0]._id);
-      } catch {}
+      } catch (err) { console.error(err); alert(err); }
     })();
   }, []);
 
@@ -61,7 +61,7 @@ export default function ParentMarks() {
     try {
       const res = await api.get(`${API.MARKS.BASE}?studentId=${selectedChild}&academicYear=${ayId}`);
       setMarks(res.data || []);
-    } catch {} finally { setLoading(false); }
+    } catch (err) { console.error(err); alert(err); } finally { setLoading(false); }
   };
 
   const childOptions = children.map(c => ({
@@ -93,7 +93,7 @@ export default function ParentMarks() {
 
       {/* Overall Summary */}
       {marks.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           {[
             { label: 'Total Obtained', value: `${totalObtained}/${totalMax}`, color: 'text-white' },
             { label: 'Overall %', value: `${overallPct}%`, color: overallPct >= 60 ? 'text-emerald-400' : 'text-rose-400' },

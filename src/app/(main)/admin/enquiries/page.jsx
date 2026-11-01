@@ -8,7 +8,7 @@
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { Search, RefreshCw, Eye, Trash2 } from 'lucide-react';
+import { Search, RefreshCw, Eye, Trash2, Filter } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
@@ -37,6 +37,7 @@ export default function EnquiriesPage() {
   const [viewEnquiry, setViewEnquiry] = useState(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -111,8 +112,19 @@ export default function EnquiriesPage() {
 
   return (
     <PageContent>
-      <PageHeader title="Enquiries" subtitle={`${total} enquiries`} />
-      <div className="flex flex-wrap gap-3 mb-4">
+      <PageHeader
+        title="Enquiries"
+        subtitle={`${total} enquiries`}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+          </div>
+        }
+      />
+      <div className="hidden sm:flex flex-wrap gap-3 mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -130,6 +142,36 @@ export default function EnquiriesPage() {
         <Select options={STATUS_OPTIONS} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }} className="w-44" />
         <Button variant="ghost" onClick={fetchEnquiries}><RefreshCw className="w-4 h-4" /></Button>
       </div>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs text-slate-400">Search</label>
+            <div className="relative mt-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                className="pl-9 pr-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"
+                placeholder="Search by name, phone..."
+                value={search} onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          <Select label="Status" options={STATUS_OPTIONS} value={statusFilter} onChange={e => setStatusFilter(e.target.value)} />
+        </div>
+        <div className="mt-6 border-t border-slate-700 pt-4">
+          <p className="text-xs text-slate-400 mb-2">Quick actions</p>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => { if (page === 1) fetchEnquiries(); else setPage(1); setFilterOpen(false); }}>
+              Refresh
+            </Button>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setSearch(''); setStatusFilter(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { if (page === 1) fetchEnquiries(); else setPage(1); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
       <Card className="!p-0">
         <Table columns={columns} data={enquiries} loading={loading} emptyMessage="No enquiries found" />
         <Pagination page={page} total={total} limit={20} onPageChange={setPage} loading={loading} />

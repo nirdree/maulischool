@@ -20,7 +20,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Plus, DollarSign, RefreshCw, Eye, Trash2, Edit2,
   Zap, CreditCard, Search, X, ChevronDown, CheckSquare,
-  Square, Calendar, FileText, AlertCircle,
+  Square, Calendar, FileText, AlertCircle, Filter,
 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
@@ -80,6 +80,7 @@ export default function FeesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [autoGenOpen, setAutoGenOpen]   = useState(false);
   const [receiptsOpen, setReceiptsOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   // selection for bulk actions
   const [selected, setSelected] = useState([]);
@@ -119,6 +120,7 @@ export default function FeesPage() {
   }, [ayId, classFilter, statusFilter, monthFilter, yearFilter, page]);
 
   useEffect(() => { if (ayId) fetchFees(); }, [fetchFees]);
+
 
   // debounced student search
   const searchTimer = useRef(null);
@@ -247,37 +249,46 @@ export default function FeesPage() {
         subtitle={`${total} records · ${summary.pendingCount} pending · ${summary.overdueCount} overdue`}
         actions={
           <div className="flex gap-2 flex-wrap">
-            <Button variant="ghost" onClick={() => setReceiptsOpen(true)}>
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+            <Button variant="ghost" onClick={() => setReceiptsOpen(true)} className="hidden sm:inline-flex">
               <FileText className="w-4 h-4 mr-1" /> Receipts
             </Button>
-            <Button variant="warning" onClick={() => setAutoGenOpen(true)}>
+            <Button variant="warning" onClick={() => setAutoGenOpen(true)} className="hidden sm:inline-flex">
               <Zap className="w-4 h-4 mr-1" /> Auto-Generate
             </Button>
-            <Button onClick={() => setAddOpen(true)}>
+            <Button onClick={() => setAddOpen(true)} className="hidden sm:inline-flex">
               <Plus className="w-4 h-4 mr-1" /> Generate Fee
             </Button>
           </div>
         }
       />
 
-      {/* Summary strip */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700">
-          <p className="text-xs text-slate-500 mb-1">Total Outstanding</p>
-          <p className="text-lg font-bold text-amber-400">₹{summary.totalOutstanding.toLocaleString()}</p>
+      {/* Fees Overview — single compact card */}
+      <Card>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Fees Overview</h3>
+        <div className="flex items-center gap-6 overflow-x-auto pb-1">
+          <div className="min-w-[90px] text-center">
+            <div className="text-lg font-extrabold text-amber-400">₹{summary.totalOutstanding.toLocaleString()}</div>
+            <div className="text-[11px] text-slate-500">Outstanding</div>
+          </div>
+          <div className="min-w-[80px] text-center">
+            <div className="text-lg font-extrabold text-rose-400">{summary.overdueCount}</div>
+            <div className="text-[11px] text-slate-500">Overdue</div>
+          </div>
+          <div className="min-w-[80px] text-center">
+            <div className="text-lg font-extrabold text-sky-400">{summary.pendingCount}</div>
+            <div className="text-[11px] text-slate-500">Pending</div>
+          </div>
         </div>
-        <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700">
-          <p className="text-xs text-slate-500 mb-1">Overdue</p>
-          <p className="text-lg font-bold text-red-400">{summary.overdueCount}</p>
-        </div>
-        <div className="bg-slate-800/60 rounded-lg p-3 border border-slate-700">
-          <p className="text-xs text-slate-500 mb-1">Paid This View</p>
-          <p className="text-lg font-bold text-emerald-400">{fees.filter(f => f.status === 'Paid').length}</p>
-        </div>
-      </div>
+      </Card>
+
+      <div className="h-4" />
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4 items-center">
+      <div className="hidden sm:flex flex-wrap gap-3 mb-4 items-center">
         {/* Student search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -305,6 +316,35 @@ export default function FeesPage() {
           </Button>
         )}
       </div>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Input label="Search" value={studentSearch} onChange={e => handleSearchChange(e.target.value)} placeholder="Search student..." />
+          <Select label="Class"  value={classFilter}   onChange={e => setClassFilter(e.target.value)} options={classOptions} />
+          <Select label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={statusOptions} />
+          <Select label="Month"  value={monthFilter}  onChange={e => setMonthFilter(e.target.value)} options={monthOptions} />
+          <Select label="Year"   value={yearFilter}   onChange={e => setYearFilter(e.target.value)} options={yearOptions} />
+          <div className="pt-4 mt-2 border-t border-slate-700">
+            <p className="text-xs text-slate-400 mb-2">Quick actions</p>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="ghost" onClick={() => { setReceiptsOpen(true); setFilterOpen(false); }}>
+                <FileText className="w-4 h-4 mr-1" /> Receipts
+              </Button>
+              <Button variant="warning" onClick={() => { setAutoGenOpen(true); setFilterOpen(false); }}>
+                <Zap className="w-4 h-4 mr-1" /> Auto-Generate
+              </Button>
+              <Button onClick={() => { setAddOpen(true); setFilterOpen(false); }}>
+                <Plus className="w-4 h-4 mr-1" /> Generate Fee
+              </Button>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setStudentSearch(''); searchRef.current=''; setClassFilter(''); setStatusFilter(''); setMonthFilter(''); setYearFilter(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { setPage(1); fetchFees(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
 
       <Card className="!p-0">
         <Table columns={columns} data={fees} loading={loading} emptyMessage="No fee records found" />
@@ -407,7 +447,22 @@ function GenerateFeeModal({ open, onClose, classrooms, ayId, ayStartDate, onSucc
   const [students, setStudents]   = useState([]);
   const [saving, setSaving]       = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
+  const [errors, setErrors]       = useState({});
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
+  const startYear  = ayStartDate ? new Date(ayStartDate).getFullYear() : currentYear;
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const m = ((startMonth - 1 + i) % 12) + 1;
+    const y = startYear + (m < startMonth ? 1 : 0);
+    return { value: String(m), label: `${MONTH_NAMES[m - 1]} (${y})` };
+  });
+
+  const onMonthChange = (mStr) => {
+    const m = Number(mStr);
+    const y = startYear + (m < startMonth ? 1 : 0);
+    setForm(f => ({ ...f, month: mStr, year: y }));
+  };
 
   const handleClassChange = async (classId) => {
     set('classroom', classId);
@@ -417,7 +472,7 @@ function GenerateFeeModal({ open, onClose, classrooms, ayId, ayStartDate, onSucc
       const cls = classrooms.find(c => c._id === classId);
       if (cls) set('tuitionFee', cls.monthlyFees);
       try {
-        const res = await api.get(`${API.STUDENTS.BASE}?classId=${classId}&status=Approved&academicYear=${ayId}&limit=200`);
+        const res = await api.get(`${API.STUDENTS.BASE}?classId=${classId}&status=Approved&academicYear=${ayId}&limit=100`);
         setStudents(res.data || []);
       } catch {}
     }
@@ -433,17 +488,22 @@ function GenerateFeeModal({ open, onClose, classrooms, ayId, ayStartDate, onSucc
   };
 
   const handleSubmit = async () => {
-    if (!form.student || !form.classroom || !form.month || !form.dueDate) {
-      return alert('Please fill all required fields');
-    }
+    const { validateGenerateFee } = await import('@/lib/validation.js');
+    const v = validateGenerateFee(form);
+    setErrors(v.errors);
+    if (!v.valid) return;
     setSaving(true);
     try {
       await api.post(API.FEES.BASE, { ...form, academicYear: ayId });
       onSuccess();
-    } catch (err) { alert(err.message); } finally { setSaving(false); }
+    } catch (err) { alert(err?.response?.data?.message || err.message); } finally { setSaving(false); }
   };
 
-  const monthOptions = buildMonthOptions(ayStartDate, false);
+  const blockInvalidKeys = (e) => {
+    const invalid = ['e','E','+','-','.'];
+    if (invalid.includes(e.key)) e.preventDefault();
+  };
+
   const total = (Number(form.tuitionFee) || 0)
     + (Number(form.transportFee) || 0)
     + (Number(form.activityFee) || 0)
@@ -454,8 +514,8 @@ function GenerateFeeModal({ open, onClose, classrooms, ayId, ayStartDate, onSucc
     <Modal open={open} onClose={onClose} title="Generate Fee Record">
       <div className="space-y-3">
         <Select label="Class *" value={form.classroom}
-          onChange={e => handleClassChange(e.target.value)}
-          options={[{ value: '', label: 'Select Class' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))]} />
+          onChange={e => { handleClassChange(e.target.value); if (errors.classroom) setErrors(prev => ({ ...prev, classroom: undefined })); }}
+          options={[{ value: '', label: 'Select Class' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))]} error={errors.classroom} />
 
         {/* Student search within modal */}
         <div>
@@ -470,30 +530,37 @@ function GenerateFeeModal({ open, onClose, classrooms, ayId, ayStartDate, onSucc
             />
           </div>
           <select
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+            className={`w-full bg-slate-800 border rounded-lg px-3 py-2 text-sm text-white focus:outline-none ${errors.student ? 'border-rose-500' : 'border-slate-700 focus:border-amber-500'}`}
             value={form.student}
-            onChange={e => set('student', e.target.value)}
+            onChange={e => { set('student', e.target.value); if (errors.student) setErrors(prev => ({ ...prev, student: undefined })); }}
           >
             <option value="">Select Student</option>
             {students.map(s => (
               <option key={s._id} value={s._id}>{s.firstName} {s.lastName} ({s.admissionNo})</option>
             ))}
           </select>
+          {errors.student && <p className="text-xs text-rose-400 mt-1">{errors.student}</p>}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Select label="Month *" value={form.month}
-            onChange={e => set('month', e.target.value)}
-            options={[{ value: '', label: 'Month' }, ...monthOptions]} />
-          <Input label="Year *" type="number" value={form.year} onChange={e => set('year', e.target.value)} />
+            onChange={e => { onMonthChange(e.target.value); if (errors.month) setErrors(prev => ({ ...prev, month: undefined })); }}
+            options={[{ value: '', label: 'Month' }, ...monthOptions]} error={errors.month} />
+          <Input label="Year *" type="number" value={form.year} readOnly error={errors.year} />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Input label="Tuition Fee *"  type="number" value={form.tuitionFee}   onChange={e => set('tuitionFee', e.target.value)} />
-          <Input label="Transport Fee"  type="number" value={form.transportFee} onChange={e => set('transportFee', e.target.value)} />
-          <Input label="Activity Fee"   type="number" value={form.activityFee}  onChange={e => set('activityFee', e.target.value)} />
-          <Input label="Other Fee"      type="number" value={form.otherFee}     onChange={e => set('otherFee', e.target.value)} />
-          <Input label="Discount"       type="number" value={form.discount}     onChange={e => set('discount', e.target.value)} />
-          <Input label="Due Date *"     type="date"   value={form.dueDate}      onChange={e => set('dueDate', e.target.value)} />
+          <Input label="Tuition Fee *"  type="number" min={0} onKeyDown={blockInvalidKeys}
+            value={form.tuitionFee}   onChange={e => { set('tuitionFee', e.target.value); if (errors.tuitionFee) setErrors(prev => ({ ...prev, tuitionFee: undefined })); }} error={errors.tuitionFee} />
+          <Input label="Transport Fee"  type="number" min={0} onKeyDown={blockInvalidKeys}
+            value={form.transportFee} onChange={e => { set('transportFee', e.target.value); if (errors.transportFee) setErrors(prev => ({ ...prev, transportFee: undefined })); }} error={errors.transportFee} />
+          <Input label="Activity Fee"   type="number" min={0} onKeyDown={blockInvalidKeys}
+            value={form.activityFee}  onChange={e => { set('activityFee', e.target.value); if (errors.activityFee) setErrors(prev => ({ ...prev, activityFee: undefined })); }} error={errors.activityFee} />
+          <Input label="Other Fee"      type="number" min={0} onKeyDown={blockInvalidKeys}
+            value={form.otherFee}     onChange={e => { set('otherFee', e.target.value); if (errors.otherFee) setErrors(prev => ({ ...prev, otherFee: undefined })); }} error={errors.otherFee} />
+          <Input label="Discount"       type="number" min={0} onKeyDown={blockInvalidKeys}
+            value={form.discount}     onChange={e => { set('discount', e.target.value); if (errors.discount) setErrors(prev => ({ ...prev, discount: undefined })); }} error={errors.discount} />
+          <Input label="Due Date *"     type="date"
+            value={form.dueDate}      onChange={e => { set('dueDate', e.target.value); if (errors.dueDate) setErrors(prev => ({ ...prev, dueDate: undefined })); }} error={errors.dueDate} />
         </div>
         <div className="bg-slate-800 rounded-lg p-3 text-sm">
           <span className="text-slate-400">Final Amount: </span>
@@ -745,7 +812,7 @@ function MultiMonthPayModal({ student, ayId, ayStartDate, onClose, onSuccess }) 
 // ─── Auto-Generate Modal ─────────────────────────────────────────────────────
 
 function AutoGenerateModal({ classrooms, ayId, ayStartDate, onClose, onSuccess }) {
-  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
+  // startMonth derived below with year-labeled months
   const [form, setForm] = useState({
     month:      currentMonth,
     year:       currentYear,
@@ -774,7 +841,18 @@ function AutoGenerateModal({ classrooms, ayId, ayStartDate, onClose, onSuccess }
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };
 
-  const monthOptions = buildMonthOptions(ayStartDate, false);
+  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
+  const startYear  = ayStartDate ? new Date(ayStartDate).getFullYear() : currentYear;
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const m = ((startMonth - 1 + i) % 12) + 1;
+    const y = startYear + (m < startMonth ? 1 : 0);
+    return { value: String(m), label: `${MONTH_NAMES[m - 1]} (${y})` };
+  });
+  const onMonthChange = (mStr) => {
+    const m = Number(mStr);
+    const y = startYear + (m < startMonth ? 1 : 0);
+    setForm(f => ({ ...f, month: mStr, year: y }));
+  };
 
   return (
     <Modal open={true} onClose={onClose} title="Auto-Generate Monthly Fees">
@@ -785,9 +863,9 @@ function AutoGenerateModal({ classrooms, ayId, ayStartDate, onClose, onSuccess }
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <Select label="Month *" value={form.month}
-            onChange={e => set('month', e.target.value)}
+            onChange={e => onMonthChange(e.target.value)}
             options={monthOptions} />
-          <Input label="Year *" type="number" value={form.year} onChange={e => set('year', e.target.value)} />
+          <Input label="Year *" type="number" value={form.year} readOnly />
         </div>
         <Input label="Due Date *" type="date" value={form.dueDate} onChange={e => set('dueDate', e.target.value)} />
         <Select label="Class (optional — all if blank)" value={form.classId}

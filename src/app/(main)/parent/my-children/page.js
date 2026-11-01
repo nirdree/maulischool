@@ -22,7 +22,7 @@ export default function MyChildren() {
         const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
         const res = await api.get(`${API.STUDENTS.BASE}?academicYear=${ay.data?._id}`);
         setChildren(res.data || []);
-      } catch {} finally { setLoading(false); }
+      } catch (err) { console.error(err); alert(err); } finally { setLoading(false); }
     })();
   }, []);
 

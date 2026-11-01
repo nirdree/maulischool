@@ -8,10 +8,10 @@
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { ArrowUpCircle, Search } from 'lucide-react';
+import { ArrowUpCircle, Search, Filter } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Button, Select, Badge } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Button, Select, Badge, Modal } from '@/components/ui.jsx';
 
 export default function PromotePage() {
   const [classrooms, setClassrooms] = useState([]);
@@ -22,6 +22,7 @@ export default function PromotePage() {
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -82,9 +83,20 @@ export default function PromotePage() {
 
   return (
     <PageContent>
-      <PageHeader title="Promote Students" subtitle="Advance or detain students at year end" />
+      <PageHeader
+        title="Promote Students"
+        subtitle="Advance or detain students at year end"
+        actions={
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+          </div>
+        }
+      />
 
-      <Card className="mb-6">
+      <Card className="mb-6 hidden sm:block">
         <div className="flex gap-3 items-end">
           <Select label="Select Class to Preview" options={classOptions} value={classFilter}
             onChange={e => setClassFilter(e.target.value)} className="w-52" />
@@ -93,6 +105,26 @@ export default function PromotePage() {
           </Button>
         </div>
       </Card>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Select label="Select Class to Preview" options={classOptions} value={classFilter}
+            onChange={e => setClassFilter(e.target.value)} />
+        </div>
+        <div className="mt-6 border-t border-slate-700 pt-4">
+          <p className="text-xs text-slate-400 mb-2">Quick actions</p>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => { handlePreview(); setFilterOpen(false); }} disabled={!classFilter || loading}>
+              <Search className="w-4 h-4 mr-1" /> {loading ? 'Loading...' : 'Load Preview'}
+            </Button>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setClassFilter(''); }}>Clear</Button>
+          <Button onClick={() => { setFilterOpen(false); }}>Close</Button>
+        </div>
+      </Modal>
 
       {result && (
         <Card className="mb-6 border-emerald-800 bg-emerald-900/10">

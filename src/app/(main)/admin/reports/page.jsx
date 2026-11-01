@@ -12,10 +12,10 @@
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { BarChart3, Users, DollarSign, CheckSquare, FileText, Banknote } from 'lucide-react';
+import { BarChart3, Users, DollarSign, CheckSquare, FileText, Banknote, Filter } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Button, Select, Badge, Table } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Button, Select, Badge, Table, Modal } from '@/components/ui.jsx';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
@@ -37,6 +37,7 @@ export default function ReportsPage() {
   const [classFilter, setClassFilter] = useState('');
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -93,7 +94,18 @@ export default function ReportsPage() {
 
   return (
     <PageContent>
-      <PageHeader title="Reports" subtitle="Analytics and insights" />
+      <PageHeader
+        title="Reports"
+        subtitle="Analytics and insights"
+        actions={
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+          </div>
+        }
+      />
 
       <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 mb-6">
         {REPORT_TYPES.map(rt => (
@@ -113,7 +125,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className="hidden sm:flex flex-wrap gap-3 mb-4">
         {['fee-defaulters', 'attendance', 'exam-results'].includes(activeReport) && (
           <Select options={classOptions} value={classFilter} onChange={e => setClassFilter(e.target.value)} className="w-44" />
         )}
@@ -124,8 +136,36 @@ export default function ReportsPage() {
               className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-24" />
           </>
         )}
-        <Button onClick={fetchReport} disabled={loading}>{loading ? 'Loading...' : 'Refresh'}</Button>
+        <Button variant="ghost" onClick={fetchReport} disabled={loading}>{loading ? 'Loading...' : 'Refresh'}</Button>
       </div>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          {['fee-defaulters', 'attendance', 'exam-results'].includes(activeReport) && (
+            <Select label="Class" options={classOptions} value={classFilter} onChange={e => setClassFilter(e.target.value)} />
+          )}
+          {['fee-collection', 'fee-defaulters', 'attendance', 'payroll'].includes(activeReport) && (
+            <div className="flex gap-3">
+              <Select label="Month" options={monthOptions} value={month} onChange={e => setMonth(e.target.value)} className="w-28" />
+              <input type="number" value={year} onChange={e => setYear(e.target.value)}
+                className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-24" />
+            </div>
+          )}
+        </div>
+        <div className="mt-6 border-t border-slate-700 pt-4">
+          <p className="text-xs text-slate-400 mb-2">Quick actions</p>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => { fetchReport(); setFilterOpen(false); }} disabled={loading}>
+              {loading ? 'Loading...' : 'Refresh'}
+            </Button>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setClassFilter(''); }}>Clear</Button>
+          <Button onClick={() => { fetchReport(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
 
       {loading && <div className="py-12 text-center text-slate-500">Loading report...</div>}
 

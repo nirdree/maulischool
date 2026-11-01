@@ -17,7 +17,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   Plus, CheckCircle, RefreshCw, Zap, Edit2,
   Trash2, Eye, Lock, AlertCircle, Calculator,
-  TrendingUp,
+  TrendingUp, Filter,
 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
@@ -25,6 +25,7 @@ import {
   PageContent, PageHeader, Card, Table, Pagination, Button,
   Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
+import { validateGeneratePayroll } from '@/lib/validation.js';
 
 const MONTHS = [
   'January','February','March','April','May','June',
@@ -39,6 +40,7 @@ export default function PayrollPage() {
   const [payroll,   setPayroll]   = useState([]);
   const [employees, setEmployees] = useState([]);
   const [ayId,      setAyId]      = useState('');
+  const [ayStartDate, setAyStartDate] = useState(null);
   const [loading,   setLoading]   = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -56,12 +58,14 @@ export default function PayrollPage() {
   const [viewPayroll,   setViewPayroll]   = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [autoGenOpen,   setAutoGenOpen]   = useState(false);
+  const [filterOpen,    setFilterOpen]    = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         const ay  = await api.get(API.ACADEMIC_YEARS.CURRENT);
         setAyId(ay.data?._id);
+        setAyStartDate(ay.data?.startDate || ay.data?.start || null);
         const emp = await api.get(`${API.EMPLOYEES.BASE}?status=active`);
         setEmployees(emp.data || []);
       } catch {}
@@ -213,38 +217,74 @@ export default function PayrollPage() {
         subtitle={`${MONTHS[monthFilter - 1]} ${yearFilter} · ${total} records`}
         actions={
           <div className="flex gap-2 flex-wrap">
-            <Button variant="warning" onClick={() => setAutoGenOpen(true)}>
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+            <Button variant="warning" onClick={() => setAutoGenOpen(true)} className="hidden sm:inline-flex">
               <Zap className="w-4 h-4 mr-1" /> Auto-Generate All
             </Button>
-            <Button onClick={() => setAddOpen(true)}>
+            <Button onClick={() => setAddOpen(true)} className="hidden sm:inline-flex">
               <Plus className="w-4 h-4 mr-1" /> Generate
             </Button>
           </div>
         }
       />
 
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {[
-          { label: 'Total Payable', value: `₹${summary.totalPayable.toLocaleString()}`, color: 'text-white' },
-          { label: 'Disbursed',     value: `₹${summary.totalPaid.toLocaleString()}`,    color: 'text-emerald-400' },
-          { label: 'Pending',       value: `₹${totalPending.toLocaleString()}`, color: 'text-rose-400' },
-        ].map(s => (
-          <Card key={s.label}>
-            <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">{s.label}</p>
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-          </Card>
-        ))}
-      </div>
+      {/* Payroll Overview — single compact card */}
+      <Card>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Payroll Overview</h3>
+        <div className="flex items-center gap-6 overflow-x-auto pb-1">
+          <div className="min-w-[110px] text-center">
+            <div className="text-lg font-extrabold text-white">₹{summary.totalPayable.toLocaleString()}</div>
+            <div className="text-[11px] text-slate-500">Total Payable</div>
+          </div>
+          <div className="min-w-[110px] text-center">
+            <div className="text-lg font-extrabold text-emerald-400">₹{summary.totalPaid.toLocaleString()}</div>
+            <div className="text-[11px] text-slate-500">Disbursed</div>
+          </div>
+          <div className="min-w-[110px] text-center">
+            <div className="text-lg font-extrabold text-rose-400">₹{totalPending.toLocaleString()}</div>
+            <div className="text-[11px] text-slate-500">Pending</div>
+          </div>
+        </div>
+      </Card>
+
+      <div className="h-4" />
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-4 items-center">
+      <div className="hidden sm:flex flex-wrap gap-3 mb-4 items-center">
         <Select options={monthOptions}  value={monthFilter}  onChange={e => { setMonthFilter(Number(e.target.value)); setPage(1); }}  className="w-36" />
         <Select options={yearOptions}   value={yearFilter}   onChange={e => { setYearFilter(Number(e.target.value)); setPage(1); }}   className="w-28" />
         <Select options={statusOptions} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}          className="w-36" />
         <Select options={empOptions}    value={empFilter}    onChange={e => { setEmpFilter(e.target.value); setPage(1); }}             className="w-52" />
         <Button variant="ghost" onClick={fetchPayroll}><RefreshCw className="w-4 h-4" /></Button>
       </div>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Select label="Month"  value={monthFilter}  onChange={e => setMonthFilter(Number(e.target.value))} options={monthOptions} />
+          <Input  label="Year"   value={yearFilter} readOnly disabled />
+          <Select label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={statusOptions} />
+          <Select label="Employee" value={empFilter} onChange={e => setEmpFilter(e.target.value)} options={empOptions} />
+        </div>
+        <div className="mt-6 border-t border-slate-700 pt-4">
+          <p className="text-xs text-slate-400 mb-2">Quick actions</p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="warning" onClick={() => { setAutoGenOpen(true); setFilterOpen(false); }}>
+              <Zap className="w-4 h-4 mr-1" /> Auto-Generate All
+            </Button>
+            <Button onClick={() => { setAddOpen(true); setFilterOpen(false); }}>
+              <Plus className="w-4 h-4 mr-1" /> Generate
+            </Button>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setStatusFilter(''); setEmpFilter(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { setPage(1); fetchPayroll(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
 
       <Card className="!p-0">
         <Table columns={columns} data={payroll} loading={loading} emptyMessage="No payroll records for this period" />
@@ -256,6 +296,7 @@ export default function PayrollPage() {
         <GeneratePayrollModal
           employees={employees}
           ayId={ayId}
+          ayStartDate={ayStartDate}
           defaultMonth={monthFilter}
           defaultYear={yearFilter}
           onClose={() => setAddOpen(false)}
@@ -297,6 +338,7 @@ export default function PayrollPage() {
       {autoGenOpen && (
         <AutoGenerateModal
           ayId={ayId}
+          ayStartDate={ayStartDate}
           defaultMonth={monthFilter}
           defaultYear={yearFilter}
           employees={employees}
@@ -310,17 +352,29 @@ export default function PayrollPage() {
 
 // ─── Generate Single Payroll Modal ───────────────────────────────────────────
 
-function GeneratePayrollModal({ employees, ayId, defaultMonth, defaultYear, onClose, onSuccess }) {
+function GeneratePayrollModal({ employees, ayId, ayStartDate, defaultMonth, defaultYear, onClose, onSuccess }) {
   const [form, setForm] = useState({
     employee: '', month: defaultMonth, year: defaultYear,
     bonus: 0, extraDeductions: 0,
     paymentMode: 'BankTransfer', manualOverride: false,
-    daysPresent: '', holidays: '',
+    daysPresent: '', holidays: '', absent: '',
   });
   const [preview, setPreview] = useState(null);
   const [saving,  setSaving]  = useState(false);
   const [loading, setLoading] = useState(false);
-  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setPreview(null); };
+  const [errors,  setErrors]  = useState({});
+  const recomputeErrors = (next) => {
+    const { errors } = validateGeneratePayroll(next);
+    setErrors(errors);
+  };
+  const set = (k, v) => {
+    setForm(f => {
+      const next = { ...f, [k]: v };
+      setPreview(null);
+      recomputeErrors(next);
+      return next;
+    });
+  };
 
   const fetchPreview = async () => {
     if (!form.employee) return alert('Select an employee first');
@@ -333,6 +387,8 @@ function GeneratePayrollModal({ employees, ayId, defaultMonth, defaultYear, onCl
         bonus:           form.bonus,
         extraDeductions: form.extraDeductions,
         ...(form.manualOverride && form.holidays !== '' && { manualHolidays: form.holidays }),
+        ...(form.manualOverride && form.daysPresent !== '' && { manualDaysPresent: form.daysPresent }),
+        ...(form.manualOverride && form.absent !== '' && { manualDaysAbsent: form.absent }),
       });
       const res = await api.get(`${API.PAYROLL.BASE}/preview?${params}`);
       setPreview(res.data);
@@ -341,7 +397,9 @@ function GeneratePayrollModal({ employees, ayId, defaultMonth, defaultYear, onCl
   };
 
   const handleSubmit = async () => {
-    if (!form.employee) return alert('Select an employee');
+    const { valid, errors } = validateGeneratePayroll(form);
+    setErrors(errors);
+    if (!valid) return;
     setSaving(true);
     try {
       await api.post(API.PAYROLL.BASE, { ...form, academicYear: ayId });
@@ -350,27 +408,72 @@ function GeneratePayrollModal({ employees, ayId, defaultMonth, defaultYear, onCl
     finally { setSaving(false); }
   };
 
-  const monthOptions = MONTHS.map((m, i) => ({ value: i + 1, label: m }));
-  const yearOptions  = [currentYear - 1, currentYear, currentYear + 1].map(y => ({ value: y, label: String(y) }));
+  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
+  const startYear  = ayStartDate ? new Date(ayStartDate).getFullYear() : currentYear;
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const m = ((startMonth - 1 + i) % 12) + 1;
+    const y = startYear + (m < startMonth ? 1 : 0);
+    return { value: m, label: `${MONTHS[m - 1]} (${y})` };
+  });
+  const onMonthChange = (mNum) => {
+    const y = startYear + (mNum < startMonth ? 1 : 0);
+    const next = { ...form, month: mNum, year: y };
+    setForm(next);
+    const { errors } = validateGeneratePayroll(next);
+    setErrors(errors);
+  };
   const modeOptions  = ['Cash', 'BankTransfer', 'Cheque'].map(m => ({ value: m, label: m }));
   const empOptions   = [
     { value: '', label: 'Select Employee' },
     ...employees.map(e => ({ value: e._id, label: `${e.name} — ₹${e.monthlySalary?.toLocaleString()}` })),
   ];
+  const onNumberKeyDown = (e) => { if (['e','E','+','-','.'].includes(e.key)) e.preventDefault(); };
+  const setNonNegative = (k, raw) => {
+    const n = Number(raw);
+    const val = Number.isFinite(n) ? Math.max(0, n) : '';
+    set(k, val);
+  };
+  const daysInMonth = (year, month) => new Date(year, month, 0).getDate();
+  const setBoundedNonNegative = (k, raw) => {
+    const n = Number(raw);
+    const val = Number.isFinite(n) ? Math.max(0, n) : '';
+    const dim = daysInMonth(form.year, form.month);
+    let next = { ...form };
+    if (k === 'daysPresent') {
+      const holidays = Number(next.holidays || 0);
+      const absent   = Number(next.absent || 0);
+      const maxPresent = Math.max(0, dim - holidays - absent);
+      next.daysPresent = Math.min(maxPresent, val);
+    } else if (k === 'holidays') {
+      const present = Number(next.daysPresent || 0);
+      const absent  = Number(next.absent || 0);
+      const maxHolidays = Math.max(0, dim - present - absent);
+      next.holidays = Math.min(maxHolidays, val);
+    } else if (k === 'absent') {
+      const present = Number(next.daysPresent || 0);
+      const holidays= Number(next.holidays || 0);
+      const maxAbsent = Math.max(0, dim - present - holidays);
+      next.absent = Math.min(maxAbsent, val);
+    } else {
+      next[k] = val;
+    }
+    setForm(next);
+    recomputeErrors(next);
+  };
 
   return (
-    <Modal open={true} onClose={onClose} title="Generate Payroll">
+    <Modal open={true} onClose={onClose} title="Generate Payroll" width="max-w-2xl">
       <div className="space-y-3">
-        <Select label="Employee *" value={form.employee} onChange={e => set('employee', e.target.value)} options={empOptions} />
+        <Select label="Employee *" error={errors.employee} value={form.employee} onChange={e => set('employee', e.target.value)} options={empOptions} />
         <div className="grid grid-cols-2 gap-3">
-          <Select label="Month *" value={form.month} onChange={e => set('month', Number(e.target.value))} options={monthOptions} />
-          <Select label="Year *"  value={form.year}  onChange={e => set('year', Number(e.target.value))}  options={yearOptions} />
+          <Select label="Month *" error={errors.month} value={form.month} onChange={e => onMonthChange(Number(e.target.value))} options={monthOptions} />
+          <Input label="Year" value={form.year} disabled readOnly />
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Input label="Bonus (₹)"            type="number" value={form.bonus}            onChange={e => set('bonus', e.target.value)} />
-          <Input label="Extra Deductions (₹)" type="number" value={form.extraDeductions}  onChange={e => set('extraDeductions', e.target.value)} />
+          <Input label="Bonus (₹)"            type="number" onKeyDown={onNumberKeyDown} value={form.bonus}            onChange={e => setNonNegative('bonus', e.target.value)} error={errors.bonus} />
+          <Input label="Extra Deductions (₹)" type="number" onKeyDown={onNumberKeyDown} value={form.extraDeductions}  onChange={e => setNonNegative('extraDeductions', e.target.value)} error={errors.extraDeductions} />
         </div>
-        <Select label="Payment Mode" value={form.paymentMode} onChange={e => set('paymentMode', e.target.value)} options={modeOptions} />
+        <Select label="Payment Mode" error={errors.paymentMode} value={form.paymentMode} onChange={e => set('paymentMode', e.target.value)} options={modeOptions} />
 
         {/* Manual override */}
         <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
@@ -380,9 +483,10 @@ function GeneratePayrollModal({ employees, ayId, defaultMonth, defaultYear, onCl
         </label>
 
         {form.manualOverride && (
-          <div className="grid grid-cols-2 gap-3 pl-2 border-l-2 border-amber-500/40">
-            <Input label="Days Present" type="number" value={form.daysPresent} onChange={e => set('daysPresent', e.target.value)} />
-            <Input label="Holidays"     type="number" value={form.holidays}    onChange={e => set('holidays', e.target.value)} />
+          <div className="grid grid-cols-3 gap-3 pl-2 border-l-2 border-amber-500/40">
+            <Input label="Days Present" type="number" onKeyDown={onNumberKeyDown} value={form.daysPresent} onChange={e => setBoundedNonNegative('daysPresent', e.target.value)} />
+            <Input label="Holidays (paid)" type="number" onKeyDown={onNumberKeyDown} value={form.holidays} onChange={e => setBoundedNonNegative('holidays', e.target.value)} />
+            <Input label="Absent (unpaid)" type="number" onKeyDown={onNumberKeyDown} value={form.absent} onChange={e => setBoundedNonNegative('absent', e.target.value)} />
           </div>
         )}
       </div>
@@ -394,7 +498,36 @@ function GeneratePayrollModal({ employees, ayId, defaultMonth, defaultYear, onCl
         </Button>
       </div>
 
-      {preview && <SalaryPreviewCard preview={preview} />}
+      {(form.manualOverride
+        ? (() => {
+            const emp = employees.find(e => e._id === form.employee);
+            const salary = Number(emp?.monthlySalary || 0);
+            const dim = daysInMonth(form.year, form.month);
+            const holidays = Number(form.holidays || 0);
+            const absent   = Number(form.absent || 0);
+            const perDay   = dim > 0 ? salary / dim : 0; // paid holidays included
+            const present  = Number(form.daysPresent || 0);
+            const payableDays = Math.max(0, dim - absent); // present + holidays - absent = total - absent
+            const earned  = Math.round(perDay * payableDays * 100) / 100;
+            const bonus   = Number(form.bonus || 0);
+            const extra   = Number(form.extraDeductions || 0);
+            const net     = Math.max(0, Math.round((earned + bonus - extra) * 100) / 100);
+            const localPreview = {
+              totalDays: dim,
+              holidays,
+              workingDays: dim, // display as calendar days
+              perDay,
+              effectivePresentDays: present,
+              daysAbsent: absent,
+              payableDays,
+              earned,
+              bonus,
+              extraDeductions: extra,
+              netSalary: net,
+            };
+            return <SalaryPreviewCard preview={localPreview} />;
+          })()
+        : (preview && <SalaryPreviewCard preview={preview} />))}
 
       <div className="flex justify-end gap-3 mt-6">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
@@ -473,7 +606,7 @@ function EditPayrollModal({ payroll: rec, onClose, onSuccess }) {
 
 // ─── Auto Generate All Modal ─────────────────────────────────────────────────
 
-function AutoGenerateModal({ ayId, defaultMonth, defaultYear, employees, onClose, onSuccess }) {
+function AutoGenerateModal({ ayId, ayStartDate, defaultMonth, defaultYear, employees, onClose, onSuccess }) {
   const [form, setForm] = useState({
     month:       defaultMonth,
     year:        defaultYear,
@@ -503,20 +636,29 @@ function AutoGenerateModal({ ayId, defaultMonth, defaultYear, employees, onClose
     finally { setSaving(false); }
   };
 
-  const monthOptions = MONTHS.map((m, i) => ({ value: i + 1, label: m }));
-  const yearOptions  = [currentYear - 1, currentYear, currentYear + 1].map(y => ({ value: y, label: String(y) }));
+  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
+  const startYear  = ayStartDate ? new Date(ayStartDate).getFullYear() : currentYear;
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const m = ((startMonth - 1 + i) % 12) + 1;
+    const y = startYear + (m < startMonth ? 1 : 0);
+    return { value: m, label: `${MONTHS[m - 1]} (${y})` };
+  });
+  const onMonthChange = (mNum) => {
+    const y = startYear + (mNum < startMonth ? 1 : 0);
+    setForm(f => ({ ...f, month: mNum, year: y }));
+  };
   const modeOptions  = ['Cash', 'BankTransfer', 'Cheque'].map(m => ({ value: m, label: m }));
 
   return (
-    <Modal open={true} onClose={onClose} title="Auto-Generate Payroll for All Employees">
+    <Modal open={true} onClose={onClose} title="Auto-Generate Payroll for All Employees" width="max-w-2xl">
       <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-amber-400 flex gap-2">
         <Zap className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <span>Generates payroll for all active employees based on their attendance records. Existing records are skipped.</span>
       </div>
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
-          <Select label="Month *" value={form.month} onChange={e => set('month', Number(e.target.value))} options={monthOptions} />
-          <Select label="Year *"  value={form.year}  onChange={e => set('year', Number(e.target.value))}  options={yearOptions} />
+          <Select label="Month *" value={form.month} onChange={e => onMonthChange(Number(e.target.value))} options={monthOptions} />
+          <Input label="Year" value={form.year} disabled readOnly />
         </div>
         <Select label="Default Payment Mode" value={form.paymentMode}
           onChange={e => set('paymentMode', e.target.value)} options={modeOptions} />
@@ -625,8 +767,9 @@ function SalaryPreviewCard({ preview: p }) {
       <p className="text-slate-400 text-xs font-medium mb-2">Salary Preview</p>
       {[
         ['Total Days in Month', p.totalDays],
-        ['Holidays',            p.holidays],
-        ['Working Days',        p.workingDays],
+        ['Holidays (paid)',     p.holidays],
+        ['Absent (unpaid)',     p.daysAbsent ?? 0],
+        ['Payable Days',        p.payableDays ?? Math.max(0, (p.totalDays || 0) - (p.daysAbsent || 0))],
         ['Per Day Rate',       `₹${p.perDay?.toFixed(2)}`],
         ['Days Present',        p.effectivePresentDays],
         ['Earned',             `₹${p.earned?.toLocaleString()}`],

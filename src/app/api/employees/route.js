@@ -54,21 +54,22 @@ export const POST = authorize('admin', 'principal')(async (request) => {
   try {
     const body = await request.json();
     const normalizedEmail = String(body.email || '').trim().toLowerCase();
-    const { name, password, role } = body;
+    const { name, password, role, aadhaarNumber } = body;
 
-    if (!name || !normalizedEmail || !password || !role) {
+    if (!name || !normalizedEmail || !password || !role || !aadhaarNumber) {
       await session.abortTransaction();
-      return r.badRequest('name, email, password and role are required');
+      return r.badRequest('name, email, password, role and aadhaarNumber are required');
     }
 
     const existingUser     = await User.findOne({ email: normalizedEmail }).session(session);
-    const existingEmployee = await Employee.findOne({ email: normalizedEmail }).session(session);
-    if (existingUser || existingEmployee) {
+    const existingEmployeeByEmail = await Employee.findOne({ email: normalizedEmail }).session(session);
+    const existingEmployeeByAadhaar = await Employee.findOne({ aadhaarNumber: String(aadhaarNumber).trim() }).session(session);
+    if (existingUser || existingEmployeeByEmail || existingEmployeeByAadhaar) {
       await session.abortTransaction();
-      return r.conflict('Email already registered');
+      return r.conflict('Email or Aadhaar Number already exists');
     }
 
-    const employeePayload = { ...body, email: normalizedEmail };
+    const employeePayload = { ...body, email: normalizedEmail, aadhaarNumber: String(aadhaarNumber).trim() };
     const [employee] = await Employee.create([employeePayload], { session });
 
     const userDoc = new User({ name, email: normalizedEmail, password: await bcrypt.hash(password, 12), role, employeeId: employee._id });
@@ -81,7 +82,7 @@ export const POST = authorize('admin', 'principal')(async (request) => {
     return r.created(employee, 'Employee created');
   } catch (err) {
     await session.abortTransaction();
-    if (err.code === 11000) return r.conflict('Email or employee ID already exists');
+    if (err.code === 11000) return r.conflict('Email, employee ID, or Aadhaar Number already exists');
     return r.serverError(err.message);
   } finally {
     session.endSession();

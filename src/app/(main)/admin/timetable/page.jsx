@@ -157,6 +157,7 @@ export default function TimetableAdminPage() {
   const [teacherViewModal, setTeacherViewModal] = useState(false);
   const [settingsOpen, setSettingsOpen]         = useState(false);
   const [clearConfirm, setClearConfirm]         = useState(null); // 'all' | dayName
+  const [actionsOpen, setActionsOpen]           = useState(false);
 
   const saveSuccessTimer = useRef(null);
 
@@ -433,31 +434,6 @@ export default function TimetableAdminPage() {
                 <CheckCircle className="w-3.5 h-3.5" /> Saved
               </span>
             )}
-            <Button
-              variant="ghost"
-              onClick={() => setTeacherViewModal(true)}
-              disabled={!classFilter}
-              title="Teacher schedule view"
-            >
-              <Eye className="w-4 h-4" /> Teacher View
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setSettingsOpen(true)}
-              disabled={!classFilter}
-              title="Timetable settings"
-            >
-              ⚙ Settings
-            </Button>
-            {classFilter && (
-              <Button variant="danger" onClick={handleDelete} title="Delete timetable">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-            <Button onClick={handleSave} disabled={saving || !classFilter}>
-              <Save className="w-4 h-4" />
-              {saving ? 'Saving…' : 'Save Timetable'}
-            </Button>
           </div>
         }
       />
@@ -472,6 +448,12 @@ export default function TimetableAdminPage() {
             onChange={e => handleClassChange(e.target.value)}
           />
         </div>
+
+        {classFilter && (
+          <Button size="sm" variant="ghost" onClick={() => setActionsOpen(true)} title="Class actions">
+            <ChevronDown className="w-3.5 h-3.5" /> Actions
+          </Button>
+        )}
 
         {classFilter && (
           <>
@@ -653,6 +635,54 @@ export default function TimetableAdminPage() {
           classLabel={selectedClass?.displayName || ''}
           onClose={() => setTeacherViewModal(false)}
         />
+      )}
+
+      {actionsOpen && (
+        <Modal open onClose={() => setActionsOpen(false)} title="Timetable Actions">
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Button variant="ghost" onClick={() => { setTeacherViewModal(true); setActionsOpen(false); }} disabled={!classFilter} title="Teacher schedule view">
+                <Eye className="w-4 h-4" /> Teacher View
+              </Button>
+              <Button variant="ghost" onClick={() => { setSettingsOpen(true); setActionsOpen(false); }} disabled={!classFilter} title="Timetable settings">
+                ⚙ Settings
+              </Button>
+              <Button onClick={() => { handleSave(); setActionsOpen(false); }} disabled={saving || !classFilter} title="Save timetable">
+                <Save className="w-4 h-4" /> {saving ? 'Saving…' : 'Save Timetable'}
+              </Button>
+            </div>
+
+            {classFilter && (
+              <div className="border-t border-slate-800 pt-4 space-y-3">
+                <p className="text-xs text-slate-400">Class Controls</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <label className="text-xs text-slate-400 mr-2">Periods / day</label>
+                    <Button size="sm" variant="ghost" onClick={() => changeNumPeriods(numPeriods - 1)} disabled={numPeriods <= MIN_PERIODS}>
+                      <Minus className="w-3 h-3" />
+                    </Button>
+                    <span className="w-6 text-center text-white font-semibold text-sm">{numPeriods}</span>
+                    <Button size="sm" variant="ghost" onClick={() => changeNumPeriods(numPeriods + 1)} disabled={numPeriods >= MAX_PERIODS}>
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <Button size="sm" variant="ghost" className="text-slate-400" onClick={() => { setClearConfirm('all'); setActionsOpen(false); }}>
+                    <RefreshCw className="w-3.5 h-3.5" /> Clear All
+                  </Button>
+                </div>
+
+                <div className="flex justify-between mt-2">
+                  <Button variant="danger" onClick={() => { handleDelete(); setActionsOpen(false); }} title="Delete timetable">
+                    <Trash2 className="w-4 h-4" /> Delete
+                  </Button>
+                  <Button onClick={() => { handleSave(); setActionsOpen(false); }} disabled={saving || !classFilter}>
+                    <Save className="w-4 h-4" /> Save
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
 
       {settingsOpen && (

@@ -16,6 +16,7 @@ import {
   PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, leaveStatusBadge, Badge, Modal,
 } from '@/components/ui.jsx';
 import { useAuth } from '@/context/AuthContext';
+import { validateApplyLeave } from '@/lib/validation.js';
 
 const LEAVE_TYPES = ['Sick', 'Casual', 'Earned', 'Maternity', 'Unpaid', 'Other'];
 
@@ -125,19 +126,24 @@ export default function TeacherLeaves() {
         </div>
       )}
 
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {[
-          { label: 'Pending', value: summary.pendingCount, color: 'text-amber-400' },
-          { label: 'Approved', value: summary.approvedCount, color: 'text-emerald-400' },
-          { label: 'Approved Days', value: summary.approvedDays, color: 'text-sky-400' },
-        ].map(s => (
-          <Card key={s.label}>
-            <p className="text-xs text-slate-400 uppercase tracking-wider">{s.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
-          </Card>
-        ))}
-      </div>
+      {/* Leaves Overview — single compact row */}
+      <Card>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Leaves Overview</h3>
+        <div className="flex items-center gap-6 overflow-x-auto pb-1">
+          <div className="min-w-[90px] text-center">
+            <div className="text-lg font-extrabold text-amber-400">{summary.pendingCount}</div>
+            <div className="text-[11px] text-slate-500">Pending</div>
+          </div>
+          <div className="min-w-[90px] text-center">
+            <div className="text-lg font-extrabold text-emerald-400">{summary.approvedCount}</div>
+            <div className="text-[11px] text-slate-500">Approved</div>
+          </div>
+          <div className="min-w-[120px] text-center">
+            <div className="text-lg font-extrabold text-sky-400">{summary.approvedDays}</div>
+            <div className="text-[11px] text-slate-500">Approved Days</div>
+          </div>
+        </div>
+      </Card>
 
       <Card className="!p-0">
         <Table columns={columns} data={leaves} loading={loading} emptyMessage="No leave applications" />
@@ -156,33 +162,50 @@ export default function TeacherLeaves() {
 }
 
 function ApplyLeaveModal({ open, onClose, ayId, employeeId, onSuccess }) {
-  const [form, setForm] = useState({
-    leaveType: 'Sick', fromDate: '', toDate: '', reason: '',
-  });
+  const initialForm = { leaveType: 'Sick', fromDate: '', toDate: '', reason: '' };
+  const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const resetForm = () => {
+    setForm(initialForm);
+    setErrors({});
+    setTouched({});
+    setSubmitted(false);
+  };
+
+  useEffect(() => { if (open) resetForm(); }, [open]);
 
   const calcDays = () => {
     if (!form.fromDate || !form.toDate) return 0;
-    return Math.ceil((new Date(form.toDate) - new Date(form.fromDate)) / (1000 * 60 * 60 * 24)) + 1;
+    const from = new Date(form.fromDate);
+    const to = new Date(form.toDate);
+    const ms = to - from;
+    if (Number.isNaN(ms) || ms < 0) return 0;
+    return Math.ceil(ms / (1000 * 60 * 60 * 24)) + 1;
   };
 
+  useEffect(() => {
+    const v = validateApplyLeave(form);
+    setErrors(v.errors || {});
+  }, [form]);
+
   const handleSubmit = async () => {
+    setSubmitted(true);
+    const v = validateApplyLeave(form);
+    setErrors(v.errors || {});
+    if (!v.valid) return;
     if (!ayId) {
       alert('The current academic year is not available right now. Please contact the administrator.');
-      return;
-    }
-    if (!form.fromDate || !form.toDate || !form.reason) {
-      alert('Please fill all required fields');
-      return;
-    }
-    if (new Date(form.toDate) < new Date(form.fromDate)) {
-      alert('End date must be after start date');
       return;
     }
     setSaving(true);
     try {
       await api.post(API.LEAVES.BASE, { ...form, employee: employeeId, academicYear: ayId });
+      resetForm();
       onSuccess();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };
@@ -194,11 +217,28 @@ function ApplyLeaveModal({ open, onClose, ayId, employeeId, onSuccess }) {
           label="Leave Type *"
           value={form.leaveType}
           onChange={e => set('leaveType', e.target.value)}
+          onBlur={() => setTouched(t => ({ ...t, leaveType: true }))}
           options={LEAVE_TYPES.map(t => ({ value: t, label: t }))}
+          error={(submitted || touched.leaveType) ? errors.leaveType : null}
         />
         <div className="grid grid-cols-2 gap-4">
-          <Input label="From Date *" type="date" value={form.fromDate} onChange={e => set('fromDate', e.target.value)} />
-          <Input label="To Date *" type="date" value={form.toDate} onChange={e => set('toDate', e.target.value)} />
+          <Input
+            label="From Date *"
+            type="date"
+            value={form.fromDate}
+            onChange={e => set('fromDate', e.target.value)}
+            onBlur={() => setTouched(t => ({ ...t, fromDate: true }))}
+            error={(submitted || touched.fromDate) ? errors.fromDate : null}
+          />
+          <Input
+            label="To Date *"
+            type="date"
+            value={form.toDate}
+            onChange={e => set('toDate', e.target.value)}
+            onBlur={() => setTouched(t => ({ ...t, toDate: true }))}
+            min={form.fromDate || undefined}
+            error={(submitted || touched.toDate) ? errors.toDate : null}
+          />
         </div>
         {calcDays() > 0 && (
           <p className="text-xs text-emerald-400 font-medium">Total: {calcDays()} day(s)</p>
@@ -208,14 +248,18 @@ function ApplyLeaveModal({ open, onClose, ayId, employeeId, onSuccess }) {
           <textarea
             value={form.reason}
             onChange={e => set('reason', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            onBlur={() => setTouched(t => ({ ...t, reason: true }))}
+            className={`w-full px-3 py-2 rounded-lg bg-slate-800 border text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${ (submitted || touched.reason) && errors.reason ? 'border-rose-500 focus:ring-rose-500' : 'border-slate-700'}`}
             rows={3}
             placeholder="State the reason for leave..."
           />
+          {(submitted || touched.reason) && errors.reason && (
+            <p className="text-xs text-rose-400 mt-1">{errors.reason}</p>
+          )}
         </div>
       </div>
       <div className="flex justify-end gap-3 mt-6">
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button variant="ghost" onClick={() => { resetForm(); onClose(); }}>Cancel</Button>
         <Button onClick={handleSubmit} disabled={saving}>{saving ? 'Submitting...' : 'Apply'}</Button>
       </div>
     </Modal>

@@ -13,6 +13,7 @@ api.interceptors.request.use(
 
     const token = window.localStorage.getItem('sms_token');
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
@@ -35,3 +36,7 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+
+
+

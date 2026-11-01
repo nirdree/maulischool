@@ -14,10 +14,11 @@
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, ClipboardList } from 'lucide-react';
+import { Plus, Edit2, Trash2, ClipboardList, Filter } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import { PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal } from '@/components/ui.jsx';
+import { validateExam, validateExamTotalMarks } from '@/lib/validation.js';
 
 const EXAM_TYPES = ['UnitTest1', 'UnitTest2', 'MidTerm', 'FinalExam', 'Project', 'Other'];
 
@@ -31,6 +32,7 @@ export default function ExamsAdminPage() {
   const [total, setTotal] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
   const [marksExam, setMarksExam] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -93,9 +95,20 @@ export default function ExamsAdminPage() {
       <PageHeader
         title="Exams & Marks"
         subtitle={`${total} exams`}
-        actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Create Exam</Button>}
+        actions={
+          <>
+            <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+            <Button onClick={() => setAddOpen(true)}>
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Create Exam</span>
+            </Button>
+          </>
+        }
       />
-      <div className="flex gap-3 mb-4">
+      <div className="hidden sm:flex gap-3 mb-4">
         <Select options={classOptions} value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }} className="w-48" />
       </div>
       <Card className="!p-0">
@@ -114,6 +127,17 @@ export default function ExamsAdminPage() {
       {marksExam && (
         <MarksModal exam={marksExam} onClose={() => setMarksExam(null)} ayId={ayId} />
       )}
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Select label="Class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)} options={classOptions} />
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setClassFilter(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { setPage(1); fetchExams(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
     </PageContent>
   );
 }
@@ -122,6 +146,7 @@ function ExamModal({ open, onClose, classrooms, ayId, onSuccess }) {
   const [form, setForm] = useState({ name: '', examType: 'UnitTest1', classroom: '', subject: '', totalMarks: '', examDate: '', description: '' });
   const [subjects, setSubjects] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleClassChange = async (classId) => {
@@ -132,32 +157,50 @@ function ExamModal({ open, onClose, classrooms, ayId, onSuccess }) {
         const res = await api.get(`${API.SUBJECTS.BASE}?classId=${classId}&isActive=true`);
         setSubjects(res.data || []);
       } catch {}
+    } else {
+      setSubjects([]);
     }
   };
 
   const handleSubmit = async () => {
+    const v = validateExam(form);
+    setErrors(v.errors);
+    if (!v.valid) return;
     setSaving(true);
     try {
       await api.post(API.EXAMS.BASE, { ...form, academicYear: ayId });
       onSuccess();
-    } catch (err) { alert(err.message); } finally { setSaving(false); }
+    } catch (err) { alert(err?.response?.data?.message || err.message); } finally { setSaving(false); }
+  };
+
+  const blockInvalidNumberKeys = (e) => {
+    const invalid = ['e', 'E', '+', '-', '.'];
+    if (invalid.includes(e.key)) e.preventDefault();
   };
 
   return (
     <Modal open={open} onClose={onClose} title="Create Exam">
       <div className="space-y-4">
-        <Input label="Exam Name *" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Unit Test 1" />
-        <Select label="Exam Type *" value={form.examType} onChange={e => set('examType', e.target.value)}
-          options={EXAM_TYPES.map(t => ({ value: t, label: t }))} />
-        <Select label="Class *" value={form.classroom} onChange={e => handleClassChange(e.target.value)}
-          options={[{ value: '', label: 'Select Class' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))]} />
-        <Select label="Subject *" value={form.subject} onChange={e => set('subject', e.target.value)}
-          options={[{ value: '', label: 'Select Subject' }, ...subjects.map(s => ({ value: s._id, label: s.name }))]} />
+        <Input label="Exam Name *" value={form.name} onChange={e => { set('name', e.target.value); if (errors.name) setErrors(prev => ({ ...prev, name: undefined })); }} placeholder="Unit Test 1" error={errors.name} />
+        <Select label="Exam Type *" value={form.examType} onChange={e => { set('examType', e.target.value); if (errors.examType) setErrors(prev => ({ ...prev, examType: undefined })); }}
+          options={EXAM_TYPES.map(t => ({ value: t, label: t }))} error={errors.examType} />
+        <Select label="Class *" value={form.classroom} onChange={e => { handleClassChange(e.target.value); if (errors.classroom) setErrors(prev => ({ ...prev, classroom: undefined })); }}
+          options={[{ value: '', label: 'Select Class' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))]} error={errors.classroom} />
+        <Select label="Subject *" value={form.subject} disabled={!form.classroom}
+          onChange={e => { set('subject', e.target.value); if (errors.subject) setErrors(prev => ({ ...prev, subject: undefined })); }}
+          options={form.classroom ? (
+            [{ value: '', label: 'Select Subject' }, ...subjects.map(s => ({ value: s._id, label: s.name }))]
+          ) : (
+            [{ value: '', label: 'Select Class first' }]
+          )}
+          error={errors.subject}
+        />
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Total Marks *" type="number" value={form.totalMarks} onChange={e => set('totalMarks', e.target.value)} placeholder="25" />
-          <Input label="Exam Date *" type="date" value={form.examDate} onChange={e => set('examDate', e.target.value)} />
+          <Input label="Total Marks *" type="number" min={1} max={500} step={1} onKeyDown={blockInvalidNumberKeys}
+            value={form.totalMarks} onChange={e => { set('totalMarks', e.target.value); if (errors.totalMarks) setErrors(prev => ({ ...prev, totalMarks: undefined })); }} placeholder="25" error={errors.totalMarks} />
+          <Input label="Exam Date *" type="date" value={form.examDate} onChange={e => { set('examDate', e.target.value); if (errors.examDate) setErrors(prev => ({ ...prev, examDate: undefined })); }} error={errors.examDate} />
         </div>
-        <Input label="Description" value={form.description} onChange={e => set('description', e.target.value)} placeholder="Optional notes" />
+        <Input label="Description" value={form.description} onChange={e => { set('description', e.target.value); if (errors.description) setErrors(prev => ({ ...prev, description: undefined })); }} placeholder="Optional notes" error={errors.description} />
       </div>
       <div className="flex justify-end gap-3 mt-6">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>

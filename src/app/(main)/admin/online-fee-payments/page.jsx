@@ -1,11 +1,11 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { Download, RefreshCw, Search } from 'lucide-react';
+import { Download, RefreshCw, Search, Filter } from 'lucide-react';
 import api from '@/api/client';
-import { PageContent, PageHeader, Card, Pagination, Button, Input, Select } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Pagination, Button, Input, Select, Modal } from '@/components/ui.jsx';
 
 const STATUSES = ['', 'Pending', 'Processing', 'Paid', 'Failed', 'Refunded'];
-const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+const money = value => `₹${Number(value || 0).toLocaleString('en-IN')}`;
 
 export default function OnlineFeePaymentsPage() {
   const [payments, setPayments] = useState([]);
@@ -23,6 +23,7 @@ export default function OnlineFeePaymentsPage() {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const loadPayments = useCallback(async () => {
     setLoading(true);
@@ -80,16 +81,37 @@ export default function OnlineFeePaymentsPage() {
   return (
     <PageContent>
       <PageHeader title="Online Fee Payments" subtitle="Cashfree transactions and verified receipts" actions={
-        <Button variant="ghost" onClick={loadPayments} disabled={loading}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
+            <Filter className="w-4 h-4" />
+            <span className="hidden sm:inline">Filters</span>
+          </Button>
+          <Button variant="ghost" onClick={loadPayments} disabled={loading}><RefreshCw className="w-4 h-4 mr-1" /> Refresh</Button>
+        </div>
       } />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-        <Card><p className="text-xs text-slate-400 uppercase">Successful collections</p><p className="mt-1 text-xl font-semibold text-emerald-400">{money(successful?.amount)}</p><p className="text-xs text-slate-500">{successful?.count || 0} payments</p></Card>
-        <Card><p className="text-xs text-slate-400 uppercase">Pending</p><p className="mt-1 text-xl font-semibold text-amber-400">{money((pending?.amount || 0) + (processing?.amount || 0))}</p><p className="text-xs text-slate-500">{(pending?.count || 0) + (processing?.count || 0)} payments</p></Card>
-        <Card><p className="text-xs text-slate-400 uppercase">Failed</p><p className="mt-1 text-xl font-semibold text-rose-400">{money(failed?.amount)}</p><p className="text-xs text-slate-500">{failed?.count || 0} payments</p></Card>
-      </div>
+      {/* Payments Overview — single compact card */}
+      <Card>
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3">Payments Overview</h3>
+        <div className="flex items-center gap-6 overflow-x-auto pb-1">
+          <div className="min-w-[90px] text-center">
+            <div className="text-lg font-extrabold text-emerald-400">{money(successful?.amount)}</div>
+            <div className="text-[11px] text-slate-500">Success</div>
+          </div>
+          <div className="min-w-[90px] text-center">
+            <div className="text-lg font-extrabold text-amber-400">{money((pending?.amount || 0) + (processing?.amount || 0))}</div>
+            <div className="text-[11px] text-slate-500">Pending</div>
+          </div>
+          <div className="min-w-[90px] text-center">
+            <div className="text-lg font-extrabold text-rose-400">{money(failed?.amount)}</div>
+            <div className="text-[11px] text-slate-500">Failed</div>
+          </div>
+        </div>
+      </Card>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
+      <div className="h-4" />
+
+      <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <Input value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} onKeyDown={event => event.key === 'Enter' && loadPayments()} placeholder="Student, admission, receipt, Cashfree order" className="pl-9" />
@@ -106,6 +128,27 @@ export default function OnlineFeePaymentsPage() {
         <Input type="date" value={toDate} onChange={event => { setToDate(event.target.value); setPage(1); }} aria-label="To date" />
         <Button onClick={loadPayments}><Search className="w-4 h-4 mr-1" /> Apply filters</Button>
       </div>
+
+      {/* Filters modal (mobile) */}
+      <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
+        <div className="space-y-4">
+          <Input label="Search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Student, admission, receipt, Cashfree order" />
+          <Select label="Status" value={status} onChange={event => setStatus(event.target.value)} options={STATUSES.map(value => ({ value, label: value || 'All statuses' }))} />
+          <Select label="Academic Year" value={academicYear} onChange={event => setAcademicYear(event.target.value)} options={[{ value: '', label: 'All academic years' }, ...academicYears.map(year => ({ value: year._id, label: year.name }))]} />
+          <Select label="Class" value={classId} onChange={event => setClassId(event.target.value)} options={[{ value: '', label: 'All classes' }, ...classrooms.map(classroom => ({ value: classroom._id, label: classroom.displayName }))]} />
+          <Select label="Payment Method" value={paymentMethod} onChange={event => setPaymentMethod(event.target.value)} options={[
+            { value: '', label: 'All payment methods' }, { value: 'upi', label: 'UPI' },
+            { value: 'credit_card', label: 'Credit card' }, { value: 'debit_card', label: 'Debit card' },
+            { value: 'net_banking', label: 'Net banking' }, { value: 'wallet', label: 'Wallet' },
+          ]} />
+          <Input type="date" label="From date" value={fromDate} onChange={event => setFromDate(event.target.value)} />
+          <Input type="date" label="To date" value={toDate} onChange={event => setToDate(event.target.value)} />
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="ghost" onClick={() => { setSearch(''); setStatus(''); setAcademicYear(''); setClassId(''); setPaymentMethod(''); setFromDate(''); setToDate(''); setPage(1); }}>Clear</Button>
+          <Button onClick={() => { setPage(1); loadPayments(); setFilterOpen(false); }}>Apply</Button>
+        </div>
+      </Modal>
 
       {error && <div className="mb-4 rounded border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300" role="alert">{error}</div>}
       <Card className="!p-0 overflow-x-auto">

@@ -10,10 +10,10 @@
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { Save, RefreshCw, CheckCircle } from 'lucide-react';
+import { Save, RefreshCw, CheckCircle, Filter } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Button, Select } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Button, Select, Modal } from '@/components/ui.jsx';
 import { useAuth } from '@/context/AuthContext';
 const STATUSES = ['Present', 'Absent', 'Late', 'HalfDay', 'Holiday'];
 
@@ -44,6 +44,7 @@ export default function AttendancePage() {
   const [saved, setSaved] = useState(false);
   const [myAttendance, setMyAttendance] = useState([]);
   const [myAttendanceLoading, setMyAttendanceLoading] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
   (async () => {
@@ -174,10 +175,14 @@ export default function AttendancePage() {
         <Button variant={view === 'mine' ? 'primary' : 'ghost'} onClick={() => setView('mine')}>
           My Attendance
         </Button>
+        {/* Mobile Filters trigger */}
+        <Button className="sm:hidden ml-auto" variant="ghost" onClick={() => setFiltersOpen(true)}>
+          <Filter className="w-4 h-4" /> Filters
+        </Button>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-wrap gap-3 mb-4 items-end">
+      {/* Controls (hidden on phones, moved to Filters modal) */}
+      <div className="hidden sm:flex flex-wrap gap-3 mb-4 items-end">
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-1">Date</label>
           <input
@@ -212,7 +217,7 @@ export default function AttendancePage() {
           {myAttendanceLoading ? (
             <div className="py-12 text-center text-slate-500">Loading your attendance...</div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-800">
@@ -253,7 +258,7 @@ export default function AttendancePage() {
         {loading ? (
           <div className="py-12 text-center text-slate-500">Loading students...</div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto scrollbar-thin">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-800">
@@ -297,6 +302,51 @@ export default function AttendancePage() {
           </div>
         )}
       </Card>}
+
+      {filtersOpen && (
+        <Modal open onClose={() => setFiltersOpen(false)} title="Filters">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={e => setDate(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none"
+              />
+            </div>
+
+            {view === 'students' && (
+              <Select
+                label="Class"
+                options={classOptions}
+                value={classFilter}
+                onChange={e => setClassFilter(e.target.value)}
+              />
+            )}
+
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" onClick={view === 'students' ? fetchAttendance : fetchMyAttendance}>
+                <RefreshCw className="w-4 h-4" /> Refresh
+              </Button>
+
+              {view === 'students' && students.length > 0 && (
+                <div className="flex gap-2">
+                  {['Present', 'Absent', 'Holiday'].map(s => (
+                    <Button key={s} size="sm" variant="ghost" onClick={() => markAll(s)}>
+                      All {s}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-end mt-6">
+            <Button onClick={() => setFiltersOpen(false)}>Done</Button>
+          </div>
+        </Modal>
+      )}
+
     </PageContent>
   );
 }

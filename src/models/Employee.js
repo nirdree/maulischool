@@ -7,6 +7,7 @@ const employeeSchema = new mongoose.Schema({
   photo:        { type: String, default: null },
   email:        { type: String, required: true, unique: true, lowercase: true, trim: true },
   mobileNo:     { type: String, required: true },
+  aadhaarNumber:{ type: String, required: true, unique: true },
   gender:       { type: String, enum: ['Male', 'Female', 'Other'], required: true },
   dateOfBirth:  { type: Date },
   dateOfJoining:{ type: Date, required: true },

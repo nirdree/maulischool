@@ -4,3 +4,18 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+/* Thin horizontal scrollbar for mobile scrollers */
+.scrollbar-thin {
+  scrollbar-width: thin;           /* Firefox */
+}
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;                     /* Horizontal scrollbar height */
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.5); /* slate-400/50 */
+  border-radius: 9999px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background-color: transparent;
+}

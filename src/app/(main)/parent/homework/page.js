@@ -30,7 +30,7 @@ export default function ParentHomework() {
         const kids = res.data || [];
         setChildren(kids);
         if (kids.length > 0) setSelectedChild(kids[0]._id);
-      } catch {}
+      } catch (err) { console.error(err); alert(err); }
     })();
   }, []);
 
@@ -52,7 +52,7 @@ export default function ParentHomework() {
       const res = await api.get(`${API.HOMEWORK.BASE}?${params}`);
       setHomework(res.data || []);
       setTotal(res.meta?.total || 0);
-    } catch {} finally { setLoading(false); }
+    } catch (err) { console.error(err); alert(err); } finally { setLoading(false); }
   };
 
   const childOptions = children.map(c => ({
@@ -69,9 +69,7 @@ export default function ParentHomework() {
       <PageHeader title="Homework" subtitle="Assignments for your child" />
 
       <div className="flex gap-3 mb-6">
-        {children.length > 1 && (
-          <Select options={childOptions} value={selectedChild} onChange={e => { setSelectedChild(e.target.value); setPage(1); }} className="w-64" label="Child" />
-        )}
+        <Select options={childOptions} value={selectedChild} onChange={e => { setSelectedChild(e.target.value); setPage(1); }} className="w-64" label="Child" />
       </div>
 
       {loading ? (

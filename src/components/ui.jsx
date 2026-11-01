@@ -4,12 +4,12 @@ import { Loader2 } from 'lucide-react';
 // ── Page wrapper ─────────────────────────────────────────────
 export function PageHeader({ title, subtitle, actions }) {
   return (
-    <div className="flex items-start justify-between mb-6">
-      <div>
-        <h1 className="text-xl font-bold text-white">{title}</h1>
-        {subtitle && <p className="text-slate-400 text-sm mt-0.5">{subtitle}</p>}
+    <div className="flex items-center justify-between mb-6 gap-3">
+      <div className="min-w-0">
+        <h1 className="text-xl font-bold text-white truncate">{title}</h1>
+        {subtitle && <p className="text-slate-400 text-sm mt-0.5 truncate">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex items-center gap-2 shrink-0 whitespace-nowrap">{actions}</div>}
     </div>
   );
 }
@@ -187,7 +187,7 @@ export function Input({ label, error, className = '', ...props }) {
     <div className={className}>
       {label && <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>}
       <input
-        className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+        className={`w-full px-3 py-2 rounded-lg bg-slate-800 border text-white placeholder-slate-500 focus:outline-none text-sm ${error ? 'border-rose-500 focus:ring-2 focus:ring-rose-500' : 'border-slate-700 focus:ring-2 focus:ring-indigo-500'}`}
         {...props}
       />
       {error && <p className="text-xs text-rose-400 mt-1">{error}</p>}
@@ -201,7 +201,7 @@ export function Select({ label, options, error, className = '', ...props }) {
     <div className={className}>
       {label && <label className="block text-xs font-medium text-slate-400 mb-1">{label}</label>}
       <select
-        className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+        className={`w-full px-3 py-2 rounded-lg bg-slate-800 border text-white focus:outline-none text-sm ${error ? 'border-rose-500 focus:ring-2 focus:ring-rose-500' : 'border-slate-700 focus:ring-2 focus:ring-indigo-500'}`}
         {...props}
       >
         {options.map((opt) => (
@@ -217,14 +217,14 @@ export function Select({ label, options, error, className = '', ...props }) {
 export function Modal({ open, onClose, title, children, width = 'max-w-lg' }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 p-4 flex items-start justify-center overflow-y-auto">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full ${width} bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+      <div className={`relative w-full ${width} max-h-[90vh] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl my-8`}> 
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 sticky top-0 bg-slate-900 z-10 rounded-t-2xl">
           <h3 className="font-semibold text-white">{title}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-white text-lg">✕</button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-4rem)]">{children}</div>
       </div>
     </div>
   );
