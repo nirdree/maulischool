@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import {
@@ -55,14 +56,13 @@ function SidebarContent({ isOpen, isMobile, theme, user, navItems, prefix, pathn
         display: 'flex', alignItems: 'center', gap: 12,
         padding: '20px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-          background: `linear-gradient(135deg, ${theme.primary}, ${theme.light})`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: `0 4px 12px ${theme.primary}55`,
-        }}>
-          <GraduationCap size={18} color="white" />
-        </div>
+        <Image
+          src="/logo.png"
+          alt="Mauli School logo"
+          width={36}
+          height={36}
+          style={{ borderRadius: 8, background: 'white', flexShrink: 0 }}
+        />
         {isOpen && (
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 800, color: '#f1f5f9', letterSpacing: '0.02em', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -285,13 +285,13 @@ export default function AppLayout({ children, portal = 'admin' }) {
                 <Menu size={18} />
               </button>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: 8,
-                  background: `linear-gradient(135deg, ${theme.primary}, ${theme.light})`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <GraduationCap size={14} color="white" />
-                </div>
+                <Image
+                  src="/logo.png"
+                  alt="Mauli School logo"
+                  width={28}
+                  height={28}
+                  style={{ borderRadius: 6, background: 'white', flexShrink: 0 }}
+                />
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>Mauli School</span>
               </div>
             </div>

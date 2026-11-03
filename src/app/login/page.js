@@ -3,7 +3,8 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ROLE_HOME, useAuth } from '@/context/AuthContext';
-import { Eye, EyeOff, GraduationCap, Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 
 
@@ -73,8 +74,8 @@ function LoginForm() {
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 mb-4 shadow-lg shadow-indigo-500/30">
-            <GraduationCap className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white mb-4 shadow-lg shadow-indigo-500/30">
+            <Image src="/logo.png" alt="Mauli English Medium School logo" width={64} height={64} />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">
             Mauli English Medium School

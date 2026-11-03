@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ROLE_HOME, useAuth } from "@/context/AuthContext";
 import {
   GraduationCap, Shield, Heart, Camera, Target, Monitor,
@@ -70,12 +71,12 @@ const CLASSES = [
 ];
 
 const GALLERY = [
-  { emoji:"🎨", label:"Classroom Activities", bg:"#140d2e" },
-  { emoji:"🏀", label:"Sports Day",           bg:"#0b1a2e" },
-  { emoji:"🎭", label:"Cultural Program",     bg:"#2a1008" },
-  { emoji:"🏆", label:"Annual Day",           bg:"#1a0a2e" },
-  { emoji:"🔬", label:"Science Expo",         bg:"#062618" },
-  { emoji:"🎠", label:"Playground Fun",       bg:"#1a1208" },
+  { src:"/Creative%20Classroom%20Craft%20Activity-1.png", label:"Classroom Activities", alt:"Students creating crafts together in the classroom", bg:"#140d2e" },
+  { src:"/School%20Sports%20Day%20Relay%20Finish-2.png", label:"Sports Day", alt:"Students competing in a school sports day relay", bg:"#0b1a2e" },
+  { src:"/Vibrant%20Maharashtrian%20School%20Dance%20Performance-3.png", label:"Cultural Program", alt:"Students performing a Maharashtrian dance at school", bg:"#2a1008" },
+  { src:"/Vibrant%20Annual%20Day%20School%20Performance.png", label:"Annual Day", alt:"Students performing on stage for the school annual day", bg:"#1a0a2e" },
+  { src:"/Young%20Scientists%20Present%20a%20Green%20Future.png", label:"Science Expo", alt:"Students presenting a science project", bg:"#062618" },
+  { src:"/Joyful%20School%20Sports%20Day%20Playground.png", label:"Playground Fun", alt:"Students enjoying outdoor activities at school", bg:"#1a1208" },
 ];
 
 /* ── shared styles ── */
@@ -231,14 +232,13 @@ export default function MauliSchoolPage() {
             display:"flex", alignItems:"center", justifyContent:"space-between" }}>
 
             <a href="#home" style={{ display:"flex", alignItems:"center", gap:12 }}>
-              <div style={{
-                width:38, height:38, borderRadius:12,
-                background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
-                display:"flex", alignItems:"center", justifyContent:"center",
-                boxShadow:"0 4px 16px rgba(79,70,229,0.3)",
-              }}>
-                <GraduationCap size={18} color="white"/>
-              </div>
+              <Image
+                src="/logo.png"
+                alt="Mauli English Medium School logo"
+                width={38}
+                height={38}
+                style={{ borderRadius: 10, background: "white" }}
+              />
               <div>
                 <div style={{ fontFamily:S.sora, fontSize:13, fontWeight:900, color:S.amber, letterSpacing:"0.06em", lineHeight:1 }}>MAULI ENGLISH MEDIUM</div>
                 <div style={{ fontSize:9, color:"#3f3f46", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase" }}>CBSE Pattern</div>
@@ -311,6 +311,15 @@ export default function MauliSchoolPage() {
           paddingTop:64, overflow:"hidden",
           background:"linear-gradient(150deg,#020617 0%,#0f172a 48%,#111b3a 72%,#020617 100%)",
         }}>
+          <Image
+            src="/Mauli%20School%20Courtyard%20Facade.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            style={{ objectFit:"cover", opacity:0.99 }}
+          />
+          <div style={{ position:"absolute", inset:0, background:"linear-gradient(90deg,rgba(2,6,23,0.88) 0%,rgba(2,6,23,0.72) 55%,rgba(2,6,23,0.55) 100%)", pointerEvents:"none" }}/>
           <div style={{ position:"absolute", top:-120, right:-120, width:640, height:640, borderRadius:"50%",
             background:"radial-gradient(circle,rgba(99,102,241,0.2) 0%,transparent 65%)", filter:"blur(50px)", pointerEvents:"none" }}/>
           <div style={{ position:"absolute", bottom:-100, left:-100, width:520, height:520, borderRadius:"50%",
@@ -374,12 +383,13 @@ export default function MauliSchoolPage() {
                     border:`1px solid ${S.amberBorder}`, borderRadius:28, padding:32,
                     boxShadow:"0 32px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.04)",
                   }}>
-                    <div style={{ width:78, height:78, margin:"0 auto 16px", borderRadius:22,
-                      display:"flex", alignItems:"center", justifyContent:"center",
-                      background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
-                      boxShadow:"0 8px 32px rgba(79,70,229,0.35)" }}>
-                      <GraduationCap size={38} color="white"/>
-                    </div>
+                    <Image
+                      src="/logo.png"
+                      alt="Mauli English Medium School logo"
+                      width={78}
+                      height={78}
+                      style={{ display: "block", margin: "0 auto 16px", borderRadius: 18, background: "white" }}
+                    />
                     <h3 style={{ textAlign:"center", fontWeight:900, fontSize:20, color:S.text, marginBottom:4 }}>Mauli School</h3>
                     <p style={{ textAlign:"center", fontSize:13, color:S.dim, marginBottom:24 }}>Nurturing young minds since day one</p>
                     {["Caring & Qualified Teachers","Safe & Secure Campus","CBSE Curriculum","Activity-Based Learning"].map(t => (
@@ -497,15 +507,20 @@ export default function MauliSchoolPage() {
                 title={<>Life at <span className="fire-text">Mauli School</span></>}/>
             </Reveal>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))", gap:14 }}>
-              {GALLERY.map(({emoji,label,bg}, i) => (
+              {GALLERY.map(({src,label,alt,bg}, i) => (
                 <Reveal key={label} delay={(i%3)*80}>
                   <div className="gal-card" style={{
                     position:"relative", height:200, borderRadius:20, overflow:"hidden",
                     background:bg, border:`1px solid ${S.border}`,
                     cursor:"pointer", transition:"all 0.3s",
                   }}>
-                    <div style={{ position:"absolute", inset:0, display:"flex",
-                      alignItems:"center", justifyContent:"center", fontSize:54 }}>{emoji}</div>
+                    <Image
+                      src={src}
+                      alt={alt}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 960px) 50vw, 33vw"
+                      style={{ objectFit:"cover" }}
+                    />
                     <div className="gal-label" style={{
                       position:"absolute", inset:"auto 0 0",
                       background:"linear-gradient(to top,rgba(0,0,0,0.85),transparent)",
@@ -742,11 +757,13 @@ export default function MauliSchoolPage() {
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:32, marginBottom:32 }}>
               <div>
                 <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
-                  <div style={{ width:36, height:36, borderRadius:10,
-                    background:"linear-gradient(135deg,#4f46e5,#0ea5e9)",
-                    display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <GraduationCap size={16} color="white"/>
-                  </div>
+                  <Image
+                    src="/logo.png"
+                    alt="Mauli English Medium School logo"
+                    width={36}
+                    height={36}
+                    style={{ borderRadius: 8, background: "white" }}
+                  />
                   <div>
                     <div style={{ fontFamily:S.sora, fontSize:13, fontWeight:900, color:S.amber }}>MAULI ENGLISH MEDIUM</div>
                     <div style={{ fontSize:9, color:"#3f3f46", fontWeight:700, letterSpacing:"0.18em", textTransform:"uppercase" }}>CBSE Pattern</div>
