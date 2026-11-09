@@ -18,15 +18,15 @@ import { API } from '@/api/constants';
 import {
   PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
-import { useAuth } from '@/context/AuthContext';
 import { validateHomework } from '@/lib/validation.js';
 
 export default function HomeworkPage() {
-  const { user } = useAuth();
   const [homework, setHomework] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
+  const [teacherId, setTeacherId] = useState('');
   const [ayId, setAyId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
   const [classFilter, setClassFilter] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -37,10 +37,24 @@ export default function HomeworkPage() {
     (async () => {
       try {
         const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
+        const profile = await api.get(API.AUTH.ME);
+        const employeeId = profile.data?.employeeId?._id || profile.data?.employeeId;
+        if (!employeeId) throw new Error('Your account is not linked to a teacher profile.');
+        const subjectResponse = await api.get(
+          `${API.SUBJECTS.BASE}?teacherId=${encodeURIComponent(employeeId)}&academicYear=${encodeURIComponent(ay.data?._id || '')}&isActive=true`
+        );
+        const teachingClasses = [...new Map(
+          (subjectResponse.data || [])
+            .filter(subject => subject.classroom?._id)
+            .map(subject => [subject.classroom._id, subject.classroom])
+        ).values()];
+        setTeacherId(employeeId);
         setAyId(ay.data?._id);
-        const cls = await api.get(`${API.CLASSROOMS.BASE}?isActive=true&academicYear=${ay.data?._id}`);
-        setClassrooms(cls.data || []);
-      } catch { }
+        setClassrooms(teachingClasses);
+      } catch (err) {
+        setPageError(err.response?.data?.message || err.message || 'Unable to load your teaching classes.');
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -48,15 +62,22 @@ export default function HomeworkPage() {
     if (!ayId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
+      const params = new URLSearchParams({
+        academicYear: ayId,
+        teacherId,
+        page: String(page),
+        limit: '20',
+      });
       if (classFilter) params.set('classId', classFilter);
       const res = await api.get(`${API.HOMEWORK.BASE}?${params}`);
       setHomework(res.data || []);
       setTotal(res.meta?.total || 0);
-    } catch { } finally { setLoading(false); }
+    } catch (err) {
+      setPageError(err.response?.data?.message || err.message || 'Unable to load homework.');
+    } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (ayId) fetchHomework(); }, [classFilter, ayId, page]);
+  useEffect(() => { if (ayId && teacherId) fetchHomework(); }, [classFilter, ayId, teacherId, page]);
 
   const handleDelete = async (id) => {
     if (!(await confirm('Delete this homework?'))) return;
@@ -109,8 +130,9 @@ export default function HomeworkPage() {
       <PageHeader
         title="Homework"
         subtitle={`${total} assignments`}
-        actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Assign Homework</Button>}
+        actions={<Button onClick={() => setAddOpen(true)} disabled={!classrooms.length}><Plus className="w-4 h-4" /> Assign Homework</Button>}
       />
+      {pageError && <p className="mb-4 text-sm text-rose-400">{pageError}</p>}
       <div className="flex gap-3 mb-4">
         <Select options={classOptions} value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }} className="w-48" />
       </div>
@@ -124,6 +146,7 @@ export default function HomeworkPage() {
         onClose={() => { setAddOpen(false); setEditHw(null); }}
         homework={editHw}
         classrooms={classrooms}
+        teacherId={teacherId}
         ayId={ayId}
         onSuccess={() => { fetchHomework(); setAddOpen(false); setEditHw(null); }}
       />
@@ -131,8 +154,7 @@ export default function HomeworkPage() {
   );
 }
 
-function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess }) {
-  const { user } = useAuth();
+function HomeworkModal({ open, onClose, homework, classrooms, teacherId, ayId, onSuccess }) {
   const isEdit = !!homework;
   const initialForm = { title: '', description: '', classroom: '', subject: '', dueDate: '' };
   const [form, setForm] = useState(initialForm);
@@ -175,15 +197,13 @@ function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess })
 
   const loadSubjects = async (classId) => {
     try {
-      const res = await api.get(`${API.SUBJECTS.BASE}?classId=${classId}&isActive=true`);
-      const allSubjects = res.data || [];
-
-      const mySubjects = allSubjects.filter(
-        (s) => s.teacher?.name === user?.name
+      const res = await api.get(
+        `${API.SUBJECTS.BASE}?classId=${encodeURIComponent(classId)}&teacherId=${encodeURIComponent(teacherId)}&academicYear=${encodeURIComponent(ayId)}&isActive=true`
       );
-
-      setSubjects(mySubjects);
-    } catch { }
+      setSubjects(res.data || []);
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Unable to load assigned subjects.');
+    }
   };
 
   const handleClassChange = (classId) => {
@@ -199,7 +219,7 @@ function HomeworkModal({ open, onClose, homework, classrooms, ayId, onSuccess })
     if (!v.valid) return;
     setSaving(true);
     try {
-      const payload = { ...form, academicYear: ayId, teacher: user?.employeeId };
+      const payload = { ...form, academicYear: ayId, teacher: teacherId };
       if (isEdit) {
         await api.put(API.HOMEWORK.BY_ID(homework._id), payload);
       } else {

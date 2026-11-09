@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
+import mongoose from 'mongoose';
 import { Fee, FeePayment } from '@/models/Fee';
+import FeeReceipt from '@/models/FeeReceipt';
 import CashfreePayment from '@/models/CashfreePayment';
 
 export const cashfreeConfig = () => {
@@ -65,7 +67,7 @@ export async function confirmCashfreePayment(payment) {
   if (order.order_status !== 'PAID') {
     const status = order.order_status === 'ACTIVE' ? 'Pending' : 'Failed';
     const update = { $set: { status, failureReason: status === 'Failed' ? `Cashfree order status: ${order.order_status}` : '' } };
-    if (status === 'Failed') update.$unset = { activeFeeKey: 1 };
+    if (status === 'Failed') update.$unset = { activeFeeKey: 1, activeFeeKeys: 1 };
     await CashfreePayment.updateOne(
       { _id: payment._id, status: { $ne: 'Paid' } },
       update,
@@ -78,6 +80,109 @@ export async function confirmCashfreePayment(payment) {
     .find(item => item.payment_status === 'SUCCESS'
       && Number(item.payment_amount).toFixed(2) === Number(payment.expectedAmount).toFixed(2));
   if (!successfulPayment) throw new Error('No successful Cashfree payment matches this order amount');
+
+  if ((payment.feeAllocations || []).length > 1) {
+    let batchReceipt = await FeeReceipt.findOne({ gatewayOrderId: payment.orderId });
+    if (!batchReceipt) {
+      const allocations = payment.feeAllocations.map(item => ({
+        fee: item.fee,
+        amountPaid: Number(item.amount.toFixed(2)),
+      }));
+      const allocatedTotal = allocations.reduce((sum, item) => sum + item.amountPaid, 0);
+      if (Number(allocatedTotal.toFixed(2)) !== Number(payment.expectedAmount.toFixed(2))) {
+        throw new Error('Online payment allocations do not match the verified order amount');
+      }
+
+      const session = await mongoose.startSession();
+      try {
+        session.startTransaction();
+        const fees = await Fee.find({ _id: { $in: allocations.map(item => item.fee) } }).session(session);
+        if (fees.length !== allocations.length) throw new Error('A fee record for this online payment no longer exists');
+        const feeById = new Map(fees.map(fee => [String(fee._id), fee]));
+        const paymentDate = new Date(successfulPayment.payment_time || Date.now());
+        const receiptNo = `RCP-CF-${payment.orderId}`;
+        [batchReceipt] = await FeeReceipt.create([{
+          receiptNo,
+          gatewayOrderId: payment.orderId,
+          student: payment.student,
+          academicYear: payment.academicYear,
+          items: allocations.map(item => {
+            const fee = feeById.get(String(item.fee));
+            if (!fee) throw new Error('A fee allocation is invalid');
+            return { fee: fee._id, month: fee.month, year: fee.year, amountPaid: item.amountPaid };
+          }),
+          amountPaid: payment.expectedAmount,
+          paymentMode: 'Online',
+          transactionId: String(successfulPayment.cf_payment_id || successfulPayment.bank_reference || payment.orderId),
+          paymentDate,
+          collectedBy: payment.parent,
+          notes: 'Cashfree verified online payment',
+        }], { session });
+
+        const feePayments = await FeePayment.create(allocations.map((item, index) => ({
+          fee: item.fee,
+          student: payment.student,
+          receiptNo: `${receiptNo}-${String(index + 1).padStart(2, '0')}`,
+          amountPaid: item.amountPaid,
+          paymentDate,
+          paymentMode: 'Online',
+          transactionId: String(successfulPayment.cf_payment_id || successfulPayment.bank_reference || payment.orderId),
+          gatewayOrderId: index === 0 ? payment.orderId : undefined,
+          collectedBy: payment.parent,
+          notes: 'Cashfree verified online payment',
+          academicYear: payment.academicYear,
+          batchReceipt: batchReceipt._id,
+        })), { session, ordered: true });
+        batchReceipt.payments = feePayments.map(item => item._id);
+        await batchReceipt.save({ session });
+
+        const paymentTotals = await FeePayment.aggregate([
+          { $match: { fee: { $in: fees.map(fee => fee._id) } } },
+          {
+            $group: {
+              _id: '$fee',
+              paid: { $sum: { $subtract: ['$amountPaid', { $ifNull: ['$amountRefunded', 0] }] } },
+            },
+          },
+        ]).session(session);
+        const paidByFee = new Map(paymentTotals.map(item => [String(item._id), item.paid]));
+        for (const fee of fees) {
+          const paid = paidByFee.get(String(fee._id)) || 0;
+          fee.status = paid >= fee.finalAmount
+            ? 'Paid'
+            : (fee.dueDate < paymentDate ? 'Overdue' : 'PartiallyPaid');
+          await fee.save({ session });
+        }
+        await session.commitTransaction();
+      } catch (error) {
+        if (session.inTransaction()) await session.abortTransaction();
+        if (error.code !== 11000) throw error;
+        batchReceipt = await FeeReceipt.findOne({ gatewayOrderId: payment.orderId });
+        if (!batchReceipt) throw error;
+      } finally {
+        await session.endSession();
+      }
+    }
+
+    const primaryPayment = await FeePayment.findOne({ gatewayOrderId: payment.orderId });
+    if (!primaryPayment) throw new Error('Verified multi-month fee payments are not available');
+    await CashfreePayment.updateOne(
+      { _id: payment._id, status: { $ne: 'Paid' } },
+      { $set: {
+        status: 'Paid',
+        feePayment: primaryPayment._id,
+        feeReceipt: batchReceipt._id,
+        cashfreePaymentId: String(successfulPayment.cf_payment_id || ''),
+        transactionReference: String(successfulPayment.bank_reference || successfulPayment.cf_payment_id || ''),
+        paymentMethod: successfulPayment.payment_group || '',
+        paidAt: new Date(successfulPayment.payment_time || Date.now()),
+        receiptNo: batchReceipt.receiptNo,
+        failureReason: '',
+      } },
+    );
+    await CashfreePayment.updateOne({ _id: payment._id }, { $unset: { activeFeeKey: 1, activeFeeKeys: 1 } });
+    return CashfreePayment.findById(payment._id).populate('feePayment').populate('feeReceipt');
+  }
 
   let receipt = await FeePayment.findOne({ gatewayOrderId: payment.orderId });
   if (!receipt) {
@@ -124,6 +229,6 @@ export async function confirmCashfreePayment(payment) {
       failureReason: '',
     } },
   );
-  await CashfreePayment.updateOne({ _id: payment._id }, { $unset: { activeFeeKey: 1 } });
+  await CashfreePayment.updateOne({ _id: payment._id }, { $unset: { activeFeeKey: 1, activeFeeKeys: 1 } });
   return CashfreePayment.findById(payment._id).populate('feePayment');
 }

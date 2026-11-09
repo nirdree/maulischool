@@ -22,6 +22,8 @@ export const GET = protect(async (request) => {
       .select('-paymentSessionId -webhookEvents')
       .populate('student', 'firstName lastName admissionNo')
       .populate('fee', 'month year')
+      .populate('feeAllocations.fee', 'month year')
+      .populate('feeReceipt', 'receiptNo')
       .sort({ createdAt: -1 });
     if (pagination) query.skip(pagination.skip).limit(pagination.limit);
     else query.limit(100);

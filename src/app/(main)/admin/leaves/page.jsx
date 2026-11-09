@@ -11,10 +11,11 @@
  *   GET    /api/employees           — dropdown
  */
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   CheckCircle, XCircle, RefreshCw, Plus, Edit2,
-  Trash2, Eye, BarChart2, AlertCircle, Lock, Filter,
+  Trash2, Eye, BarChart2, AlertCircle, Lock, Filter, MoreVertical,
 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
@@ -103,6 +104,99 @@ export default function LeavesAdminPage() {
     } catch (err) { alert(err.response?.data?.message || err.message); }
   };
 
+  const RowActions = ({ leave }) => {
+    const [open, setOpen] = useState(false);
+    const [position, setPosition] = useState({ top: 0, left: 0 });
+    const triggerRef = useRef(null);
+    const menuRef = useRef(null);
+    useEffect(() => {
+      const onDoc = event => {
+        if (!triggerRef.current?.contains(event.target) && !menuRef.current?.contains(event.target)) {
+          setOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', onDoc);
+      return () => document.removeEventListener('mousedown', onDoc);
+    }, []);
+
+    useLayoutEffect(() => {
+      if (!open || !triggerRef.current || !menuRef.current) return;
+      const trigger = triggerRef.current.getBoundingClientRect();
+      const menu = menuRef.current.getBoundingClientRect();
+      const showAbove = window.innerHeight - trigger.bottom < menu.height + 8
+        && trigger.top > menu.height + 8;
+      setPosition({
+        top: showAbove ? trigger.top - menu.height - 4 : trigger.bottom + 4,
+        left: Math.max(8, Math.min(trigger.right - menu.width, window.innerWidth - menu.width - 8)),
+      });
+    }, [open]);
+
+    useEffect(() => {
+      if (!open) return undefined;
+      const closeOnScroll = () => setOpen(false);
+      window.addEventListener('scroll', closeOnScroll, true);
+      window.addEventListener('resize', closeOnScroll);
+      return () => {
+        window.removeEventListener('scroll', closeOnScroll, true);
+        window.removeEventListener('resize', closeOnScroll);
+      };
+    }, [open]);
+
+    const menu = open && (
+      <div
+        ref={menuRef}
+        style={{ position: 'fixed', top: position.top, left: position.left }}
+        className="z-[100] min-w-[170px] rounded-lg border border-slate-700 bg-slate-900 py-1 shadow-lg"
+      >
+        <button
+          onClick={() => { setOpen(false); setViewLeave(leave); }}
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-slate-200 hover:bg-slate-800"
+        >
+          <Eye className="w-4 h-4" /><span className="text-sm">View</span>
+        </button>
+        {leave.status === 'Pending' && (
+          <>
+            <button
+              onClick={() => { setOpen(false); handleApprove(leave._id); }}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-slate-200 hover:bg-slate-800"
+            >
+              <CheckCircle className="w-4 h-4" /><span className="text-sm">Approve</span>
+            </button>
+            <button
+              onClick={() => { setOpen(false); setRejectLeave(leave); }}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-slate-200 hover:bg-slate-800"
+            >
+              <XCircle className="w-4 h-4" /><span className="text-sm">Reject</span>
+            </button>
+            <button
+              onClick={() => { setOpen(false); setEditLeave(leave); }}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-slate-200 hover:bg-slate-800"
+            >
+              <Edit2 className="w-4 h-4" /><span className="text-sm">Edit</span>
+            </button>
+            <button
+              onClick={() => { setOpen(false); setDeleteConfirm(leave); }}
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-rose-400 hover:bg-slate-800 hover:text-white"
+            >
+              <Trash2 className="w-4 h-4" /><span className="text-sm">Delete</span>
+            </button>
+          </>
+        )}
+      </div>
+    );
+
+    return (
+      <>
+        <div ref={triggerRef}>
+          <Button size="sm" variant="ghost" title="Actions" onClick={() => setOpen(value => !value)}>
+          <MoreVertical className="w-4 h-4" />
+          </Button>
+        </div>
+        {open && createPortal(menu, document.body)}
+      </>
+    );
+  };
+
   const statusOptions   = [
     { value: '', label: 'All Status' },
     { value: 'Pending',  label: 'Pending' },
@@ -158,29 +252,7 @@ export default function LeavesAdminPage() {
     },
     {
       key: 'actions', label: '',
-      render: (l) => (
-        <div className="flex gap-1 flex-wrap">
-          <Button size="sm" variant="ghost" onClick={() => setViewLeave(l)} title="View">
-            <Eye className="w-3 h-3" />
-          </Button>
-          {l.status === 'Pending' && (
-            <>
-              <Button size="sm" variant="success" onClick={() => handleApprove(l._id)} title="Approve">
-                <CheckCircle className="w-3 h-3" />
-              </Button>
-              <Button size="sm" variant="danger" onClick={() => setRejectLeave(l)} title="Reject">
-                <XCircle className="w-3 h-3" />
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditLeave(l)} title="Edit">
-                <Edit2 className="w-3 h-3" />
-              </Button>
-              <Button size="sm" variant="danger" onClick={() => setDeleteConfirm(l)} title="Delete">
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </>
-          )}
-        </div>
-      ),
+      render: (leave) => <RowActions leave={leave} />,
     },
   ];
 

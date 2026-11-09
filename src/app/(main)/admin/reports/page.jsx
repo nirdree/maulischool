@@ -19,6 +19,23 @@ import { PageContent, PageHeader, Card, Button, Select, Badge, Table, Modal } fr
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+function getAcademicYearMonths(startDate) {
+  const start = startDate ? new Date(startDate) : new Date(new Date().getFullYear(), 3, 1);
+  const startMonth = start.getMonth() + 1;
+  const startYear = start.getFullYear();
+
+  return Array.from({ length: 12 }, (_, index) => {
+    const month = ((startMonth - 1 + index) % 12) + 1;
+    const year = startYear + (month < startMonth ? 1 : 0);
+    return {
+      value: `${month}-${year}`,
+      label: `${MONTHS[month - 1]} (${year})`,
+      month,
+      year,
+    };
+  });
+}
+
 const REPORT_TYPES = [
   { key: 'classwise', label: 'Class-wise Students', icon: Users },
   { key: 'fee-collection', label: 'Fee Collection', icon: DollarSign },
@@ -33,6 +50,7 @@ export default function ReportsPage() {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [ayId, setAyId] = useState('');
+  const [ayStartDate, setAyStartDate] = useState(null);
   const [classrooms, setClassrooms] = useState([]);
   const [classFilter, setClassFilter] = useState('');
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -44,6 +62,14 @@ export default function ReportsPage() {
       try {
         const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
         setAyId(ay.data?._id);
+        const startDate = ay.data?.startDate || ay.data?.start || null;
+        setAyStartDate(startDate);
+        const academicYearMonths = getAcademicYearMonths(startDate);
+        const currentPeriod = academicYearMonths.find(period =>
+          period.month === new Date().getMonth() + 1 && period.year === new Date().getFullYear()
+        ) || academicYearMonths[0];
+        setMonth(currentPeriod.month);
+        setYear(currentPeriod.year);
         const cls = await api.get(`${API.CLASSROOMS.BASE}?isActive=true&academicYear=${ay.data?._id}`);
         setClassrooms(cls.data || []);
       } catch {}
@@ -87,10 +113,16 @@ export default function ReportsPage() {
     } catch (err) { console.log(err); } finally { setLoading(false); }
   };
 
-  useEffect(() => { if (ayId) fetchReport(); }, [activeReport, ayId]);
+  useEffect(() => { if (ayId) fetchReport(); }, [activeReport, ayId, month, year]);
 
   const classOptions = [{ value: '', label: 'All Classes' }, ...classrooms.map(c => ({ value: c._id, label: c.displayName }))];
-  const monthOptions = MONTHS.map((m, i) => ({ value: i + 1, label: m }));
+  const monthOptions = getAcademicYearMonths(ayStartDate);
+  const selectedPeriod = `${month}-${year}`;
+  const handlePeriodChange = value => {
+    const [selectedMonth, selectedYear] = value.split('-').map(Number);
+    setMonth(selectedMonth);
+    setYear(selectedYear);
+  };
 
   return (
     <PageContent>
@@ -131,9 +163,7 @@ export default function ReportsPage() {
         )}
         {['fee-collection', 'fee-defaulters', 'attendance', 'payroll'].includes(activeReport) && (
           <>
-            <Select options={monthOptions} value={month} onChange={e => setMonth(e.target.value)} className="w-28" />
-            <input type="number" value={year} onChange={e => setYear(e.target.value)}
-              className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-24" />
+            <Select options={monthOptions} value={selectedPeriod} onChange={e => handlePeriodChange(e.target.value)} className="w-36" />
           </>
         )}
         <Button variant="ghost" onClick={fetchReport} disabled={loading}>{loading ? 'Loading...' : 'Refresh'}</Button>
@@ -147,9 +177,12 @@ export default function ReportsPage() {
           )}
           {['fee-collection', 'fee-defaulters', 'attendance', 'payroll'].includes(activeReport) && (
             <div className="flex gap-3">
-              <Select label="Month" options={monthOptions} value={month} onChange={e => setMonth(e.target.value)} className="w-28" />
-              <input type="number" value={year} onChange={e => setYear(e.target.value)}
-                className="px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-24" />
+              <Select
+                label="Month"
+                options={monthOptions}
+                value={selectedPeriod}
+                onChange={e => handlePeriodChange(e.target.value)}
+              />
             </div>
           )}
         </div>

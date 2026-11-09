@@ -43,6 +43,7 @@ const feePaymentSchema = new mongoose.Schema({
   },
   transactionId: { type: String },
   gatewayOrderId: { type: String, unique: true, sparse: true },
+  batchReceipt:  { type: mongoose.Schema.Types.ObjectId, ref: 'FeeReceipt' },
   collectedBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   notes:         { type: String },
   academicYear:  { type: mongoose.Schema.Types.ObjectId, ref: 'AcademicYear', required: true },

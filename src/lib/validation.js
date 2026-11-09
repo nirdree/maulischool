@@ -657,7 +657,7 @@ export function validateNoticePriority(value) {
 export function validateNoticeAudience(value) {
   const arr = Array.isArray(value) ? value : [];
   if (arr.length === 0) return 'Select at least one audience.';
-  const allowed = ['parent','teacher','admin'];
+  const allowed = ['parent','teacher','admin','public'];
   if (!arr.every(v => allowed.includes(v))) return 'Select a valid audience.';
   return null;
 }
@@ -736,4 +736,3 @@ export function validateHomework(form) {
   Object.keys(errors).forEach((k) => { if (errors[k] == null) delete errors[k]; });
   return { valid: Object.keys(errors).length === 0, errors };
 }
-

@@ -172,11 +172,14 @@ function NoticeModal({ open, onClose, notice, ayId, onSuccess }) {
 
   const toggleRole = (role) => {
     setForm(f => {
+      const targetRoles = role === 'public'
+        ? (f.targetRoles.includes('public') ? [] : ['public'])
+        : f.targetRoles.includes(role)
+          ? f.targetRoles.filter(r => r !== role)
+          : [...f.targetRoles.filter(r => r !== 'public'), role];
       const next = {
         ...f,
-        targetRoles: f.targetRoles.includes(role)
-          ? f.targetRoles.filter(r => r !== role)
-          : [...f.targetRoles, role],
+        targetRoles,
       };
       setErrors(validatePublishNotice(next).errors);
       return next;
@@ -218,11 +221,11 @@ function NoticeModal({ open, onClose, notice, ayId, onSuccess }) {
         <div>
           <label className="block text-xs font-medium text-slate-400 mb-2">Target Audience</label>
           <div className="flex gap-3">
-            {['parent', 'teacher', 'admin'].map(role => (
+            {['parent', 'teacher', 'admin', 'public'].map(role => (
               <label key={role} className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.targetRoles.includes(role)} onChange={() => toggleRole(role)}
                   className="w-4 h-4 rounded border-slate-600 bg-slate-800" />
-                <span className="text-sm text-slate-300 capitalize">{role}</span>
+                <span className="text-sm text-slate-300 capitalize">{role === 'public' ? 'Public (Everyone)' : role}</span>
               </label>
             ))}
           </div>

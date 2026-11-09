@@ -1,0 +1,1348 @@
+{
+    "success": true,
+    "message": "Subjects fetched",
+    "data": [
+        {
+            "_id": "6af020e4aaf9cee460dbf8d6",
+            "name": "Drawing",
+            "classroom": {
+                "_id": "6af01b0baaf9cee460dbf827",
+                "displayName": "Nursery"
+            },
+            "teacher": {
+                "_id": "6af01860aaf9cee460dbf77a",
+                "name": "Vijay Jadhav",
+                "employeeId": "EMP-2026-005"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:12:36.091Z",
+            "updatedAt": "2026-11-08T07:12:36.091Z"
+        },
+        {
+            "_id": "6af02125aaf9cee460dbf8e5",
+            "name": "Drawing",
+            "classroom": {
+                "_id": "6af01bddaaf9cee460dbf832",
+                "displayName": "LKG"
+            },
+            "teacher": {
+                "_id": "6af0188baaf9cee460dbf798",
+                "name": "Pooja Shinde",
+                "employeeId": "EMP-2026-008"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:13:41.053Z",
+            "updatedAt": "2026-11-08T07:13:41.053Z"
+        },
+        {
+            "_id": "6af02164aaf9cee460dbf8f4",
+            "name": "Drawing",
+            "classroom": {
+                "_id": "6af01beaaaf9cee460dbf837",
+                "displayName": "UKG"
+            },
+            "teacher": {
+                "_id": "6af0188baaf9cee460dbf798",
+                "name": "Pooja Shinde",
+                "employeeId": "EMP-2026-008"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:14:44.588Z",
+            "updatedAt": "2026-11-08T07:14:44.588Z"
+        },
+        {
+            "_id": "6af020d9aaf9cee460dbf8d3",
+            "name": "EVS",
+            "classroom": {
+                "_id": "6af01b0baaf9cee460dbf827",
+                "displayName": "Nursery"
+            },
+            "teacher": {
+                "_id": "6af01853aaf9cee460dbf770",
+                "name": "Sneha Kulkarni",
+                "employeeId": "EMP-2026-004"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:12:25.979Z",
+            "updatedAt": "2026-11-08T07:12:25.979Z"
+        },
+        {
+            "_id": "6af0211baaf9cee460dbf8e2",
+            "name": "EVS",
+            "classroom": {
+                "_id": "6af01bddaaf9cee460dbf832",
+                "displayName": "LKG"
+            },
+            "teacher": {
+                "_id": "6af0187daaf9cee460dbf78e",
+                "name": "Sandeep More",
+                "employeeId": "EMP-2026-007"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:13:31.252Z",
+            "updatedAt": "2026-11-08T07:13:31.252Z"
+        },
+        {
+            "_id": "6af02158aaf9cee460dbf8f1",
+            "name": "EVS",
+            "classroom": {
+                "_id": "6af01beaaaf9cee460dbf837",
+                "displayName": "UKG"
+            },
+            "teacher": {
+                "_id": "6af019acaaf9cee460dbf7e1",
+                "name": "Nitin Kumbhar",
+                "employeeId": "EMP-2026-015"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:14:32.289Z",
+            "updatedAt": "2026-11-08T07:14:32.289Z"
+        },
+        {
+            "_id": "6af021a0aaf9cee460dbf903",
+            "name": "EVS",
+            "classroom": {
+                "_id": "6af01bf7aaf9cee460dbf83c",
+                "displayName": "Class 1"
+            },
+            "teacher": {
+                "_id": "6af0186faaf9cee460dbf784",
+                "name": "Neha Joshi",
+                "employeeId": "EMP-2026-006"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:15:44.918Z",
+            "updatedAt": "2026-11-08T07:15:44.918Z"
+        },
+        {
+            "_id": "6af021daaaf9cee460dbf912",
+            "name": "EVS",
+            "classroom": {
+                "_id": "6af01c02aaf9cee460dbf841",
+                "displayName": "Class 2"
+            },
+            "teacher": {
+                "_id": "6af019a0aaf9cee460dbf7d7",
+                "name": "Meera Sawant",
+                "employeeId": "EMP-2026-014"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:16:42.843Z",
+            "updatedAt": "2026-11-08T07:16:42.843Z"
+        },
+        {
+            "_id": "6af020c0aaf9cee460dbf8cd",
+            "name": "English",
+            "classroom": {
+                "_id": "6af01b0baaf9cee460dbf827",
+                "displayName": "Nursery"
+            },
+            "teacher": {
+                "_id": "6af01833aaf9cee460dbf75c",
+                "name": "Priya Patil",
+                "employeeId": "EMP-2026-002"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:12:00.847Z",
+            "updatedAt": "2026-11-08T07:12:00.847Z"
+        },
+        {
+            "_id": "6af020f3aaf9cee460dbf8d9",
+            "name": "English",
+            "classroom": {
+                "_id": "6af01bddaaf9cee460dbf832",
+                "displayName": "LKG"
+            },
+            "teacher": {
+                "_id": "6af01853aaf9cee460dbf770",
+                "name": "Sneha Kulkarni",
+                "employeeId": "EMP-2026-004"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:12:51.088Z",
+            "updatedAt": "2026-11-08T07:12:51.088Z"
+        },
+        {
+            "_id": "6af02130aaf9cee460dbf8e8",
+            "name": "English",
+            "classroom": {
+                "_id": "6af01beaaaf9cee460dbf837",
+                "displayName": "UKG"
+            },
+            "teacher": {
+                "_id": "6af0189aaaf9cee460dbf7a2",
+                "name": "Anil Pawar",
+                "employeeId": "EMP-2026-009"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:13:52.614Z",
+            "updatedAt": "2026-11-08T07:13:52.614Z"
+        },
+        {
+            "_id": "6af02172aaf9cee460dbf8f7",
+            "name": "English",
+            "classroom": {
+                "_id": "6af01bf7aaf9cee460dbf83c",
+                "displayName": "Class 1"
+            },
+            "teacher": {
+                "_id": "6af01833aaf9cee460dbf75c",
+                "name": "Priya Patil",
+                "employeeId": "EMP-2026-002"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:14:58.553Z",
+            "updatedAt": "2026-11-08T07:14:58.553Z"
+        },
+        {
+            "_id": "6af021abaaf9cee460dbf906",
+            "name": "English",
+            "classroom": {
+                "_id": "6af01c02aaf9cee460dbf841",
+                "displayName": "Class 2"
+            },
+            "teacher": {
+                "_id": "6af0187daaf9cee460dbf78e",
+                "name": "Sandeep More",
+                "employeeId": "EMP-2026-007"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:15:55.848Z",
+            "updatedAt": "2026-11-08T07:15:55.848Z"
+        },
+        {
+            "_id": "6af0218baaf9cee460dbf8fd",
+            "name": "Hindi",
+            "classroom": {
+                "_id": "6af01bf7aaf9cee460dbf83c",
+                "displayName": "Class 1"
+            },
+            "teacher": {
+                "_id": "6af01853aaf9cee460dbf770",
+                "name": "Sneha Kulkarni",
+                "employeeId": "EMP-2026-004"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:15:23.131Z",
+            "updatedAt": "2026-11-08T07:15:23.131Z"
+        },
+        {
+            "_id": "6af021c1aaf9cee460dbf90c",
+            "name": "Hindi",
+            "classroom": {
+                "_id": "6af01c02aaf9cee460dbf841",
+                "displayName": "Class 2"
+            },
+            "teacher": {
+                "_id": "6af0189aaaf9cee460dbf7a2",
+                "name": "Anil Pawar",
+                "employeeId": "EMP-2026-009"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:16:17.892Z",
+            "updatedAt": "2026-11-08T07:16:17.892Z"
+        },
+        {
+            "_id": "6af0217eaaf9cee460dbf8fa",
+            "name": "Marathi",
+            "classroom": {
+                "_id": "6af01bf7aaf9cee460dbf83c",
+                "displayName": "Class 1"
+            },
+            "teacher": {
+                "_id": "6af01841aaf9cee460dbf766",
+                "name": "Amit Deshmukh",
+                "employeeId": "EMP-2026-003"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:15:10.357Z",
+            "updatedAt": "2026-11-08T07:15:10.357Z"
+        },
+        {
+            "_id": "6af021b7aaf9cee460dbf909",
+            "name": "Marathi",
+            "classroom": {
+                "_id": "6af01c02aaf9cee460dbf841",
+                "displayName": "Class 2"
+            },
+            "teacher": {
+                "_id": "6af0188baaf9cee460dbf798",
+                "name": "Pooja Shinde",
+                "employeeId": "EMP-2026-008"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:16:07.899Z",
+            "updatedAt": "2026-11-08T07:16:07.899Z"
+        },
+        {
+            "_id": "6af02196aaf9cee460dbf900",
+            "name": "Mathematics",
+            "classroom": {
+                "_id": "6af01bf7aaf9cee460dbf83c",
+                "displayName": "Class 1"
+            },
+            "teacher": {
+                "_id": "6af01860aaf9cee460dbf77a",
+                "name": "Vijay Jadhav",
+                "employeeId": "EMP-2026-005"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:15:34.282Z",
+            "updatedAt": "2026-11-08T07:15:34.282Z"
+        },
+        {
+            "_id": "6af021d1aaf9cee460dbf90f",
+            "name": "Mathematics",
+            "classroom": {
+                "_id": "6af01c02aaf9cee460dbf841",
+                "displayName": "Class 2"
+            },
+            "teacher": {
+                "_id": "6af018baaaf9cee460dbf7b6",
+                "name": "Manoj Chavan",
+                "employeeId": "EMP-2026-011"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:16:33.781Z",
+            "updatedAt": "2026-11-08T07:16:33.781Z"
+        },
+        {
+            "_id": "6af020ceaaf9cee460dbf8d0",
+            "name": "Maths",
+            "classroom": {
+                "_id": "6af01b0baaf9cee460dbf827",
+                "displayName": "Nursery"
+            },
+            "teacher": {
+                "_id": "6af01841aaf9cee460dbf766",
+                "name": "Amit Deshmukh",
+                "employeeId": "EMP-2026-003"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:12:14.653Z",
+            "updatedAt": "2026-11-08T07:12:14.653Z"
+        },
+        {
+            "_id": "6af020fdaaf9cee460dbf8dc",
+            "name": "Maths",
+            "classroom": {
+                "_id": "6af01bddaaf9cee460dbf832",
+                "displayName": "LKG"
+            },
+            "teacher": {
+                "_id": "6af01860aaf9cee460dbf77a",
+                "name": "Vijay Jadhav",
+                "employeeId": "EMP-2026-005"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:13:01.253Z",
+            "updatedAt": "2026-11-08T07:13:01.253Z"
+        },
+        {
+            "_id": "6af0213eaaf9cee460dbf8eb",
+            "name": "Maths",
+            "classroom": {
+                "_id": "6af01beaaaf9cee460dbf837",
+                "displayName": "UKG"
+            },
+            "teacher": {
+                "_id": "6af018baaaf9cee460dbf7b6",
+                "name": "Manoj Chavan",
+                "employeeId": "EMP-2026-011"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:14:06.723Z",
+            "updatedAt": "2026-11-08T07:14:06.723Z"
+        },
+        {
+            "_id": "6af0210caaf9cee460dbf8df",
+            "name": "Rhymes",
+            "classroom": {
+                "_id": "6af01bddaaf9cee460dbf832",
+                "displayName": "LKG"
+            },
+            "teacher": {
+                "_id": "6af0186faaf9cee460dbf784",
+                "name": "Neha Joshi",
+                "employeeId": "EMP-2026-006"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:13:16.928Z",
+            "updatedAt": "2026-11-08T07:13:16.928Z"
+        },
+        {
+            "_id": "6af02149aaf9cee460dbf8ee",
+            "name": "Rhymes",
+            "classroom": {
+                "_id": "6af01beaaaf9cee460dbf837",
+                "displayName": "UKG"
+            },
+            "teacher": {
+                "_id": "6af019a0aaf9cee460dbf7d7",
+                "name": "Meera Sawant",
+                "employeeId": "EMP-2026-014"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:14:17.993Z",
+            "updatedAt": "2026-11-08T07:14:17.993Z"
+        },
+        {
+            "_id": "f3a8ce507b27a5bc305143bb",
+            "name": "computer",
+            "classroom": {
+                "_id": "6af01c0faaf9cee460dbf846",
+                "displayName": "Class 3"
+            },
+            "teacher": {
+                "_id": "6af0186faaf9cee460dbf784",
+                "name": "Neha Joshi",
+                "employeeId": "EMP-2026-006"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "fe39ae9ff3da878a74757bd5",
+            "name": "computer",
+            "classroom": {
+                "_id": "6af01c1baaf9cee460dbf84b",
+                "displayName": "Class 4"
+            },
+            "teacher": {
+                "_id": "6af01990aaf9cee460dbf7cd",
+                "name": "Rohit Desai",
+                "employeeId": "EMP-2026-013"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "fba14d198d425e062f91777e",
+            "name": "english",
+            "classroom": {
+                "_id": "6af01c0faaf9cee460dbf846",
+                "displayName": "Class 3"
+            },
+            "teacher": {
+                "_id": "6af016cbaaf9cee460dbf74f",
+                "name": "Rahul Sharma",
+                "employeeId": "EMP-2026-001"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "034c5aafb5f07cc0e58ddb69",
+            "name": "english",
+            "classroom": {
+                "_id": "6af01c1baaf9cee460dbf84b",
+                "displayName": "Class 4"
+            },
+            "teacher": {
+                "_id": "6af0187daaf9cee460dbf78e",
+                "name": "Sandeep More",
+                "employeeId": "EMP-2026-007"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "302c9982b3c86959328fe206",
+            "name": "english",
+            "classroom": {
+                "_id": "6af01c2aaaf9cee460dbf850",
+                "displayName": "Class 5"
+            },
+            "teacher": {
+                "_id": "6af019a0aaf9cee460dbf7d7",
+                "name": "Meera Sawant",
+                "employeeId": "EMP-2026-014"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "b73af6c68eede8646b3c0628",
+            "name": "english",
+            "classroom": {
+                "_id": "6af01c36aaf9cee460dbf855",
+                "displayName": "Class 6"
+            },
+            "teacher": {
+                "_id": "6af01853aaf9cee460dbf770",
+                "name": "Sneha Kulkarni",
+                "employeeId": "EMP-2026-004"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "ea0bf4f9facd60fb4dd13eb7",
+            "name": "english",
+            "classroom": {
+                "_id": "6af01c42aaf9cee460dbf85a",
+                "displayName": "Class 7"
+            },
+            "teacher": {
+                "_id": "6af018baaaf9cee460dbf7b6",
+                "name": "Manoj Chavan",
+                "employeeId": "EMP-2026-011"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "878edce5220090d70c3ac569",
+            "name": "english",
+            "classroom": {
+                "_id": "6af01c4faaf9cee460dbf85f",
+                "displayName": "Class 8"
+            },
+            "teacher": {
+                "_id": "6af016cbaaf9cee460dbf74f",
+                "name": "Rahul Sharma",
+                "employeeId": "EMP-2026-001"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "f0d03c7e00cf120152edc97c",
+            "name": "evs",
+            "classroom": {
+                "_id": "6af01c0faaf9cee460dbf846",
+                "displayName": "Class 3"
+            },
+            "teacher": {
+                "_id": "6af01860aaf9cee460dbf77a",
+                "name": "Vijay Jadhav",
+                "employeeId": "EMP-2026-005"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "821a28e2363c11ad62b65ff9",
+            "name": "evs",
+            "classroom": {
+                "_id": "6af01c1baaf9cee460dbf84b",
+                "displayName": "Class 4"
+            },
+            "teacher": {
+                "_id": "6af018c7aaf9cee460dbf7c0",
+                "name": "Aarti Bhosale",
+                "employeeId": "EMP-2026-012"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "218b64be192ecfa16dcb850c",
+            "name": "hindi",
+            "classroom": {
+                "_id": "6af01c0faaf9cee460dbf846",
+                "displayName": "Class 3"
+            },
+            "teacher": {
+                "_id": "6af01841aaf9cee460dbf766",
+                "name": "Amit Deshmukh",
+                "employeeId": "EMP-2026-003"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "9b2fb1b92871f4337f6eb64b",
+            "name": "hindi",
+            "classroom": {
+                "_id": "6af01c1baaf9cee460dbf84b",
+                "displayName": "Class 4"
+            },
+            "teacher": {
+                "_id": "6af0189aaaf9cee460dbf7a2",
+                "name": "Anil Pawar",
+                "employeeId": "EMP-2026-009"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "e7495b6f7281e0137236f33b",
+            "name": "hindi",
+            "classroom": {
+                "_id": "6af01c2aaaf9cee460dbf850",
+                "displayName": "Class 5"
+            },
+            "teacher": {
+                "_id": "6af019b8aaf9cee460dbf7eb",
+                "name": "Swati Nikam",
+                "employeeId": "EMP-2026-016"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "6fddee433f134ba503a95b04",
+            "name": "hindi",
+            "classroom": {
+                "_id": "6af01c36aaf9cee460dbf855",
+                "displayName": "Class 6"
+            },
+            "teacher": {
+                "_id": "6af0186faaf9cee460dbf784",
+                "name": "Neha Joshi",
+                "employeeId": "EMP-2026-006"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "14039f9a7081ea8b572f661d",
+            "name": "hindi",
+            "classroom": {
+                "_id": "6af01c42aaf9cee460dbf85a",
+                "displayName": "Class 7"
+            },
+            "teacher": {
+                "_id": "6af01990aaf9cee460dbf7cd",
+                "name": "Rohit Desai",
+                "employeeId": "EMP-2026-013"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "5267efc21049b4658b9904ca",
+            "name": "hindi",
+            "classroom": {
+                "_id": "6af01c4faaf9cee460dbf85f",
+                "displayName": "Class 8"
+            },
+            "teacher": {
+                "_id": "6af01841aaf9cee460dbf766",
+                "name": "Amit Deshmukh",
+                "employeeId": "EMP-2026-003"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "4e1165e591a06be5db7fa22b",
+            "name": "marathi",
+            "classroom": {
+                "_id": "6af01c0faaf9cee460dbf846",
+                "displayName": "Class 3"
+            },
+            "teacher": {
+                "_id": "6af01833aaf9cee460dbf75c",
+                "name": "Priya Patil",
+                "employeeId": "EMP-2026-002"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "9ffc9694e05acaa99a6ef70e",
+            "name": "marathi",
+            "classroom": {
+                "_id": "6af01c1baaf9cee460dbf84b",
+                "displayName": "Class 4"
+            },
+            "teacher": {
+                "_id": "6af0188baaf9cee460dbf798",
+                "name": "Pooja Shinde",
+                "employeeId": "EMP-2026-008"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "ef8a13933cdbf65a16ab27c0",
+            "name": "marathi",
+            "classroom": {
+                "_id": "6af01c2aaaf9cee460dbf850",
+                "displayName": "Class 5"
+            },
+            "teacher": {
+                "_id": "6af019acaaf9cee460dbf7e1",
+                "name": "Nitin Kumbhar",
+                "employeeId": "EMP-2026-015"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "063309d5455642cc01d4cc10",
+            "name": "marathi",
+            "classroom": {
+                "_id": "6af01c36aaf9cee460dbf855",
+                "displayName": "Class 6"
+            },
+            "teacher": {
+                "_id": "6af01860aaf9cee460dbf77a",
+                "name": "Vijay Jadhav",
+                "employeeId": "EMP-2026-005"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "ec0964cc857a8bf1742a8b39",
+            "name": "marathi",
+            "classroom": {
+                "_id": "6af01c42aaf9cee460dbf85a",
+                "displayName": "Class 7"
+            },
+            "teacher": {
+                "_id": "6af018c7aaf9cee460dbf7c0",
+                "name": "Aarti Bhosale",
+                "employeeId": "EMP-2026-012"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "a9fcb032045486db458c9f24",
+            "name": "marathi",
+            "classroom": {
+                "_id": "6af01c4faaf9cee460dbf85f",
+                "displayName": "Class 8"
+            },
+            "teacher": {
+                "_id": "6af01833aaf9cee460dbf75c",
+                "name": "Priya Patil",
+                "employeeId": "EMP-2026-002"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "3f6c9fb7a95490e374350441",
+            "name": "mathematics",
+            "classroom": {
+                "_id": "6af01c0faaf9cee460dbf846",
+                "displayName": "Class 3"
+            },
+            "teacher": {
+                "_id": "6af01853aaf9cee460dbf770",
+                "name": "Sneha Kulkarni",
+                "employeeId": "EMP-2026-004"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "659a5ee97d9e86006838718b",
+            "name": "mathematics",
+            "classroom": {
+                "_id": "6af01c1baaf9cee460dbf84b",
+                "displayName": "Class 4"
+            },
+            "teacher": {
+                "_id": "6af018baaaf9cee460dbf7b6",
+                "name": "Manoj Chavan",
+                "employeeId": "EMP-2026-011"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "a2bfb61b7467c3655beb649b",
+            "name": "mathematics",
+            "classroom": {
+                "_id": "6af01c2aaaf9cee460dbf850",
+                "displayName": "Class 5"
+            },
+            "teacher": {
+                "_id": "6af016cbaaf9cee460dbf74f",
+                "name": "Rahul Sharma",
+                "employeeId": "EMP-2026-001"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "6a28cfbd31887ed9488d5fb8",
+            "name": "mathematics",
+            "classroom": {
+                "_id": "6af01c36aaf9cee460dbf855",
+                "displayName": "Class 6"
+            },
+            "teacher": {
+                "_id": "6af0187daaf9cee460dbf78e",
+                "name": "Sandeep More",
+                "employeeId": "EMP-2026-007"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "2f2c261d76ab593f354d31f1",
+            "name": "mathematics",
+            "classroom": {
+                "_id": "6af01c42aaf9cee460dbf85a",
+                "displayName": "Class 7"
+            },
+            "teacher": {
+                "_id": "6af019a0aaf9cee460dbf7d7",
+                "name": "Meera Sawant",
+                "employeeId": "EMP-2026-014"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "2719edc6effc5dc97b36d74d",
+            "name": "mathematics",
+            "classroom": {
+                "_id": "6af01c4faaf9cee460dbf85f",
+                "displayName": "Class 8"
+            },
+            "teacher": {
+                "_id": "6af01853aaf9cee460dbf770",
+                "name": "Sneha Kulkarni",
+                "employeeId": "EMP-2026-004"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "6af02028aaf9cee460dbf8c4",
+            "name": "rhymes",
+            "classroom": {
+                "_id": "6af01b0baaf9cee460dbf827",
+                "displayName": "Nursery"
+            },
+            "teacher": {
+                "_id": "6af018c7aaf9cee460dbf7c0",
+                "name": "Aarti Bhosale",
+                "employeeId": "EMP-2026-012"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:09:28.975Z",
+            "updatedAt": "2026-11-08T07:09:28.975Z"
+        },
+        {
+            "_id": "957653fe652c5cd8e78c1446",
+            "name": "science",
+            "classroom": {
+                "_id": "6af01c2aaaf9cee460dbf850",
+                "displayName": "Class 5"
+            },
+            "teacher": {
+                "_id": "6af01833aaf9cee460dbf75c",
+                "name": "Priya Patil",
+                "employeeId": "EMP-2026-002"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "b8352e7e5a738b241f739eae",
+            "name": "science",
+            "classroom": {
+                "_id": "6af01c36aaf9cee460dbf855",
+                "displayName": "Class 6"
+            },
+            "teacher": {
+                "_id": "6af0188baaf9cee460dbf798",
+                "name": "Pooja Shinde",
+                "employeeId": "EMP-2026-008"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "b65d76da8dc730c13bbc358c",
+            "name": "science",
+            "classroom": {
+                "_id": "6af01c42aaf9cee460dbf85a",
+                "displayName": "Class 7"
+            },
+            "teacher": {
+                "_id": "6af019acaaf9cee460dbf7e1",
+                "name": "Nitin Kumbhar",
+                "employeeId": "EMP-2026-015"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "70397aef92d22d15b6e06b13",
+            "name": "science",
+            "classroom": {
+                "_id": "6af01c4faaf9cee460dbf85f",
+                "displayName": "Class 8"
+            },
+            "teacher": {
+                "_id": "6af01860aaf9cee460dbf77a",
+                "name": "Vijay Jadhav",
+                "employeeId": "EMP-2026-005"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "722c6527e18e3fbb554027df",
+            "name": "social studies",
+            "classroom": {
+                "_id": "6af01c2aaaf9cee460dbf850",
+                "displayName": "Class 5"
+            },
+            "teacher": {
+                "_id": "6af01841aaf9cee460dbf766",
+                "name": "Amit Deshmukh",
+                "employeeId": "EMP-2026-003"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "0eb5656d777280d3b84f1ead",
+            "name": "social studies",
+            "classroom": {
+                "_id": "6af01c36aaf9cee460dbf855",
+                "displayName": "Class 6"
+            },
+            "teacher": {
+                "_id": "6af0189aaaf9cee460dbf7a2",
+                "name": "Anil Pawar",
+                "employeeId": "EMP-2026-009"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "f6b867d02c2aff534ad4dc7d",
+            "name": "social studies",
+            "classroom": {
+                "_id": "6af01c42aaf9cee460dbf85a",
+                "displayName": "Class 7"
+            },
+            "teacher": {
+                "_id": "6af019b8aaf9cee460dbf7eb",
+                "name": "Swati Nikam",
+                "employeeId": "EMP-2026-016"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        },
+        {
+            "_id": "55802f8d99e1d307b69a9f15",
+            "name": "social studies",
+            "classroom": {
+                "_id": "6af01c4faaf9cee460dbf85f",
+                "displayName": "Class 8"
+            },
+            "teacher": {
+                "_id": "6af0186faaf9cee460dbf784",
+                "name": "Neha Joshi",
+                "employeeId": "EMP-2026-006"
+            },
+            "totalMarks": 100,
+            "isActive": true,
+            "academicYear": {
+                "_id": "6af01355aaf9cee460dbf721",
+                "name": "2023-2024"
+            },
+            "__v": 0,
+            "createdAt": "2026-11-08T07:24:31.703Z",
+            "updatedAt": "2026-11-08T07:24:31.703Z"
+        }
+    ]
+}

@@ -86,15 +86,21 @@ export function Table({ columns, data, loading, emptyMessage = 'No data found' }
               </td>
             </tr>
           ) : (
-            data?.map((row, i) => (
-              <tr key={row._id || i} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
+            data?.map((row, i) => {
+              const rowId = row._id;
+              const rowKey = rowId && typeof rowId === 'object'
+                ? rowId._id || JSON.stringify(rowId)
+                : rowId ?? i;
+              return (
+              <tr key={rowKey} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition">
                 {columns.map((col) => (
                   <td key={col.key} className="py-3 px-4 text-slate-300">
                     {col.render ? col.render(row) : row[col.key] ?? '—'}
                   </td>
                 ))}
               </tr>
-            ))
+              );
+            })
           )}
         </tbody>
       </table>

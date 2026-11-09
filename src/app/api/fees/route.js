@@ -41,14 +41,28 @@ export const GET = protect(async (request) => {
         : { $in: ids };
     }
 
-    const query = Fee.find(filter)
+    const groupedView = request.user.role !== 'parent' && searchParams.get('groupByStudent') === 'true';
+    const groupedStudentIds = groupedView ? await Fee.distinct('student', filter) : null;
+    const groupedStudents = groupedView
+      ? await Student.find({ _id: { $in: groupedStudentIds } })
+          .select('firstName lastName admissionNo')
+          .sort({ firstName: 1, lastName: 1, _id: 1 })
+          .skip(pagination?.skip || 0)
+          .limit(pagination?.limit || Math.max(groupedStudentIds.length, 1))
+      : null;
+    const queryFilter = groupedView
+      ? { ...filter, student: { $in: groupedStudents.map(student => student._id) } }
+      : filter;
+    const query = Fee.find(queryFilter)
       .populate('student',   'firstName lastName admissionNo')
       .populate('classroom', 'displayName')
-      .sort({ year: -1, month: -1 });
-    if (pagination) query.skip(pagination.skip).limit(pagination.limit);
+      .sort({ year: groupedView ? 1 : -1, month: groupedView ? 1 : -1 });
+    if (pagination && !groupedView) query.skip(pagination.skip).limit(pagination.limit);
     const [fees, total, summary, parentSummary] = await Promise.all([
       query,
-      pagination ? Fee.countDocuments(filter) : Promise.resolve(null),
+      pagination
+        ? groupedView ? Promise.resolve(groupedStudentIds.length) : Fee.countDocuments(filter)
+        : Promise.resolve(null),
       pagination
         ? Fee.aggregate([
             {
@@ -102,29 +116,42 @@ export const GET = protect(async (request) => {
         : Promise.resolve(null),
     ]);
 
-    if (request.user.role === 'parent' && fees.length) {
-      const payments = await FeePayment.aggregate([
-        { $match: { fee: { $in: fees.map(fee => fee._id) } } },
-        { $group: { _id: '$fee', amountPaid: { $sum: { $subtract: ['$amountPaid', { $ifNull: ['$amountRefunded', 0] }] } } } },
-      ]);
-      const paidByFee = new Map(payments.map(item => [String(item._id), item.amountPaid]));
-      const data = fees.map(fee => {
-        const amountPaid = paidByFee.get(String(fee._id)) || 0;
-        return { ...fee.toObject(), amountPaid, outstandingAmount: Math.max(0, fee.finalAmount - amountPaid) };
-      });
-      return pagination
-        ? r.ok(data, 'Fees fetched', {
-            ...paginationMeta(total, pagination),
-            ...(parentSummary || summary),
-          })
-        : r.ok(data);
-    }
+    const paymentTotals = fees.length
+      ? await FeePayment.aggregate([
+          { $match: { fee: { $in: fees.map(fee => fee._id) } } },
+          {
+            $group: {
+              _id: '$fee',
+              amountPaid: {
+                $sum: { $subtract: ['$amountPaid', { $ifNull: ['$amountRefunded', 0] }] },
+              },
+            },
+          },
+        ])
+      : [];
+    const paidByFee = new Map(paymentTotals.map(item => [String(item._id), item.amountPaid]));
+    const feesWithBalance = fees.map(fee => {
+      const amountPaid = paidByFee.get(String(fee._id)) || 0;
+      return {
+        ...fee.toObject(),
+        amountPaid,
+        outstandingAmount: Math.max(0, fee.finalAmount - amountPaid),
+      };
+    });
+    const data = groupedView
+      ? groupedStudents.map(student => ({
+          student,
+          classroom: feesWithBalance.find(fee => String(fee.student?._id) === String(student._id))?.classroom || null,
+          records: feesWithBalance.filter(fee => String(fee.student?._id) === String(student._id)),
+        }))
+      : feesWithBalance;
+
     return pagination
-      ? r.ok(fees, 'Fees fetched', {
+      ? r.ok(data, 'Fees fetched', {
           ...paginationMeta(total, pagination),
           ...(parentSummary || summary),
         })
-      : r.ok(fees);
+      : r.ok(data);
   } catch (err) {
     return r.serverError(err.message);
   }

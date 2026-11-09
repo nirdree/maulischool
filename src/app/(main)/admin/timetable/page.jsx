@@ -80,7 +80,7 @@ function makeEmptySchedule(days, numPeriods, globalTimes = []) {
   }));
 }
 
-function mergeSchedule(loaded, days, numPeriods) {
+function mergeSchedule(loaded, days, numPeriods, subjects) {
   return days.map(day => {
     const existing = loaded.find(s => s.day === day);
     return {
@@ -88,12 +88,14 @@ function mergeSchedule(loaded, days, numPeriods) {
       periods: Array.from({ length: numPeriods }, (_, i) => {
         const ep = existing?.periods?.find(p => p.periodNo === i + 1);
         if (!ep) return makeEmptyPeriod(i + 1);
+        const subjectId = ep.subject?._id || ep.subject || '';
+        const subject = subjects.find(s => s._id === subjectId);
         return {
           periodNo:   i + 1,
           startTime:  ep.startTime  || '',
           endTime:    ep.endTime    || '',
-          subject:    ep.subject?._id   || ep.subject   || '',
-          teacher:    ep.teacher?._id   || ep.teacher   || '',
+          subject:    subjectId,
+          teacher:    subject?.teacher?._id || subject?.teacher || '',
           isBreak:    ep.isBreak    || false,
           breakLabel: ep.breakLabel || 'Break',
         };
@@ -205,7 +207,8 @@ export default function TimetableAdminPage() {
         api.get(`${API.CLASSROOMS.BY_ID(classId)}/subjects`),
         api.get(`${API.TIMETABLE.BY_CLASS(classId)}?academicYear=${ayId}`).catch(() => null),
       ]);
-      setSubjects(subRes.data || []);
+      const classSubjects = subRes.data || [];
+      setSubjects(classSubjects);
 
       if (ttRes?.data) {
         const tt = ttRes.data;
@@ -214,7 +217,7 @@ export default function TimetableAdminPage() {
         const savedDays     = tt.workingDays  || workingDays;
         setNumPeriods(savedPeriods);
         setWorkingDays(savedDays);
-        setSchedule(mergeSchedule(tt.schedule || [], savedDays, savedPeriods));
+        setSchedule(mergeSchedule(tt.schedule || [], savedDays, savedPeriods, classSubjects));
       } else {
         setSchedule(makeEmptySchedule(workingDays, numPeriods, globalTimes));
       }
@@ -228,19 +231,28 @@ export default function TimetableAdminPage() {
 
   // ── Period update ──────────────────────────────────────────────────────────
   const updatePeriod = useCallback((dayIdx, periodIdx, field, value) => {
+    const selectedSubject = field === 'subject'
+      ? subjects.find(subject => subject._id === value)
+      : null;
+    const teacherId = selectedSubject?.teacher?._id || selectedSubject?.teacher || '';
+
     setSchedule(prev =>
       prev.map((d, di) =>
         di !== dayIdx ? d : {
           ...d,
           periods: d.periods.map((p, pi) =>
-            pi !== periodIdx ? p : { ...p, [field]: value }
+            pi !== periodIdx
+              ? p
+              : field === 'subject'
+                ? { ...p, subject: value, teacher: teacherId }
+                : { ...p, [field]: value }
           ),
         }
       )
     );
     setDirty(true);
     setServerConflicts([]);
-  }, []);
+  }, [subjects]);
 
   // ── Toggle break ───────────────────────────────────────────────────────────
   const toggleBreak = useCallback((dayIdx, periodIdx) => {
@@ -403,11 +415,10 @@ export default function TimetableAdminPage() {
   ];
   const subjectOptions = [
     { value: '', label: '— Subject —' },
-    ...subjects.map(s => ({ value: s._id, label: s.name })),
-  ];
-  const teacherOptions = [
-    { value: '', label: '— Teacher —' },
-    ...teachers.map(t => ({ value: t._id, label: t.name })),
+    ...subjects.map(s => ({
+      value: s._id,
+      label: `${s.name} (${s.teacher?.name || 'No teacher assigned'})`,
+    })),
   ];
 
   const selectedClass = classrooms.find(c => c._id === classFilter);
@@ -599,7 +610,6 @@ export default function TimetableAdminPage() {
                         <PeriodCell
                           period={period}
                           subjectOptions={subjectOptions}
-                          teacherOptions={teacherOptions}
                           isConflict={isConflict}
                           colorClass={PERIOD_COLORS[pi % PERIOD_COLORS.length]}
                           onChange={(field, val) => updatePeriod(di, pi, field, val)}
@@ -628,11 +638,7 @@ export default function TimetableAdminPage() {
       {teacherViewModal && (
         <TeacherViewModal
           teachers={teachers}
-          schedule={schedule}
-          subjects={subjects}
-          numPeriods={numPeriods}
-          workingDays={workingDays}
-          classLabel={selectedClass?.displayName || ''}
+          academicYear={ayId}
           onClose={() => setTeacherViewModal(false)}
         />
       )}
@@ -641,7 +647,7 @@ export default function TimetableAdminPage() {
         <Modal open onClose={() => setActionsOpen(false)} title="Timetable Actions">
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
-              <Button variant="ghost" onClick={() => { setTeacherViewModal(true); setActionsOpen(false); }} disabled={!classFilter} title="Teacher schedule view">
+              <Button variant="ghost" onClick={() => { setTeacherViewModal(true); setActionsOpen(false); }} title="Teacher schedule view">
                 <Eye className="w-4 h-4" /> Teacher View
               </Button>
               <Button variant="ghost" onClick={() => { setSettingsOpen(true); setActionsOpen(false); }} disabled={!classFilter} title="Timetable settings">
@@ -726,7 +732,7 @@ export default function TimetableAdminPage() {
 // PERIOD CELL
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PeriodCell({ period, subjectOptions, teacherOptions, isConflict, colorClass, onChange, onToggleBreak }) {
+function PeriodCell({ period, subjectOptions, isConflict, colorClass, onChange, onToggleBreak }) {
   if (period.isBreak) {
     return (
       <div className="w-44 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2 flex flex-col gap-1.5">
@@ -798,21 +804,6 @@ function PeriodCell({ period, subjectOptions, teacherOptions, isConflict, colorC
         className="w-full px-1.5 py-1 rounded bg-slate-700 border border-slate-600 text-white text-xs focus:outline-none focus:border-indigo-500"
       >
         {subjectOptions.map(o => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
-
-      {/* Teacher */}
-      <select
-        value={period.teacher}
-        onChange={e => onChange('teacher', e.target.value)}
-        className={`w-full px-1.5 py-1 rounded border text-xs focus:outline-none focus:border-indigo-500 ${
-          isConflict
-            ? 'bg-red-900/30 border-red-500/40 text-red-300'
-            : 'bg-slate-700 border-slate-600 text-white'
-        }`}
-      >
-        {teacherOptions.map(o => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
@@ -929,73 +920,158 @@ function TimetableSettingsModal({ workingDays, numPeriods, allDays, onToggleDay,
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TEACHER VIEW MODAL
-// Shows one teacher's full weekly schedule for the current class
+// Shows a teacher's scheduled periods across all classes for the academic year
 // ─────────────────────────────────────────────────────────────────────────────
 
-function TeacherViewModal({ teachers, schedule, subjects, numPeriods, workingDays, classLabel, onClose }) {
+function TeacherViewModal({ teachers, academicYear, onClose }) {
   const [selectedTeacher, setSelectedTeacher] = useState('');
+  const [teacherTimetables, setTeacherTimetables] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const subjectName = (id) => subjects.find(s => s._id === id)?.name || '—';
+  const handleTeacherChange = (event) => {
+    const teacherId = event.target.value;
+    setSelectedTeacher(teacherId);
+    setTeacherTimetables([]);
+    setLoading(Boolean(teacherId));
+    setError('');
+  };
 
-  const teacherSchedule = selectedTeacher
-    ? schedule.map(ds => ({
-        day: ds.day,
-        periods: ds.periods.filter(p => p.teacher === selectedTeacher && !p.isBreak && p.subject),
-      })).filter(ds => ds.periods.length > 0)
-    : [];
+  useEffect(() => {
+    if (!selectedTeacher) return;
+
+    let active = true;
+    api.get(`${API.TIMETABLE.BY_TEACHER(selectedTeacher)}?academicYear=${academicYear}`)
+      .then(res => {
+        if (active) setTeacherTimetables(res.data || []);
+      })
+      .catch(err => {
+        if (active) {
+          setTeacherTimetables([]);
+          setError(err.response?.data?.message || err.message || 'Unable to load teacher schedule');
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [selectedTeacher, academicYear]);
 
   const teacherOptions = [
     { value: '', label: '— Select teacher —' },
     ...teachers.map(t => ({ value: t._id, label: t.name })),
   ];
 
-  const totalPeriods = teacherSchedule.reduce((sum, ds) => sum + ds.periods.length, 0);
+  const totalPeriods = teacherTimetables.reduce(
+    (sum, timetable) => sum + timetable.schedule.reduce((daySum, day) => daySum + day.periods.length, 0),
+    0,
+  );
+  const periodsByDayAndNumber = new Map();
+  const timesByPeriod = new Map();
+  teacherTimetables.forEach(timetable => {
+    timetable.schedule.forEach(day => {
+      day.periods.forEach(period => {
+        const cellKey = `${day.day}|${period.periodNo}`;
+        if (!periodsByDayAndNumber.has(cellKey)) periodsByDayAndNumber.set(cellKey, []);
+        periodsByDayAndNumber.get(cellKey).push({
+          classroom: timetable.classroom.displayName,
+          subject: period.subject?.name || 'Subject not set',
+        });
+
+        if (period.startTime || period.endTime) {
+          if (!timesByPeriod.has(period.periodNo)) timesByPeriod.set(period.periodNo, new Set());
+          timesByPeriod.get(period.periodNo).add(`${period.startTime || ''}–${period.endTime || ''}`);
+        }
+      });
+    });
+  });
+  const periodNumbers = [...new Set(
+    teacherTimetables.flatMap(timetable =>
+      timetable.schedule.flatMap(day => day.periods.map(period => period.periodNo))
+    ),
+  )].sort((a, b) => a - b);
 
   return (
-    <Modal open onClose={onClose} title="Teacher Schedule View">
+    <Modal
+      open
+      onClose={onClose}
+      title="Teacher Schedule View"
+      width="max-w-[calc(100vw-2rem)] lg:max-w-[96vw]"
+    >
       <div className="mb-4">
         <Select
           label="Select Teacher"
           options={teacherOptions}
           value={selectedTeacher}
-          onChange={e => setSelectedTeacher(e.target.value)}
+          onChange={handleTeacherChange}
         />
       </div>
 
       {selectedTeacher && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-slate-400 text-sm">
-              Class: <span className="text-white font-medium">{classLabel}</span>
-            </p>
             <Badge label={`${totalPeriods} period${totalPeriods !== 1 ? 's' : ''} / week`} color="blue" />
           </div>
 
-          {teacherSchedule.length === 0 ? (
+          {loading ? (
+            <p className="text-slate-500 text-sm py-4 text-center">Loading teacher schedule…</p>
+          ) : error ? (
+            <p className="text-red-400 text-sm py-4 text-center">{error}</p>
+          ) : teacherTimetables.length === 0 ? (
             <p className="text-slate-500 text-sm italic py-4 text-center">
-              This teacher has no periods assigned in {classLabel}.
+              This teacher has no periods assigned this academic year.
             </p>
           ) : (
-            <div className="space-y-2 max-h-80 overflow-y-auto">
-              {teacherSchedule.map(ds => (
-                <div key={ds.day} className="rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2">
-                  <p className="text-slate-300 font-medium text-sm mb-2">{ds.day}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {ds.periods.map(p => (
-                      <div
-                        key={p.periodNo}
-                        className="rounded bg-slate-700 px-2 py-1 text-xs"
-                      >
-                        <span className="text-slate-400">P{p.periodNo}</span>
-                        <span className="text-white font-medium ml-1">{subjectName(p.subject)}</span>
-                        {p.startTime && (
-                          <span className="text-slate-500 ml-1">{p.startTime}–{p.endTime}</span>
-                        )}
-                      </div>
+            <div className="max-h-[55vh] overflow-auto rounded-lg border border-slate-700 lg:max-h-none">
+              <table className="w-full min-w-max border-collapse text-left text-xs">
+                <thead className="sticky top-0 z-10 bg-slate-800">
+                  <tr>
+                    <th className="border-b border-r border-slate-700 bg-slate-800 px-3 py-2 text-slate-300">
+                      Period
+                    </th>
+                    <th className="border-b border-r border-slate-700 bg-slate-800 px-3 py-2 text-slate-300">
+                      Time
+                    </th>
+                    {ALL_DAYS.map(day => (
+                      <th key={day} className="min-w-36 border-b border-slate-700 px-3 py-2 font-medium text-white">
+                        {day}
+                      </th>
                     ))}
-                  </div>
-                </div>
-              ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {periodNumbers.map(periodNo => (
+                    <tr key={periodNo} className="border-b border-slate-800 last:border-0">
+                      <th className="border-r border-slate-700 px-3 py-2 align-top font-medium text-slate-300">
+                        P{periodNo}
+                      </th>
+                      <td className="border-r border-slate-700 px-3 py-2 align-top text-slate-400">
+                        {[...(timesByPeriod.get(periodNo) || [])].join(', ') || '—'}
+                      </td>
+                      {ALL_DAYS.map(day => {
+                        const entries = periodsByDayAndNumber.get(`${day}|${periodNo}`) || [];
+                        return (
+                          <td key={day} className="px-3 py-2 align-top">
+                            {entries.length ? (
+                              <div className="flex flex-col gap-1">
+                                {entries.map((entry, index) => (
+                                  <div key={`${entry.classroom}-${entry.subject}-${index}`} className="rounded bg-slate-800 px-2 py-1">
+                                    <span className="block font-medium text-white">{entry.classroom}</span>
+                                    <span className="text-slate-400">{entry.subject}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-slate-600">—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </>

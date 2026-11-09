@@ -1,7 +1,6 @@
 import { connectDB } from '@/lib/mongodb';
 import Employee from '@/models/Employee';
 import User from '@/models/User';
-import mongoose from 'mongoose';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
 
@@ -48,23 +47,16 @@ export const PUT = authorize('admin', 'principal')(async (request, { params }) =
 });
 
 export const DELETE = authorize('admin')(async (request, { params }) => {
-  await connectDB();
-  const { id } = await params;
-  const session = await mongoose.startSession();
-  session.startTransaction();
   try {
-    const employee = await Employee.findByIdAndDelete(id).session(session);
-    if (!employee) {
-      await session.abortTransaction();
-      return r.notFound('Employee not found');
-    }
-    if (employee.user) await User.findByIdAndDelete(employee.user).session(session);
-    await session.commitTransaction();
+    await connectDB();
+    const { id } = await params;
+    const employee = await Employee.findById(id);
+    if (!employee) return r.notFound('Employee not found');
+
+    if (employee.user) await User.findByIdAndDelete(employee.user);
+    await Employee.findByIdAndDelete(id);
     return r.noContent();
   } catch (err) {
-    await session.abortTransaction();
     return r.serverError(err.message);
-  } finally {
-    session.endSession();
   }
 });

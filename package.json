@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "create:admin": "node scripts/create-admin.mjs"
+    "create:admin": "node scripts/create-admin.mjs",
+    "seed:employee-attendance": "node scripts/seed-employee-attendance.mjs",
+    "seed:student-attendance": "node scripts/seed-student-attendance.mjs",
+    "seed:student-marks": "node scripts/seed-student-marks.mjs"
   },
   "dependencies": {
     "@cashfreepayments/cashfree-js": "^1.0.7",

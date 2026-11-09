@@ -94,7 +94,14 @@ export const POST = protect(async (request) => {
     const body = await request.json();
     let { employee: employeeId, fromDate, toDate, leaveType, reason, academicYear } = body;
 
-    if (!employeeId) {
+    if (request.user.role === 'teacher') {
+      employeeId = request.user.employeeId;
+      if (!employeeId) {
+        const emp = await Employee.findOne({ user: request.user._id }).select('_id');
+        employeeId = emp?._id;
+      }
+      if (!employeeId) return r.notFound('Employee profile not found for this user');
+    } else if (!employeeId) {
       const emp = await Employee.findOne({ user: request.user._id }).select('_id');
       if (!emp) return r.notFound('Employee profile not found for this user');
       employeeId = emp._id;
@@ -102,6 +109,10 @@ export const POST = protect(async (request) => {
 
     if (!fromDate || !toDate || !leaveType || !reason || !academicYear)
       return r.badRequest('fromDate, toDate, leaveType, reason, academicYear are required');
+    if (Number.isNaN(new Date(fromDate).getTime()) || Number.isNaN(new Date(toDate).getTime())
+      || new Date(toDate) < new Date(fromDate)) {
+      return r.badRequest('A valid date range is required');
+    }
 
     const lockCheck = await isPayrollLocked(employeeId, fromDate, toDate);
     if (lockCheck.locked)

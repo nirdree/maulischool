@@ -84,8 +84,10 @@ export const API = {
     BASE: `/api/fees`,
     BY_ID: (id) => `/api/fees/${id}`,
     PAY: (id) => `/api/fees/${id}/pay`,
+    PAY_MULTIPLE: `/api/fees/pay-multiple`,
     PAYMENTS: (id) => `/api/fees/${id}/payments`,
     RECEIPTS: `/api/fees/receipts/all`,
+    RECEIPT: (id) => `/api/fees/receipts/${id}`,
   },
 
   // ── 💼 Payroll ────────────────────────────────────────────
@@ -118,6 +120,7 @@ export const API = {
   TIMETABLE: {
     BASE: `/api/timetable`,
     BY_CLASS: (classId) => `/api/timetable/${classId}`,
+    BY_TEACHER: (teacherId) => `/api/timetable/teacher/${teacherId}`,
     BY_ID: (id) => `/api/timetable/${id}`,
   },
 

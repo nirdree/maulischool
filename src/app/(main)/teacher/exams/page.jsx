@@ -13,27 +13,21 @@
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { Plus, ClipboardList, Trash2 } from 'lucide-react';
+import { Plus, ClipboardList } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import {
   PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, Badge, Modal,
 } from '@/components/ui.jsx';
-import { useAuth } from '@/context/AuthContext';
 import { validateExam } from '@/lib/validation.js';
 const EXAM_TYPES = ['UnitTest1', 'UnitTest2', 'MidTerm', 'FinalExam', 'Project', 'Other'];
 
 export default function ExamsPage() {
-  const { user } = useAuth();
-  //   {
-  //     "_id": "69e5f1cb008470346b7da3fe",
-  //     "name": "Priya Patel",
-  //     "email": "priya.patel@school.com",
-  //     "role": "teacher"
-  // }
   const [exams, setExams] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
+  const [teacherId, setTeacherId] = useState('');
   const [ayId, setAyId] = useState('');
+  const [pageError, setPageError] = useState('');
   const [loading, setLoading] = useState(true);
   const [classFilter, setClassFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -43,14 +37,34 @@ export default function ExamsPage() {
 
   useEffect(() => {
     (async () => {
+      setPageError('');
       try {
         const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
+        const profile = await api.get(API.AUTH.ME);
+        const employeeId = profile.data?.employeeId?._id || profile.data?.employeeId;
+        if (!employeeId) throw new Error('Your account is not linked to a teacher profile.');
+        const [subjectResponse, classroomResponse] = await Promise.all([
+          api.get(
+            `${API.SUBJECTS.BASE}?teacherId=${encodeURIComponent(employeeId)}&academicYear=${encodeURIComponent(ay.data?._id || '')}&isActive=true`
+          ),
+          api.get(`${API.CLASSROOMS.BASE}?isActive=true&academicYear=${encodeURIComponent(ay.data?._id || '')}`),
+        ]);
+        const assignedClassIds = new Set(
+          (subjectResponse.data || []).map(subject => String(subject.classroom?._id || subject.classroom || ''))
+        );
+        const allClasses = classroomResponse.data || [];
+        const teacherClasses = allClasses.filter(classroom =>
+          assignedClassIds.has(String(classroom._id))
+          || String(classroom.classTeacher?._id || classroom.classTeacher || '') === String(employeeId)
+        );
+        setTeacherId(employeeId || '');
         setAyId(ay.data?._id);
-        const cls = await api.get(`${API.CLASSROOMS.BASE}?isActive=true&academicYear=${ay.data?._id}`);
-        const classes = cls.data || [];
-        setClassrooms(classes);
-        if (classes.length > 0) setClassFilter(classes[0]._id);
-      } catch { }
+        setClassrooms(teacherClasses);
+        setClassFilter('');
+      } catch (err) {
+        setPageError(err.response?.data?.message || err.message || 'Unable to load your classrooms.');
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -63,7 +77,9 @@ export default function ExamsPage() {
       const res = await api.get(`${API.EXAMS.BASE}?${params}`);
       setExams(res.data || []);
       setTotal(res.meta?.total || 0);
-    } catch { } finally { setLoading(false); }
+    } catch (err) {
+      setPageError(err.response?.data?.message || err.message || 'Unable to load exams.');
+    } finally { setLoading(false); }
   };
 
   useEffect(() => { if (ayId) fetchExams(); }, [classFilter, ayId, page]);
@@ -78,8 +94,16 @@ export default function ExamsPage() {
     {
       key: 'actions', label: '',
       render: (e) => (
-        <Button size="sm" variant="ghost" onClick={() => setMarksExam(e)}>
-          <ClipboardList className="w-3 h-3 mr-1" /> Enter Marks
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => setMarksExam({
+            ...e,
+            canEditMarks: Boolean(teacherId && String(e.subject?.teacher?._id || e.subject?.teacher || '') === String(teacherId)),
+          })}
+        >
+          <ClipboardList className="w-3 h-3 mr-1" />
+          {teacherId && String(e.subject?.teacher?._id || e.subject?.teacher || '') === String(teacherId) ? 'Enter Marks' : 'View Marks'}
         </Button>
       ),
     },
@@ -94,6 +118,7 @@ export default function ExamsPage() {
         subtitle={`${total} exams`}
         actions={<Button onClick={() => setAddOpen(true)}><Plus className="w-4 h-4" /> Create Exam</Button>}
       />
+      {pageError && <p className="mb-4 text-sm text-rose-400">{pageError}</p>}
       <div className="flex gap-3 mb-4">
         <Select options={[{ value: '', label: 'All Classes' }, ...classOptions]} value={classFilter}
           onChange={e => { setClassFilter(e.target.value); setPage(1); }} className="w-48" />
@@ -107,8 +132,8 @@ export default function ExamsPage() {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         classrooms={classrooms}
+        teacherId={teacherId}
         ayId={ayId}
-        user={user}
         onSuccess={() => { fetchExams(); setAddOpen(false); }}
       />
 
@@ -119,7 +144,7 @@ export default function ExamsPage() {
   );
 }
 
-function ExamCreateModal({ open, onClose, classrooms, ayId, onSuccess, user }) {
+function ExamCreateModal({ open, onClose, classrooms, teacherId, ayId, onSuccess }) {
   const initialForm = {
     name: '', examType: 'UnitTest1', classroom: '', subject: '',
     totalMarks: '', examDate: '', description: '',
@@ -154,17 +179,13 @@ function ExamCreateModal({ open, onClose, classrooms, ayId, onSuccess, user }) {
   const handleClassChange = async (classId) => {
     set('classroom', classId);
     set('subject', '');
+    setSubjects([]);
     if (classId) {
       try {
         const res = await api.get(
-          `${API.SUBJECTS.BASE}?classId=${classId}&isActive=true`
+          `${API.SUBJECTS.BASE}?classId=${encodeURIComponent(classId)}&teacherId=${encodeURIComponent(teacherId)}&academicYear=${encodeURIComponent(ayId)}&isActive=true`
         );
-        const allSubjects = res.data || [];
-        const mySubjects = allSubjects.filter(
-          (s) => s.teacher?.name === user?.name
-        );
-
-        setSubjects(mySubjects);
+        setSubjects(res.data || []);
       } catch (err) {
         console.log(err);
       }
@@ -178,7 +199,7 @@ function ExamCreateModal({ open, onClose, classrooms, ayId, onSuccess, user }) {
     if (!v.valid) return;
     setSaving(true);
     try {
-      await api.post(API.EXAMS.BASE, { ...form, academicYear: ayId });
+      await api.post(API.EXAMS.BASE, { ...form, academicYear: ayId, teacher: teacherId });
       resetForm();
       onSuccess();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
@@ -260,8 +281,11 @@ function MarksModal({ exam, onClose, ayId }) {
   const [marks, setMarks] = useState({});
   const [absent, setAbsent] = useState({});
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
+    let active = true;
     (async () => {
       try {
         const classId = exam.classroom?._id || exam.classroom;
@@ -269,6 +293,7 @@ function MarksModal({ exam, onClose, ayId }) {
           api.get(`${API.STUDENTS.BASE}?classId=${classId}&status=Approved&academicYear=${ayId}&limit=100`),
           api.get(API.EXAMS.MARKS(exam._id)),
         ]);
+        if (!active) return;
         setStudents(stuRes.data || []);
         const mMap = {}, aMap = {};
         (marksRes.data || []).forEach(m => {
@@ -277,9 +302,14 @@ function MarksModal({ exam, onClose, ayId }) {
         });
         setMarks(mMap);
         setAbsent(aMap);
-      } catch { }
+      } catch (err) {
+        if (active) setError(err.response?.data?.message || err.message || 'Unable to load marks.');
+      } finally {
+        if (active) setLoading(false);
+      }
     })();
-  }, []);
+    return () => { active = false; };
+  }, [exam._id, exam.classroom, ayId]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -297,7 +327,14 @@ function MarksModal({ exam, onClose, ayId }) {
 
   return (
     <Modal open={true} onClose={onClose} title={`Marks — ${exam.name} (/${exam.totalMarks})`} width="max-w-2xl">
-      <div className="max-h-96 overflow-y-auto">
+      {!exam.canEditMarks && (
+        <p className="mb-3 text-sm text-slate-400">View only. Marks can be entered or changed only for your assigned subjects.</p>
+      )}
+      {loading ? (
+        <p className="py-8 text-center text-slate-400">Loading marks...</p>
+      ) : error ? (
+        <p className="py-8 text-center text-rose-400">{error}</p>
+      ) : <div className="max-h-96 overflow-y-auto">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-slate-900">
             <tr className="border-b border-slate-800">
@@ -316,25 +353,32 @@ function MarksModal({ exam, onClose, ayId }) {
                 <td className="py-2 px-3">
                   <input
                     type="number" min={0} max={exam.totalMarks}
-                    disabled={absent[s._id]}
+                    disabled={!exam.canEditMarks || absent[s._id]}
                     value={marks[s._id] ?? ''}
                     onChange={e => setMarks(prev => ({ ...prev, [s._id]: e.target.value }))}
                     className="w-20 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-40"
                   />
                 </td>
                 <td className="py-2 px-3">
-                  <input type="checkbox" checked={absent[s._id] || false}
+                  <input type="checkbox" checked={absent[s._id] || false} disabled={!exam.canEditMarks}
                     onChange={e => setAbsent(prev => ({ ...prev, [s._id]: e.target.checked }))}
                     className="w-4 h-4 rounded" />
                 </td>
               </tr>
             ))}
+            {students.length === 0 && (
+              <tr><td colSpan={3} className="py-8 text-center text-slate-500">No students found for this classroom.</td></tr>
+            )}
           </tbody>
         </table>
-      </div>
+      </div>}
       <div className="flex justify-end gap-3 mt-4">
         <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Marks'}</Button>
+        {exam.canEditMarks && (
+          <Button onClick={handleSave} disabled={saving || loading || Boolean(error) || students.length === 0}>
+            {saving ? 'Saving...' : 'Save Marks'}
+          </Button>
+        )}
       </div>
     </Modal>
   );

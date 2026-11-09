@@ -15,14 +15,22 @@ export const GET = protect(async (request) => {
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
     if (['parent', 'teacher'].includes(request.user.role)) {
-      filter.targetRoles = request.user.role;
+      filter.targetRoles = { $in: [request.user.role, 'public'] };
     }
 
-    filter.$or = [
-      { expiryDate: { $exists: false } },
-      { expiryDate: null },
-      { expiryDate: { $gte: new Date() } },
-    ];
+    if (['parent', 'teacher'].includes(request.user.role)) {
+      const now = new Date();
+      const startOfToday = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+      ));
+      filter.$or = [
+        { expiryDate: { $exists: false } },
+        { expiryDate: null },
+        { expiryDate: { $gte: startOfToday } },
+      ];
+    }
 
     const query = Notice.find(filter)
       .populate('createdBy', 'name')

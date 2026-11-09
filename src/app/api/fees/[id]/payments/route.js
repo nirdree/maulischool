@@ -17,13 +17,21 @@ export const GET = protect(async (request, { params }) => {
     }
     const payments = await FeePayment.find({ fee: id })
       .populate('collectedBy', 'name')
+      .populate('batchReceipt', 'receiptNo')
       .sort({ paymentDate: -1 });
-    const onlinePayments = await CashfreePayment.find({ fee: id, status: 'Paid', feePayment: { $in: payments.map(payment => payment._id) } })
-      .select('_id feePayment');
+    const onlinePayments = await CashfreePayment.find({
+      status: 'Paid',
+      $or: [{ fee: id }, { 'feeAllocations.fee': id }],
+    }).select('_id feePayment feeReceipt');
     const onlinePaymentIds = new Map(onlinePayments.map(payment => [String(payment.feePayment), String(payment._id)]));
+    const onlineReceiptIds = new Map(onlinePayments
+      .filter(payment => payment.feeReceipt)
+      .map(payment => [String(payment.feeReceipt), String(payment._id)]));
     return r.ok(payments.map(payment => ({
       ...payment.toObject(),
-      onlinePaymentId: onlinePaymentIds.get(String(payment._id)) || null,
+      onlinePaymentId: onlinePaymentIds.get(String(payment._id))
+        || onlineReceiptIds.get(String(payment.batchReceipt?._id || payment.batchReceipt))
+        || null,
     })));
   } catch (err) {
     return r.serverError(err.message);

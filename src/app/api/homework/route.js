@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/mongodb';
 import { Homework } from '@/models/Others';
+import Subject from '@/models/Subject';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
 import { parsePagination, paginationMeta } from '@/lib/pagination';
@@ -15,6 +16,10 @@ export const GET = protect(async (request) => {
     if (searchParams.get('subjectId'))    filter.subject      = searchParams.get('subjectId');
     if (searchParams.get('teacherId'))    filter.teacher      = searchParams.get('teacherId');
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
+    if (request.user.role === 'teacher') {
+      if (!request.user.employeeId) return r.forbidden('Teacher account is not linked to an employee');
+      filter.teacher = request.user.employeeId;
+    }
 
     const query = Homework.find(filter)
       .populate('classroom', 'displayName')
@@ -39,7 +44,21 @@ export const POST = authorize('admin', 'principal', 'teacher')(async (request) =
   try {
     await connectDB();
     const body = await request.json();
-    const hw = await Homework.create({ ...body, teacher: body.teacher || request.user.employeeId });
+    if (request.user.role === 'teacher') {
+      if (!request.user.employeeId) return r.forbidden('Teacher account is not linked to an employee');
+      const assignedSubject = await Subject.exists({
+        _id: body.subject,
+        classroom: body.classroom,
+        teacher: request.user.employeeId,
+        academicYear: body.academicYear,
+        isActive: true,
+      });
+      if (!assignedSubject) return r.forbidden('You can assign homework only to your assigned subjects and classes');
+    }
+    const hw = await Homework.create({
+      ...body,
+      ...(request.user.role === 'teacher' ? { teacher: request.user.employeeId } : {}),
+    });
     await hw.populate([
       { path: 'classroom', select: 'displayName' },
       { path: 'subject',   select: 'name' },

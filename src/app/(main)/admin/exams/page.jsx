@@ -25,9 +25,12 @@ const EXAM_TYPES = ['UnitTest1', 'UnitTest2', 'MidTerm', 'FinalExam', 'Project',
 export default function ExamsAdminPage() {
   const [exams, setExams] = useState([]);
   const [classrooms, setClassrooms] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [ayId, setAyId] = useState('');
   const [loading, setLoading] = useState(true);
   const [classFilter, setClassFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [addOpen, setAddOpen] = useState(false);
@@ -45,19 +48,30 @@ export default function ExamsAdminPage() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!ayId) return;
+    const params = new URLSearchParams({ academicYear: ayId, isActive: 'true' });
+    if (classFilter) params.set('classId', classFilter);
+    api.get(`${API.SUBJECTS.BASE}?${params}`)
+      .then(res => setSubjects(res.data || []))
+      .catch(() => setSubjects([]));
+  }, [ayId, classFilter]);
+
   const fetchExams = async () => {
     if (!ayId) return;
     setLoading(true);
     try {
       const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
       if (classFilter) params.set('classId', classFilter);
+      if (typeFilter) params.set('examType', typeFilter);
+      if (subjectFilter) params.set('subjectId', subjectFilter);
       const res = await api.get(`${API.EXAMS.BASE}?${params}`);
       setExams(res.data || []);
       setTotal(res.meta?.total || 0);
     } catch {} finally { setLoading(false); }
   };
 
-  useEffect(() => { if (ayId) fetchExams(); }, [classFilter, ayId, page]);
+  useEffect(() => { if (ayId) fetchExams(); }, [classFilter, typeFilter, subjectFilter, ayId, page]);
 
   const handleDelete = async (id) => {
     if (!(await confirm('Delete this exam and all marks?'))) return;
@@ -68,6 +82,17 @@ export default function ExamsAdminPage() {
   const classOptions = [
     { value: '', label: 'All Classes' },
     ...classrooms.map(c => ({ value: c._id, label: c.displayName })),
+  ];
+  const typeOptions = [
+    { value: '', label: 'All Types' },
+    ...EXAM_TYPES.map(type => ({ value: type, label: type })),
+  ];
+  const subjectOptions = [
+    { value: '', label: 'All Subjects' },
+    ...subjects.map(subject => ({
+      value: subject._id,
+      label: `${subject.name}${subject.classroom?.displayName ? ` (${subject.classroom.displayName})` : ''}`,
+    })),
   ];
 
   const columns = [
@@ -109,7 +134,9 @@ export default function ExamsAdminPage() {
         }
       />
       <div className="hidden sm:flex gap-3 mb-4">
-        <Select options={classOptions} value={classFilter} onChange={e => { setClassFilter(e.target.value); setPage(1); }} className="w-48" />
+        <Select options={classOptions} value={classFilter} onChange={e => { setClassFilter(e.target.value); setSubjectFilter(''); setPage(1); }} className="w-48" />
+        <Select options={typeOptions} value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1); }} className="w-48" />
+        <Select options={subjectOptions} value={subjectFilter} onChange={e => { setSubjectFilter(e.target.value); setPage(1); }} className="w-56" />
       </div>
       <Card className="!p-0">
         <Table columns={columns} data={exams} loading={loading} emptyMessage="No exams found" />
@@ -131,10 +158,12 @@ export default function ExamsAdminPage() {
       {/* Filters modal (mobile) */}
       <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
         <div className="space-y-4">
-          <Select label="Class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)} options={classOptions} />
+          <Select label="Class" value={classFilter} onChange={(e) => { setClassFilter(e.target.value); setSubjectFilter(''); setPage(1); }} options={classOptions} />
+          <Select label="Type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} options={typeOptions} />
+          <Select label="Subject" value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)} options={subjectOptions} />
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost" onClick={() => { setClassFilter(''); setPage(1); }}>Clear</Button>
+          <Button variant="ghost" onClick={() => { setClassFilter(''); setTypeFilter(''); setSubjectFilter(''); setPage(1); }}>Clear</Button>
           <Button onClick={() => { setPage(1); fetchExams(); setFilterOpen(false); }}>Apply</Button>
         </div>
       </Modal>

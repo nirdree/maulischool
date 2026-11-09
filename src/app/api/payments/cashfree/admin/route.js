@@ -51,6 +51,8 @@ export const GET = authorize('admin', 'principal')(async (request) => {
       .populate('student', 'firstName lastName admissionNo classroom')
       .populate({ path: 'student', populate: { path: 'classroom', select: 'displayName' } })
       .populate('fee', 'month year')
+      .populate('feeAllocations.fee', 'month year')
+      .populate('feeReceipt', 'receiptNo')
       .populate('academicYear', 'name')
       .sort({ createdAt: -1 });
     if (pagination) query.skip(pagination.skip).limit(pagination.limit);

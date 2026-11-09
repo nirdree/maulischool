@@ -15,7 +15,7 @@
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import {
-  Plus, CheckCircle, RefreshCw, Zap, Edit2,
+  Plus, CheckCircle, RefreshCw, Zap, Edit2, MoreVertical,
   Trash2, Eye, Lock, AlertCircle, Calculator,
   TrendingUp, Filter,
 } from 'lucide-react';
@@ -34,12 +34,30 @@ const MONTHS = [
 const currentYear  = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1;
 
+function getAcademicYearPayrollPeriods(startDate) {
+  const start = startDate ? new Date(startDate) : new Date(currentYear, 3, 1);
+  const startMonth = start.getMonth() + 1;
+  const startYear = start.getFullYear();
+
+  return Array.from({ length: 12 }, (_, index) => {
+    const month = ((startMonth - 1 + index) % 12) + 1;
+    const year = startYear + (month < startMonth ? 1 : 0);
+    return {
+      value: `${month}-${year}`,
+      label: `${MONTHS[month - 1]} (${year})`,
+      month,
+      year,
+    };
+  });
+}
+
 // ─── main page ──────────────────────────────────────────────────────────────
 
 export default function PayrollPage() {
   const [payroll,   setPayroll]   = useState([]);
   const [employees, setEmployees] = useState([]);
   const [ayId,      setAyId]      = useState('');
+  const [academicYearName, setAcademicYearName] = useState('');
   const [ayStartDate, setAyStartDate] = useState(null);
   const [loading,   setLoading]   = useState(true);
   const [page, setPage] = useState(1);
@@ -65,7 +83,14 @@ export default function PayrollPage() {
       try {
         const ay  = await api.get(API.ACADEMIC_YEARS.CURRENT);
         setAyId(ay.data?._id);
-        setAyStartDate(ay.data?.startDate || ay.data?.start || null);
+        setAcademicYearName(ay.data?.name || '');
+        const startDate = ay.data?.startDate || ay.data?.start || null;
+        setAyStartDate(startDate);
+        const periods = getAcademicYearPayrollPeriods(startDate);
+        const currentPeriod = periods.find(period => period.month === currentMonth && period.year === currentYear)
+          || periods[0];
+        setMonthFilter(currentPeriod.month);
+        setYearFilter(currentPeriod.year);
         const emp = await api.get(`${API.EMPLOYEES.BASE}?status=active`);
         setEmployees(emp.data || []);
       } catch {}
@@ -109,8 +134,14 @@ export default function PayrollPage() {
     } catch (err) { alert(err.response?.data?.message || err.message); }
   };
 
-  const monthOptions  = MONTHS.map((m, i) => ({ value: i + 1, label: m }));
-  const yearOptions   = [currentYear - 1, currentYear, currentYear + 1].map(y => ({ value: y, label: String(y) }));
+  const payrollPeriodOptions = getAcademicYearPayrollPeriods(ayStartDate);
+  const selectedPayrollPeriod = `${monthFilter}-${yearFilter}`;
+  const handlePayrollPeriodChange = value => {
+    const [month, year] = value.split('-').map(Number);
+    setMonthFilter(month);
+    setYearFilter(year);
+    setPage(1);
+  };
   const statusOptions = [
     { value: '', label: 'All Status' },
     { value: 'Pending', label: 'Pending' },
@@ -184,28 +215,13 @@ export default function PayrollPage() {
     {
       key: 'actions', label: '',
       render: (p) => (
-        <div className="flex gap-1 flex-wrap">
-          <Button size="sm" variant="ghost" onClick={() => setViewPayroll(p)} title="View Details">
-            <Eye className="w-3 h-3" />
-          </Button>
-          {p.status === 'Paid' ? (
-            <span title="Locked — salary disbursed">
-              <Lock className="w-4 h-4 text-amber-400 opacity-60 mt-1" />
-            </span>
-          ) : (
-            <>
-              <Button size="sm" variant="success" onClick={() => handlePay(p._id)} title="Mark Paid">
-                <CheckCircle className="w-3 h-3" />
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setEditPayroll(p)} title="Edit">
-                <Edit2 className="w-3 h-3" />
-              </Button>
-              <Button size="sm" variant="danger" onClick={() => setDeleteConfirm(p)} title="Delete">
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </>
-          )}
-        </div>
+        <PayrollRowActions
+          payroll={p}
+          onView={() => setViewPayroll(p)}
+          onPay={() => handlePay(p._id)}
+          onEdit={() => setEditPayroll(p)}
+          onDelete={() => setDeleteConfirm(p)}
+        />
       ),
     },
   ];
@@ -214,7 +230,7 @@ export default function PayrollPage() {
     <PageContent>
       <PageHeader
         title="Payroll"
-        subtitle={`${MONTHS[monthFilter - 1]} ${yearFilter} · ${total} records`}
+        subtitle={`${MONTHS[monthFilter - 1]} (${yearFilter}) · ${total} records`}
         actions={
           <div className="flex gap-2 flex-wrap">
             <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
@@ -254,8 +270,7 @@ export default function PayrollPage() {
 
       {/* Filters */}
       <div className="hidden sm:flex flex-wrap gap-3 mb-4 items-center">
-        <Select options={monthOptions}  value={monthFilter}  onChange={e => { setMonthFilter(Number(e.target.value)); setPage(1); }}  className="w-36" />
-        <Select options={yearOptions}   value={yearFilter}   onChange={e => { setYearFilter(Number(e.target.value)); setPage(1); }}   className="w-28" />
+        <Select options={payrollPeriodOptions} value={selectedPayrollPeriod} onChange={e => handlePayrollPeriodChange(e.target.value)} className="w-44" />
         <Select options={statusOptions} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}          className="w-36" />
         <Select options={empOptions}    value={empFilter}    onChange={e => { setEmpFilter(e.target.value); setPage(1); }}             className="w-52" />
         <Button variant="ghost" onClick={fetchPayroll}><RefreshCw className="w-4 h-4" /></Button>
@@ -264,8 +279,12 @@ export default function PayrollPage() {
       {/* Filters modal (mobile) */}
       <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
         <div className="space-y-4">
-          <Select label="Month"  value={monthFilter}  onChange={e => setMonthFilter(Number(e.target.value))} options={monthOptions} />
-          <Input  label="Year"   value={yearFilter} readOnly disabled />
+          <Select
+            label="Month"
+            value={selectedPayrollPeriod}
+            onChange={e => handlePayrollPeriodChange(e.target.value)}
+            options={payrollPeriodOptions}
+          />
           <Select label="Status" value={statusFilter} onChange={e => setStatusFilter(e.target.value)} options={statusOptions} />
           <Select label="Employee" value={empFilter} onChange={e => setEmpFilter(e.target.value)} options={empOptions} />
         </div>
@@ -296,9 +315,9 @@ export default function PayrollPage() {
         <GeneratePayrollModal
           employees={employees}
           ayId={ayId}
+          academicYearName={academicYearName}
           ayStartDate={ayStartDate}
           defaultMonth={monthFilter}
-          defaultYear={yearFilter}
           onClose={() => setAddOpen(false)}
           onSuccess={() => { fetchPayroll(); setAddOpen(false); }}
         />
@@ -338,9 +357,9 @@ export default function PayrollPage() {
       {autoGenOpen && (
         <AutoGenerateModal
           ayId={ayId}
+          academicYearName={academicYearName}
           ayStartDate={ayStartDate}
           defaultMonth={monthFilter}
-          defaultYear={yearFilter}
           employees={employees}
           onClose={() => setAutoGenOpen(false)}
           onSuccess={() => { fetchPayroll(); setAutoGenOpen(false); }}
@@ -350,11 +369,84 @@ export default function PayrollPage() {
   );
 }
 
+function PayrollRowActions({ payroll, onView, onPay, onEdit, onDelete }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleDocumentClick = event => {
+      if (ref.current && !ref.current.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => document.removeEventListener('mousedown', handleDocumentClick);
+  }, []);
+
+  return (
+    <div className="relative flex justify-end" ref={ref}>
+      <Button
+        size="sm"
+        variant="ghost"
+        title="Actions"
+        aria-label={`Actions for ${payroll.employee?.name || 'payroll record'}`}
+        aria-expanded={open}
+        onClick={() => setOpen(value => !value)}
+      >
+        <MoreVertical className="w-4 h-4" />
+      </Button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-2 min-w-[180px] rounded-lg border border-slate-700 bg-slate-900 py-1 shadow-lg">
+          <button
+            onClick={() => { setOpen(false); onView(); }}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-200 hover:bg-slate-800"
+          >
+            <Eye className="h-4 w-4" />
+            <span className="text-sm">View Details</span>
+          </button>
+          {payroll.status === 'Paid' ? (
+            <div className="flex items-center gap-2 px-3 py-2 text-amber-400" title="Locked — salary disbursed">
+              <Lock className="h-4 w-4" />
+              <span className="text-sm">Paid and locked</span>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => { setOpen(false); onPay(); }}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-200 hover:bg-slate-800"
+              >
+                <CheckCircle className="h-4 w-4 text-emerald-400" />
+                <span className="text-sm">Mark Paid</span>
+              </button>
+              <button
+                onClick={() => { setOpen(false); onEdit(); }}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-200 hover:bg-slate-800"
+              >
+                <Edit2 className="h-4 w-4" />
+                <span className="text-sm">Edit</span>
+              </button>
+              <button
+                onClick={() => { setOpen(false); onDelete(); }}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-rose-300 hover:bg-slate-800"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span className="text-sm">Delete</span>
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Generate Single Payroll Modal ───────────────────────────────────────────
 
-function GeneratePayrollModal({ employees, ayId, ayStartDate, defaultMonth, defaultYear, onClose, onSuccess }) {
+function GeneratePayrollModal({ employees, ayId, academicYearName, ayStartDate, defaultMonth, onClose, onSuccess }) {
+  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
+  const startYear = ayStartDate ? new Date(ayStartDate).getFullYear() : currentYear;
   const [form, setForm] = useState({
-    employee: '', month: defaultMonth, year: defaultYear,
+    employee: '',
+    month: defaultMonth,
+    year: startYear + (defaultMonth < startMonth ? 1 : 0),
     bonus: 0, extraDeductions: 0,
     paymentMode: 'BankTransfer', manualOverride: false,
     daysPresent: '', holidays: '', absent: '',
@@ -408,8 +500,6 @@ function GeneratePayrollModal({ employees, ayId, ayStartDate, defaultMonth, defa
     finally { setSaving(false); }
   };
 
-  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
-  const startYear  = ayStartDate ? new Date(ayStartDate).getFullYear() : currentYear;
   const monthOptions = Array.from({ length: 12 }, (_, i) => {
     const m = ((startMonth - 1 + i) % 12) + 1;
     const y = startYear + (m < startMonth ? 1 : 0);
@@ -467,7 +557,7 @@ function GeneratePayrollModal({ employees, ayId, ayStartDate, defaultMonth, defa
         <Select label="Employee *" error={errors.employee} value={form.employee} onChange={e => set('employee', e.target.value)} options={empOptions} />
         <div className="grid grid-cols-2 gap-3">
           <Select label="Month *" error={errors.month} value={form.month} onChange={e => onMonthChange(Number(e.target.value))} options={monthOptions} />
-          <Input label="Year" value={form.year} disabled readOnly />
+          <Input label="Academic Year" value={academicYearName || `${startYear}-${startYear + 1}`} disabled readOnly />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Input label="Bonus (₹)"            type="number" onKeyDown={onNumberKeyDown} value={form.bonus}            onChange={e => setNonNegative('bonus', e.target.value)} error={errors.bonus} />
@@ -606,10 +696,12 @@ function EditPayrollModal({ payroll: rec, onClose, onSuccess }) {
 
 // ─── Auto Generate All Modal ─────────────────────────────────────────────────
 
-function AutoGenerateModal({ ayId, ayStartDate, defaultMonth, defaultYear, employees, onClose, onSuccess }) {
+function AutoGenerateModal({ ayId, academicYearName, ayStartDate, defaultMonth, employees, onClose, onSuccess }) {
+  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
+  const startYear = ayStartDate ? new Date(ayStartDate).getFullYear() : currentYear;
   const [form, setForm] = useState({
     month:       defaultMonth,
-    year:        defaultYear,
+    year:        startYear + (defaultMonth < startMonth ? 1 : 0),
     paymentMode: 'BankTransfer',
   });
   const [preview, setPreview] = useState(null);
@@ -636,8 +728,6 @@ function AutoGenerateModal({ ayId, ayStartDate, defaultMonth, defaultYear, emplo
     finally { setSaving(false); }
   };
 
-  const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
-  const startYear  = ayStartDate ? new Date(ayStartDate).getFullYear() : currentYear;
   const monthOptions = Array.from({ length: 12 }, (_, i) => {
     const m = ((startMonth - 1 + i) % 12) + 1;
     const y = startYear + (m < startMonth ? 1 : 0);
@@ -658,7 +748,7 @@ function AutoGenerateModal({ ayId, ayStartDate, defaultMonth, defaultYear, emplo
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <Select label="Month *" value={form.month} onChange={e => onMonthChange(Number(e.target.value))} options={monthOptions} />
-          <Input label="Year" value={form.year} disabled readOnly />
+          <Input label="Academic Year" value={academicYearName || `${startYear}-${startYear + 1}`} disabled readOnly />
         </div>
         <Select label="Default Payment Mode" value={form.paymentMode}
           onChange={e => set('paymentMode', e.target.value)} options={modeOptions} />

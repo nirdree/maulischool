@@ -10,6 +10,7 @@
  *   POST   /api/fees/pay-multiple        — pay multiple months at once
  *   GET    /api/fees/:id/payments        — payment history
  *   GET    /api/fees/receipts/all        — all receipts
+ *   GET    /api/fees/receipts/:id        — printable receipt PDF
  *   POST   /api/fees/generate-auto       — auto-generate for all students
  *   GET    /api/classrooms               — dropdown
  *   GET    /api/students                 — dropdown / search
@@ -17,10 +18,12 @@
  */
 'use client';
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Plus, DollarSign, RefreshCw, Eye, Trash2, Edit2,
   Zap, CreditCard, Search, X, ChevronDown, CheckSquare,
   Square, Calendar, FileText, AlertCircle, Filter,
+  Printer, MoreVertical,
 } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
@@ -39,6 +42,20 @@ const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct
 const monthName  = (m) => SHORT_MONTHS[(m ?? 1) - 1] ?? m;
 const currentYear = new Date().getFullYear();
 const currentMonth = new Date().getMonth() + 1; // 1-based
+
+async function openFeeReceipt(receiptId) {
+  const pdf = await api.get(API.FEES.RECEIPT(receiptId), { responseType: 'blob' });
+  const url = URL.createObjectURL(pdf);
+  const opened = window.open(url, '_blank');
+  if (opened) opened.opener = null;
+  if (!opened) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'fee-receipt.pdf';
+    link.click();
+  }
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
 
 /** Build month options starting from AY start month */
 function buildMonthOptions(ayStartDate, includeAll = true) {
@@ -76,6 +93,7 @@ export default function FeesPage() {
   const [editFee, setEditFee]           = useState(null);
   const [payFee, setPayFee]             = useState(null);
   const [multiPayStudent, setMultiPayStudent] = useState(null);
+  const [viewMonths, setViewMonths] = useState(null);
   const [viewPayments, setViewPayments] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [autoGenOpen, setAutoGenOpen]   = useState(false);
@@ -101,7 +119,7 @@ export default function FeesPage() {
     if (!ayId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20' });
+      const params = new URLSearchParams({ academicYear: ayId, page: String(page), limit: '20', groupByStudent: 'true' });
       if (classFilter)   params.set('classId', classFilter);
       if (statusFilter)  params.set('status', statusFilter);
       if (monthFilter)   params.set('month', monthFilter);
@@ -119,7 +137,7 @@ export default function FeesPage() {
     } catch {} finally { setLoading(false); }
   }, [ayId, classFilter, statusFilter, monthFilter, yearFilter, page]);
 
-  useEffect(() => { if (ayId) fetchFees(); }, [fetchFees]);
+  useEffect(() => { if (ayId) fetchFees(); }, [ayId, fetchFees]);
 
 
   // debounced student search
@@ -155,11 +173,19 @@ export default function FeesPage() {
     { value: currentYear + 1, label: String(currentYear + 1) },
   ];
 
+  const visibleFeeIds = fees.flatMap(group => group.records.map(fee => fee._id));
+
   // bulk select helpers
-  const toggleSelect = (id) =>
-    setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
   const toggleAll = () =>
-    setSelected(s => s.length === fees.length ? [] : fees.map(f => f._id));
+    setSelected(s => visibleFeeIds.every(id => s.includes(id))
+      ? s.filter(id => !visibleFeeIds.includes(id))
+      : [...new Set([...s, ...visibleFeeIds])]);
+  const toggleGroup = (group) => {
+    const ids = group.records.map(fee => fee._id);
+    setSelected(current => ids.every(id => current.includes(id))
+      ? current.filter(id => !ids.includes(id))
+      : [...new Set([...current, ...ids])]);
+  };
 
   const handleDelete = async (fee) => {
     try {
@@ -181,14 +207,14 @@ export default function FeesPage() {
     {
       key: 'select', label: (
         <button onClick={toggleAll} className="text-slate-400 hover:text-white">
-          {selected.length === fees.length && fees.length > 0
+          {visibleFeeIds.length > 0 && visibleFeeIds.every(id => selected.includes(id))
             ? <CheckSquare className="w-4 h-4 text-amber-400" />
             : <Square className="w-4 h-4" />}
         </button>
       ),
-      render: (f) => (
-        <button onClick={() => toggleSelect(f._id)} className="text-slate-400 hover:text-white">
-          {selected.includes(f._id)
+      render: (group) => (
+        <button onClick={() => toggleGroup(group)} className="text-slate-400 hover:text-white">
+          {group.records.every(fee => selected.includes(fee._id))
             ? <CheckSquare className="w-4 h-4 text-amber-400" />
             : <Square className="w-4 h-4" />}
         </button>
@@ -196,48 +222,51 @@ export default function FeesPage() {
     },
     {
       key: 'student', label: 'Student',
-      render: (f) => (
+      render: (group) => (
         <div>
-          <p className="font-medium text-white">{f.student?.firstName} {f.student?.lastName}</p>
-          <p className="text-xs text-slate-500">{f.student?.admissionNo}</p>
+          <p className="font-medium text-white">{group.student?.firstName} {group.student?.lastName}</p>
+          <p className="text-xs text-slate-500">{group.student?.admissionNo}</p>
         </div>
       ),
     },
-    { key: 'classroom', label: 'Class', render: (f) => f.classroom?.displayName || '—' },
-    { key: 'period',    label: 'Period', render: (f) => `${monthName(f.month)} ${f.year}` },
+    { key: 'classroom', label: 'Class', render: (group) => group.classroom?.displayName || '—' },
+    {
+      key: 'period', label: 'Fee Months',
+      render: (group) => (
+        <button className="text-left text-indigo-300 hover:text-indigo-200"
+          onClick={() => setViewMonths(group)}>
+          {group.records.length} month{group.records.length === 1 ? '' : 's'} · View
+        </button>
+      ),
+    },
     {
       key: 'amount', label: 'Amount',
-      render: (f) => (
+      render: (group) => {
+        const total = group.records.reduce((sum, fee) => sum + Number(fee.finalAmount || 0), 0);
+        const outstanding = group.records.reduce((sum, fee) => sum + Number(fee.outstandingAmount || 0), 0);
+        return (
         <div>
-          <span className="text-amber-400 font-semibold">₹{f.finalAmount?.toLocaleString()}</span>
-          {f.discount > 0 && <span className="ml-1 text-xs text-emerald-400">(-₹{f.discount})</span>}
+          <span className="text-white font-semibold">₹{total.toLocaleString('en-IN')}</span>
+          <p className="text-xs text-amber-400">Due ₹{outstanding.toLocaleString('en-IN')}</p>
         </div>
-      ),
+        );
+      },
     },
-    { key: 'status',  label: 'Status',   render: (f) => feeStatusBadge(f.status) },
-    { key: 'dueDate', label: 'Due Date', render: (f) => new Date(f.dueDate).toLocaleDateString('en-IN') },
+    {
+      key: 'status', label: 'Status',
+      render: (group) => {
+        const outstanding = group.records.filter(fee => fee.outstandingAmount > 0 && fee.status !== 'Waived').length;
+        return <span className="text-sm text-slate-300">{outstanding ? `${outstanding} due` : 'All cleared'}</span>;
+      },
+    },
     {
       key: 'actions', label: '',
-      render: (f) => (
-        <div className="flex gap-1 flex-wrap">
-          {f.status !== 'Paid' && (
-            <Button size="sm" variant="success" onClick={() => setPayFee(f)} title="Collect Payment">
-              <DollarSign className="w-3 h-3" />
-            </Button>
-          )}
-          <Button size="sm" variant="ghost" onClick={() => setMultiPayStudent(f.student)} title="Pay Multiple Months">
-            <CreditCard className="w-3 h-3" />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setViewPayments(f)} title="Payment History">
-            <Eye className="w-3 h-3" />
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setEditFee(f)} title="Edit">
-            <Edit2 className="w-3 h-3" />
-          </Button>
-          <Button size="sm" variant="danger" onClick={() => setDeleteConfirm(f)} title="Delete">
-            <Trash2 className="w-3 h-3" />
-          </Button>
-        </div>
+      render: (group) => (
+        <FeeGroupActions
+          onView={() => setViewMonths(group)}
+          onPayMultiple={() => setMultiPayStudent(group.student)}
+          hasOutstanding={group.records.some(fee => fee.outstandingAmount > 0 && fee.status !== 'Waived')}
+        />
       ),
     },
   ];
@@ -246,7 +275,7 @@ export default function FeesPage() {
     <PageContent>
       <PageHeader
         title="Fees"
-        subtitle={`${total} records · ${summary.pendingCount} pending · ${summary.overdueCount} overdue`}
+        subtitle={`${total} students · ${summary.pendingCount} pending months · ${summary.overdueCount} overdue months`}
         actions={
           <div className="flex gap-2 flex-wrap">
             <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
@@ -379,13 +408,24 @@ export default function FeesPage() {
         />
       )}
 
+      {viewMonths && (
+        <FeeMonthsModal
+          group={viewMonths}
+          onClose={() => setViewMonths(null)}
+          onCollect={fee => { setViewMonths(null); setPayFee(fee); }}
+          onHistory={fee => { setViewMonths(null); setViewPayments(fee); }}
+          onEdit={fee => { setViewMonths(null); setEditFee(fee); }}
+          onDelete={fee => { setViewMonths(null); setDeleteConfirm(fee); }}
+        />
+      )}
+
       {multiPayStudent && (
         <MultiMonthPayModal
           student={multiPayStudent}
           ayId={ayId}
           ayStartDate={ayStartDate}
           onClose={() => setMultiPayStudent(null)}
-          onSuccess={() => { fetchFees(); setMultiPayStudent(null); }}
+          onSuccess={fetchFees}
         />
       )}
 
@@ -433,6 +473,126 @@ export default function FeesPage() {
         />
       )}
     </PageContent>
+  );
+}
+
+function ActionMenu({ items }) {
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState(null);
+  const ref = useRef(null);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = event => {
+      if (!ref.current?.contains(event.target) && !menuRef.current?.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    const closeMenu = () => setOpen(false);
+    document.addEventListener('scroll', closeMenu, true);
+    window.addEventListener('resize', closeMenu);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('scroll', closeMenu, true);
+      window.removeEventListener('resize', closeMenu);
+    };
+  }, []);
+
+  const toggleMenu = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+
+    const bounds = ref.current?.getBoundingClientRect();
+    if (!bounds) return;
+    const menuHeight = items.length * 40 + 8;
+    const top = bounds.bottom + 8 + menuHeight > window.innerHeight
+      ? Math.max(8, bounds.top - menuHeight - 8)
+      : bounds.bottom + 8;
+    setPosition({ top, left: Math.max(8, bounds.right - 210) });
+    setOpen(true);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <Button size="sm" variant="ghost" title="Actions" aria-label="Actions" onClick={toggleMenu}>
+        <MoreVertical className="h-4 w-4" />
+      </Button>
+      {open && position && createPortal(
+        <div ref={menuRef}
+          style={{ position: 'fixed', top: position.top, left: position.left, width: 210 }}
+          className="z-[100] rounded-lg border border-slate-700 bg-slate-900 py-1 shadow-lg">
+          {items.map(item => (
+            <button key={item.label} type="button"
+              onClick={() => { setOpen(false); item.onClick(); }}
+              className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-slate-800 ${item.danger ? 'text-rose-300' : 'text-slate-200'}`}>
+              <item.icon className="h-4 w-4" />
+              <span className="text-sm">{item.label}</span>
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </div>
+  );
+}
+
+function FeeGroupActions({ onView, onPayMultiple, hasOutstanding }) {
+  const items = [
+    { label: 'View monthly fee records', icon: Calendar, onClick: onView },
+    ...(hasOutstanding
+      ? [{ label: 'Pay multiple months', icon: CreditCard, onClick: onPayMultiple }]
+      : []),
+  ];
+  return <ActionMenu items={items} />;
+}
+
+function FeeMonthsModal({ group, onClose, onCollect, onHistory, onEdit, onDelete }) {
+  const records = [...group.records].sort((a, b) => (
+    a.year - b.year || a.month - b.month
+  ));
+
+  return (
+    <Modal open onClose={onClose}
+      title={`Monthly fees — ${group.student?.firstName || ''} ${group.student?.lastName || ''}`}
+      width="max-w-3xl">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-800 p-3 text-sm">
+        <span className="text-slate-300">Admission no. <strong className="text-white">{group.student?.admissionNo || '—'}</strong></span>
+        <span className="text-slate-300">Class <strong className="text-white">{group.classroom?.displayName || '—'}</strong></span>
+        <span className="text-slate-300">Total outstanding <strong className="text-amber-400">
+          ₹{records.reduce((sum, fee) => sum + Number(fee.outstandingAmount || 0), 0).toLocaleString('en-IN')}
+        </strong></span>
+      </div>
+
+      <div className="space-y-2">
+        {records.map(fee => (
+          <div key={fee._id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/50 p-3">
+            <div className="min-w-0">
+              <p className="font-medium text-white">{monthName(fee.month)} {fee.year}</p>
+              <p className="mt-1 text-xs text-slate-400">
+                Fee ₹{Number(fee.finalAmount || 0).toLocaleString('en-IN')}
+                {' · '}Paid ₹{Number(fee.amountPaid || 0).toLocaleString('en-IN')}
+                {' · '}Due ₹{Number(fee.outstandingAmount || 0).toLocaleString('en-IN')}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {feeStatusBadge(fee.status)}
+              <ActionMenu items={[
+                ...(fee.outstandingAmount > 0 && fee.status !== 'Waived'
+                  ? [{ label: 'Collect payment', icon: DollarSign, onClick: () => onCollect(fee) }]
+                  : []),
+                { label: 'Payment history / print receipt', icon: Printer, onClick: () => onHistory(fee) },
+                { label: 'Edit fee record', icon: Edit2, onClick: () => onEdit(fee) },
+                { label: 'Delete fee record', icon: Trash2, onClick: () => onDelete(fee), danger: true },
+              ]} />
+            </div>
+          </div>
+        ))}
+        {records.length === 0 && <p className="py-6 text-center text-sm text-slate-500">No fee records found.</p>}
+      </div>
+    </Modal>
   );
 }
 
@@ -693,6 +853,7 @@ function CollectPaymentModal({ fee, onClose, onSuccess }) {
 function MultiMonthPayModal({ student, ayId, ayStartDate, onClose, onSuccess }) {
   const [unpaidFees, setUnpaidFees]   = useState([]);
   const [selectedFees, setSelectedFees] = useState([]);
+  const [receipt, setReceipt]         = useState(null);
   const [loading, setLoading]         = useState(true);
   const [form, setForm]               = useState({ paymentMode: 'Cash', transactionId: '', notes: '' });
   const [saving, setSaving]           = useState(false);
@@ -701,7 +862,7 @@ function MultiMonthPayModal({ student, ayId, ayStartDate, onClose, onSuccess }) 
     (async () => {
       try {
         const res = await api.get(`${API.FEES.BASE}?studentId=${student._id}&academicYear=${ayId}`);
-        const unpaid = (res.data || []).filter(f => f.status !== 'Paid' && f.status !== 'Waived');
+        const unpaid = (res.data || []).filter(f => f.status !== 'Waived' && f.outstandingAmount > 0);
         // Sort by AY month order
         const startMonth = ayStartDate ? new Date(ayStartDate).getMonth() + 1 : 4;
         unpaid.sort((a, b) => {
@@ -713,30 +874,21 @@ function MultiMonthPayModal({ student, ayId, ayStartDate, onClose, onSuccess }) 
         setSelectedFees(unpaid.map(f => f._id)); // select all by default
       } catch {} finally { setLoading(false); }
     })();
-  }, []);
+  }, [ayId, ayStartDate, student._id]);
 
   const toggleFee = (id) =>
     setSelectedFees(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
 
   const totalAmount = unpaidFees
     .filter(f => selectedFees.includes(f._id))
-    .reduce((s, f) => s + (f.finalAmount || 0), 0);
+    .reduce((s, f) => s + (f.outstandingAmount || 0), 0);
 
   const handleSubmit = async () => {
     if (selectedFees.length === 0) return alert('Select at least one month');
     setSaving(true);
     try {
-      // Pay each selected fee sequentially (or use bulk endpoint if available)
-      const results = [];
-      for (const feeId of selectedFees) {
-        const fee = unpaidFees.find(f => f._id === feeId);
-        const res = await api.post(API.FEES.PAY(feeId), {
-          amountPaid: fee.finalAmount,
-          ...form,
-        });
-        results.push(res.data?.receiptNo);
-      }
-      alert(`${results.length} payments recorded!\nReceipts: ${results.filter(Boolean).join(', ')}`);
+      const res = await api.post(API.FEES.PAY_MULTIPLE, { feeIds: selectedFees, ...form });
+      setReceipt(res.data);
       onSuccess();
     } catch (err) { alert(err.message); } finally { setSaving(false); }
   };
@@ -748,7 +900,22 @@ function MultiMonthPayModal({ student, ayId, ayStartDate, onClose, onSuccess }) 
         <p className="text-xs text-slate-400">{student?.admissionNo}</p>
       </div>
 
-      {loading ? (
+      {receipt ? (
+        <div className="space-y-4">
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
+            <p className="font-semibold text-emerald-400">Payment recorded successfully</p>
+            <p className="mt-1 text-sm text-slate-300">Receipt: {receipt.receiptNo}</p>
+            <p className="text-sm text-slate-300">{receipt.monthsPaid} month(s) · ₹{receipt.amountPaid?.toLocaleString('en-IN')}</p>
+            <p className="text-xs text-slate-400">{new Date(receipt.paymentDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={onClose}>Done</Button>
+            <Button onClick={() => openFeeReceipt(receipt.receiptId).catch(err => alert(err.message))}>
+              <Printer className="mr-2 h-4 w-4" /> Print / Download Receipt
+            </Button>
+          </div>
+        </div>
+      ) : loading ? (
         <p className="text-slate-500 text-sm py-4">Loading unpaid fees...</p>
       ) : unpaidFees.length === 0 ? (
         <p className="text-emerald-400 text-sm py-4">No unpaid fees! All months are cleared.</p>
@@ -775,7 +942,7 @@ function MultiMonthPayModal({ student, ayId, ayStartDate, onClose, onSuccess }) 
                     <p className="text-xs text-slate-500">{feeStatusBadge(f.status)}</p>
                   </div>
                 </div>
-                <span className="text-amber-400 font-semibold text-sm">₹{f.finalAmount?.toLocaleString()}</span>
+                <span className="text-amber-400 font-semibold text-sm">₹{f.outstandingAmount?.toLocaleString('en-IN')}</span>
               </div>
             ))}
           </div>
@@ -797,14 +964,16 @@ function MultiMonthPayModal({ student, ayId, ayStartDate, onClose, onSuccess }) 
         </>
       )}
 
-      <div className="flex justify-end gap-3 mt-6">
-        <Button variant="ghost" onClick={onClose}>Cancel</Button>
-        {unpaidFees.length > 0 && (
-          <Button onClick={handleSubmit} disabled={saving || selectedFees.length === 0}>
-            {saving ? 'Processing...' : `Pay ₹${totalAmount.toLocaleString()}`}
-          </Button>
-        )}
-      </div>
+      {!receipt && (
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          {unpaidFees.length > 0 && (
+            <Button onClick={handleSubmit} disabled={saving || selectedFees.length === 0}>
+              {saving ? 'Processing...' : `Pay ₹${totalAmount.toLocaleString('en-IN')}`}
+            </Button>
+          )}
+        </div>
+      )}
     </Modal>
   );
 }
@@ -907,7 +1076,7 @@ function PaymentHistoryModal({ fee, onClose }) {
     api.get(API.FEES.PAYMENTS(fee._id))
       .then(res => setPayments(res.data || []))
       .finally(() => setLoading(false));
-  }, []);
+  }, [fee._id]);
 
   const total = payments.reduce((s, p) => s + (p.amountPaid || 0), 0);
 
@@ -927,15 +1096,21 @@ function PaymentHistoryModal({ fee, onClose }) {
           {payments.map(p => (
             <div key={p._id} className="flex items-center justify-between p-3 bg-slate-800 rounded-lg">
               <div>
-                <p className="text-white text-sm font-medium">{p.receiptNo}</p>
+                <p className="text-white text-sm font-medium">{p.batchReceipt?.receiptNo || p.receiptNo}</p>
                 <p className="text-xs text-slate-500">
-                  {p.paymentMode} · {new Date(p.paymentDate).toLocaleDateString('en-IN')}
+                  {p.paymentMode} · {new Date(p.paymentDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                   {p.collectedBy?.name ? ` · ${p.collectedBy.name}` : ''}
                 </p>
                 {p.transactionId && <p className="text-xs text-slate-600">TXN: {p.transactionId}</p>}
                 {p.notes && <p className="text-xs text-slate-500 italic">{p.notes}</p>}
               </div>
-              <span className="text-emerald-400 font-semibold">₹{p.amountPaid?.toLocaleString()}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-400 font-semibold">₹{p.amountPaid?.toLocaleString()}</span>
+                <Button size="sm" variant="ghost" title="Print / Download receipt"
+                  onClick={() => openFeeReceipt(p.batchReceipt?._id || p._id).catch(err => alert(err.message))}>
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))}
           <div className="flex justify-between px-3 pt-2 border-t border-slate-700">
@@ -961,16 +1136,16 @@ function AllReceiptsModal({ ayId, onClose }) {
   const [total, setTotal]       = useState(0);
   const LIMIT = 20;
 
-  const fetchReceipts = async (p = 1) => {
+  const fetchReceipts = useCallback(async (p = 1) => {
     setLoading(true);
     try {
       const res = await api.get(`${API.FEES.BASE}/receipts/all?academicYear=${ayId}&page=${p}&limit=${LIMIT}`);
       setReceipts(res.data || []);
       setTotal(res.meta?.total || 0);
     } catch {} finally { setLoading(false); }
-  };
+  }, [ayId]);
 
-  useEffect(() => { fetchReceipts(page); }, [page]);
+  useEffect(() => { fetchReceipts(page); }, [fetchReceipts, page]);
 
   const totalAmount = receipts.reduce((s, r) => s + (r.amountPaid || 0), 0);
 
@@ -992,11 +1167,19 @@ function AllReceiptsModal({ ayId, onClose }) {
                     {r.student?.firstName} {r.student?.lastName} ({r.student?.admissionNo})
                   </p>
                   <p className="text-xs text-slate-500">
-                    {r.paymentMode} · {new Date(r.paymentDate).toLocaleDateString('en-IN')}
-                    {r.fee ? ` · ${monthName(r.fee.month)} ${r.fee.year}` : ''}
+                    {r.paymentMode} · {new Date(r.paymentDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {(r.months || []).map(fee => `${monthName(fee.month)} ${fee.year}`).join(', ')}
                   </p>
                 </div>
-                <span className="text-emerald-400 font-semibold">₹{r.amountPaid?.toLocaleString()}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-emerald-400 font-semibold">₹{r.amountPaid?.toLocaleString('en-IN')}</span>
+                        <Button size="sm" variant="ghost" title="Print / Download receipt"
+                    onClick={() => openFeeReceipt(r._id).catch(err => alert(err.message))}>
+                    <Printer className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

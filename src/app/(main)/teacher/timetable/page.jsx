@@ -3,281 +3,250 @@
  * TEACHER TIMETABLE PAGE
  * APIs Used:
  *   GET /api/academic-years/current
- *   GET /api/classrooms?isActive=true&academicYear=:ayId
- *   GET /api/timetable/:classId?academicYear=:ayId
+ *   GET /api/timetable/teacher/:teacherId?academicYear=:ayId
  */
 'use client';
 import { useEffect, useState } from 'react';
-import { Clock, Coffee, AlertTriangle, Filter } from 'lucide-react';
+import { Clock, AlertTriangle } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
-import { PageContent, PageHeader, Card, Select, Button, Modal } from '@/components/ui.jsx';
+import { PageContent, PageHeader, Card, Badge, Select } from '@/components/ui.jsx';
+import { useAuth } from '@/context/AuthContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const SHORT_DAY = { Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat' };
-
-const PERIOD_COLORS = [
-  'bg-blue-500/10 border-blue-500/30 text-blue-300',
-  'bg-violet-500/10 border-violet-500/30 text-violet-300',
-  'bg-emerald-500/10 border-emerald-500/30 text-emerald-300',
-  'bg-amber-500/10 border-amber-500/30 text-amber-300',
-  'bg-pink-500/10 border-pink-500/30 text-pink-300',
-  'bg-cyan-500/10 border-cyan-500/30 text-cyan-300',
-  'bg-orange-500/10 border-orange-500/30 text-orange-300',
-  'bg-teal-500/10 border-teal-500/30 text-teal-300',
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
-
-function mergeSchedule(loaded, days, numPeriods) {
-  return days.map(day => {
-    const existing = loaded.find(s => s.day === day);
-    return {
-      day,
-      periods: Array.from({ length: numPeriods }, (_, i) => {
-        const ep = existing?.periods?.find(p => p.periodNo === i + 1);
-        if (!ep) return { periodNo: i + 1, startTime: '', endTime: '', subject: null, teacher: null, isBreak: false, breakLabel: 'Break' };
-        return {
-          periodNo:   i + 1,
-          startTime:  ep.startTime  || '',
-          endTime:    ep.endTime    || '',
-          subject:    ep.subject    || null,
-          teacher:    ep.teacher    || null,
-          isBreak:    ep.isBreak    || false,
-          breakLabel: ep.breakLabel || 'Break',
-        };
-      }),
-    };
-  });
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PERIOD CELL — read-only
-// ─────────────────────────────────────────────────────────────────────────────
-
-function PeriodCell({ period, colorClass }) {
-  if (period.isBreak) {
-    return (
-      <div className="w-40 rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 flex flex-col gap-1">
-        <div className="flex items-center gap-1 text-amber-400 text-xs font-semibold">
-          <Coffee className="w-3 h-3" />
-          {period.breakLabel || 'Break'}
-        </div>
-        {period.startTime && period.endTime && (
-          <div className="text-[10px] font-mono text-amber-300/70">
-            {period.startTime} – {period.endTime}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  const hasContent = period.subject?.name || period.teacher?.name;
-
-  return (
-    <div className={`w-40 rounded-lg border p-2.5 flex flex-col gap-1 ${
-      hasContent ? colorClass : 'border-slate-700/50 bg-slate-800/30'
-    }`}>
-      {period.startTime && period.endTime && (
-        <div className="text-[10px] font-mono text-slate-500">
-          {period.startTime} – {period.endTime}
-        </div>
-      )}
-      {period.subject?.name ? (
-        <div className="text-xs font-semibold text-white leading-tight">
-          {period.subject.name}
-        </div>
-      ) : (
-        <div className="text-xs text-slate-600 italic">No subject</div>
-      )}
-      {period.teacher?.name && (
-        <div className="text-[10px] text-slate-400 truncate">
-          {period.teacher.name}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function TeacherTimetable() {
+  const { user, initialized } = useAuth();
+  const [academicYear, setAcademicYear] = useState('');
   const [classrooms, setClassrooms] = useState([]);
-  const [classFilter, setClassFilter] = useState('');
-  const [schedule, setSchedule] = useState([]);
-  const [numPeriods, setNumPeriods] = useState(0);
-  const [workingDays, setWorkingDays] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [ayId, setAyId] = useState('');
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('teacher');
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const [timetables, setTimetables] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // ── Bootstrap ──────────────────────────────────────────────────────────────
   useEffect(() => {
+    let active = true;
+    if (!initialized) return () => { active = false; };
+
     (async () => {
       try {
         const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
-        setAyId(ay.data?._id);
-        const cls = await api.get(`${API.CLASSROOMS.BASE}?isActive=true&academicYear=${ay.data?._id}`);
-        const classes = cls.data || [];
-        setClassrooms(classes);
-        if (classes.length > 0) setClassFilter(classes[0]._id);
-      } catch {}
-    })();
-  }, []);
+        const yearId = ay.data?._id;
+        if (!yearId) throw new Error('No current academic year is configured.');
 
-  // ── Load timetable when class or AY changes ────────────────────────────────
-  useEffect(() => {
-    if (!classFilter || !ayId) return;
-    (async () => {
-      setLoading(true);
-      setError(false);
-      try {
-        const res = await api.get(`${API.TIMETABLE.BY_CLASS(classFilter)}?academicYear=${ayId}`);
-        const tt = res.data;
-        if (tt) {
-          const days = tt.workingDays?.length ? tt.workingDays : ALL_DAYS.slice(0, 5);
-          const periods = tt.totalPeriods || 8;
-          setWorkingDays(days);
-          setNumPeriods(periods);
-          setSchedule(mergeSchedule(tt.schedule || [], days, periods));
-        } else {
-          setSchedule([]);
-          setWorkingDays([]);
-          setNumPeriods(0);
+        const classes = await api.get(
+          `${API.CLASSROOMS.BASE}?isActive=true&academicYear=${encodeURIComponent(yearId)}`
+        );
+        if (active) {
+          setAcademicYear(yearId);
+          setClassrooms(classes.data || []);
+          setSelectedClassId(current => current || classes.data?.[0]?._id || '');
         }
-      } catch {
-        setError(true);
-        setSchedule([]);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        if (active) {
+          setError(err.response?.data?.message || err.message || 'Unable to load classrooms.');
+          setLoading(false);
+        }
       }
     })();
-  }, [classFilter, ayId]);
 
-  // ── Options ────────────────────────────────────────────────────────────────
-  const classOptions = classrooms.map(c => ({ value: c._id, label: c.displayName }));
-  const selectedClass = classrooms.find(c => c._id === classFilter);
+    return () => { active = false; };
+  }, [initialized]);
+
+  useEffect(() => {
+    let active = true;
+
+    (async () => {
+      if (!initialized || !academicYear) return;
+
+      setLoading(true);
+      setError('');
+      try {
+        if (viewMode === 'teacher') {
+          const profile = await api.get(API.AUTH.ME);
+          const teacherId = profile.data?.employeeId?._id || profile.data?.employeeId;
+          if (!teacherId) throw new Error('Your account is not linked to a teacher profile.');
+
+          const res = await api.get(
+            `${API.TIMETABLE.BY_TEACHER(teacherId)}?academicYear=${encodeURIComponent(academicYear)}`
+          );
+          if (active) setTimetables(res.data || []);
+        } else if (selectedClassId) {
+          const res = await api.get(
+            `${API.TIMETABLE.BY_CLASS(selectedClassId)}?academicYear=${encodeURIComponent(academicYear)}`
+          );
+          if (active) setTimetables(res.data ? [res.data] : []);
+        } else if (active) {
+          setTimetables([]);
+        }
+      } catch (err) {
+        if (active) {
+          setTimetables([]);
+          if (viewMode === 'class' && err.response?.status === 404) {
+            setError('');
+          } else {
+            setError(err.response?.data?.message || err.message || 'Unable to load schedule.');
+          }
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [initialized, academicYear, viewMode, selectedClassId]);
+
+  const periodsByDayAndNumber = new Map();
+  const timesByPeriod = new Map();
+  let totalPeriods = 0;
+  timetables.forEach(timetable => {
+    timetable.schedule?.forEach(day => {
+      day.periods.forEach(period => {
+        totalPeriods++;
+        const cellKey = `${day.day}|${period.periodNo}`;
+        if (!periodsByDayAndNumber.has(cellKey)) periodsByDayAndNumber.set(cellKey, []);
+        periodsByDayAndNumber.get(cellKey).push({
+          classroom: timetable.classroom?.displayName || 'Class not set',
+          subject: period.subject?.name || 'Subject not set',
+          teacher: period.teacher?.name || '',
+          isBreak: period.isBreak,
+          breakLabel: period.breakLabel || 'Break',
+        });
+
+        if (period.startTime || period.endTime) {
+          if (!timesByPeriod.has(period.periodNo)) timesByPeriod.set(period.periodNo, new Set());
+          timesByPeriod.get(period.periodNo).add(`${period.startTime || ''}–${period.endTime || ''}`);
+        }
+      });
+    });
+  });
+
+  const periodNumbers = [...new Set(
+    timetables.flatMap(timetable =>
+      (timetable.schedule || []).flatMap(day => day.periods.map(period => period.periodNo))
+    ),
+  )].sort((a, b) => a - b);
 
   // ─────────────────────────────────────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <PageContent>
-      {/* ── Header ── */}
       <PageHeader
-        title="Timetable"
-        subtitle={selectedClass ? `Class: ${selectedClass.displayName}` : 'View class schedule'}
+        title="Teacher Schedule View"
+        subtitle={viewMode === 'teacher'
+          ? `${user?.name || 'Your'} weekly teaching schedule`
+          : `${classrooms.find(classroom => classroom._id === selectedClassId)?.displayName || 'Class'} weekly schedule`}
       />
 
-      {/* ── Class selector ── */}
-      <div className="flex flex-wrap items-end gap-3 mb-5">
-        <div className="w-52 hidden sm:block">
+      <div className="mb-5 flex flex-wrap items-end gap-3">
+        <div className="w-56">
           <Select
-            label="Class"
-            options={classOptions}
-            value={classFilter}
-            onChange={e => setClassFilter(e.target.value)}
+            label="Schedule view"
+            value={viewMode}
+            onChange={event => setViewMode(event.target.value)}
+            options={[
+              { value: 'teacher', label: 'My teacher schedule' },
+              { value: 'class', label: 'Class-wise schedule' },
+            ]}
           />
         </div>
-        <Button className="sm:hidden" variant="ghost" onClick={() => setFiltersOpen(true)}>
-          <Filter className="w-4 h-4" /> Filters
-        </Button>
-        {selectedClass && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 pb-1">
-            <Clock className="w-3.5 h-3.5" />
-            {numPeriods > 0 ? `${numPeriods} periods/day` : ''}
-            {workingDays.length > 0 && numPeriods > 0 && ' · '}
-            {workingDays.length > 0 ? `${workingDays.length} working days` : ''}
+        {viewMode === 'class' && (
+          <div className="w-56">
+            <Select
+              label="Class"
+              value={selectedClassId}
+              onChange={event => setSelectedClassId(event.target.value)}
+              options={[
+                { value: '', label: 'Select class' },
+                ...classrooms.map(classroom => ({ value: classroom._id, label: classroom.displayName })),
+              ]}
+            />
           </div>
         )}
       </div>
 
-      {/* ── States ── */}
       {loading ? (
         <Card className="py-16 text-center text-slate-500">Loading timetable…</Card>
       ) : error ? (
         <Card className="py-16 text-center">
           <AlertTriangle className="w-8 h-8 mx-auto mb-3 text-amber-500/50" />
-          <p className="text-slate-400 text-sm">Failed to load timetable. Please try again.</p>
+          <p className="text-slate-400 text-sm">{error}</p>
         </Card>
-      ) : !classFilter ? (
+      ) : timetables.length === 0 || totalPeriods === 0 ? (
         <Card className="py-16 text-center text-slate-500">
           <Clock className="w-10 h-10 mx-auto mb-3 opacity-20" />
-          <p>Select a class above to view its timetable.</p>
-        </Card>
-      ) : schedule.length === 0 ? (
-        <Card className="py-16 text-center text-slate-500">
-          <Clock className="w-10 h-10 mx-auto mb-3 opacity-20" />
-          <p>No timetable found for this class.</p>
+          <p>{viewMode === 'teacher'
+            ? 'No periods are assigned to you this academic year.'
+            : selectedClassId ? 'No timetable found for this class.' : 'Select a class to view its timetable.'}</p>
         </Card>
       ) : (
-        /* ── Timetable grid ── */
-        <div className="overflow-x-auto scrollbar-thin">
-          <table className="border-collapse" style={{ minWidth: `${120 + numPeriods * 172}px` }}>
-            {/* Period header row */}
-            <thead>
-              <tr>
-                <th className="w-20 pb-3 pr-3 text-left text-xs text-slate-500 uppercase tracking-wide font-medium">
-                  Day
-                </th>
-                {Array.from({ length: numPeriods }, (_, i) => (
-                  <th key={i} className="pb-3 px-1 text-center">
-                    <span className="text-xs font-semibold text-slate-400 tracking-wide">
-                      Period {i + 1}
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            {/* Day rows */}
-            <tbody>
-              {schedule.map((daySchedule) => (
-                <tr key={daySchedule.day} className="border-t border-slate-800">
-                  {/* Day label */}
-                  <td className="py-2 pr-3 align-middle">
-                    <span className="text-slate-200 font-semibold text-sm">
-                      {SHORT_DAY[daySchedule.day]}
-                    </span>
-                  </td>
-
-                  {/* Period cells */}
-                  {daySchedule.periods.map((period, pi) => (
-                    <td key={pi} className="py-1.5 px-1 align-top">
-                      <PeriodCell
-                        period={period}
-                        colorClass={PERIOD_COLORS[pi % PERIOD_COLORS.length]}
-                      />
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {filtersOpen && (
-        <Modal open onClose={() => setFiltersOpen(false)} title="Filters">
-          <Select
-            label="Class"
-            options={classOptions}
-            value={classFilter}
-            onChange={e => setClassFilter(e.target.value)}
-          />
-          <div className="flex justify-end mt-6">
-            <Button onClick={() => setFiltersOpen(false)}>Done</Button>
+        <>
+          <div className="mb-3">
+            <Badge label={`${totalPeriods} period${totalPeriods !== 1 ? 's' : ''} / week`} color="blue" />
           </div>
-        </Modal>
+          <Card className="!p-0 overflow-hidden">
+            <div className="max-h-[70vh] overflow-auto">
+              <table className="w-full min-w-max border-collapse text-left text-xs">
+                <thead className="sticky top-0 z-10 bg-slate-800">
+                  <tr>
+                    <th className="border-b border-r border-slate-700 bg-slate-800 px-3 py-2 text-slate-300">Period</th>
+                    <th className="border-b border-r border-slate-700 bg-slate-800 px-3 py-2 text-slate-300">Time</th>
+                    {ALL_DAYS.map(day => (
+                      <th key={day} className="min-w-36 border-b border-slate-700 px-3 py-2 font-medium text-white">
+                        {day}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {periodNumbers.map(periodNo => (
+                    <tr key={periodNo} className="border-b border-slate-800 last:border-0">
+                      <th className="border-r border-slate-700 px-3 py-2 align-top font-medium text-slate-300">
+                        P{periodNo}
+                      </th>
+                      <td className="border-r border-slate-700 px-3 py-2 align-top text-slate-400">
+                        {[...(timesByPeriod.get(periodNo) || [])].join(', ') || '—'}
+                      </td>
+                      {ALL_DAYS.map(day => {
+                        const entries = periodsByDayAndNumber.get(`${day}|${periodNo}`) || [];
+                        return (
+                          <td key={day} className="px-3 py-2 align-top">
+                            {entries.length ? (
+                              <div className="flex flex-col gap-1">
+                                {entries.map((entry, index) => (
+                                  <div key={`${entry.classroom}-${entry.subject}-${index}`} className="rounded bg-slate-800 px-2 py-1">
+                                    {entry.isBreak ? (
+                                      <span className="font-medium text-amber-400">{entry.breakLabel}</span>
+                                    ) : (
+                                      <>
+                                        {viewMode === 'teacher' && <span className="block font-medium text-white">{entry.classroom}</span>}
+                                        <span className="text-slate-300">{entry.subject}</span>
+                                        {viewMode === 'class' && entry.teacher && <span className="block text-slate-400">{entry.teacher}</span>}
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : <span className="text-slate-600">—</span>}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
       )}
     </PageContent>
   );

@@ -23,6 +23,7 @@ function LoginForm() {
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPwd, setShowPwd] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
 
   // Optional redirect handling (?from=/something)
@@ -43,6 +44,27 @@ function LoginForm() {
     const result = await login(form.email, form.password);
 
     if (result.success) {
+      if (
+        rememberMe &&
+        window.isSecureContext &&
+        'PasswordCredential' in window &&
+        navigator.credentials?.store
+      ) {
+        try {
+          await navigator.credentials.store(
+            new window.PasswordCredential({
+              id: form.email,
+              password: form.password,
+            }),
+          );
+        } catch (credentialError) {
+          console.warn(
+            'Unable to save login credentials in the browser password manager.',
+            credentialError,
+          );
+        }
+      }
+
       const rolePrefix = ['admin', 'principal'].includes(result.role)
         ? '/admin/'
         : `/${result.role}/`;
@@ -97,13 +119,16 @@ function LoginForm() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
             <div>
-              <label className="block text-sm text-slate-300 mb-1.5">
+              <label htmlFor="login-email" className="block text-sm text-slate-300 mb-1.5">
                 Email
               </label>
               <input
+                id="login-email"
+                name="username"
                 type="email"
+                autoComplete="username"
                 required
                 value={form.email}
                 onChange={(e) =>
@@ -114,12 +139,15 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm text-slate-300 mb-1.5">
+              <label htmlFor="login-password" className="block text-sm text-slate-300 mb-1.5">
                 Password
               </label>
               <div className="relative">
                 <input
+                  id="login-password"
+                  name="password"
                   type={showPwd ? 'text' : 'password'}
+                  autoComplete="current-password"
                   required
                   value={form.password}
                   onChange={(e) =>
@@ -136,6 +164,16 @@ function LoginForm() {
                 </button>
               </div>
             </div>
+
+            <label className="flex items-center gap-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-600 bg-slate-800 accent-indigo-600"
+              />
+              Remember me on this device
+            </label>
 
             <button
               type="submit"

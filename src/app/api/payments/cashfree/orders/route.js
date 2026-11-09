@@ -12,25 +12,62 @@ export const POST = protect(async (request) => {
   try {
     if (request.user.role !== 'parent') return r.forbidden('Only parents can create online fee payments');
     await connectDB();
-    const { feeId } = await request.json();
-    if (!mongoose.isValidObjectId(feeId)) return r.badRequest('A valid feeId is required');
+    const body = await request.json();
+    const feeIds = body.feeIds ?? (body.feeId ? [body.feeId] : []);
+    if (!Array.isArray(feeIds) || feeIds.length === 0 || feeIds.length > 12
+      || feeIds.some(id => !mongoose.isValidObjectId(id))
+      || new Set(feeIds.map(String)).size !== feeIds.length) {
+      return r.badRequest('Select between 1 and 12 unique valid fee months');
+    }
 
-    const fee = await Fee.findById(feeId).populate('classroom', 'displayName');
-    if (!fee) return r.notFound('Fee record not found');
-    if (!(request.user.studentIds || []).some(id => String(id) === String(fee.student))) {
+    const fees = await Fee.find({ _id: { $in: feeIds } }).sort({ year: 1, month: 1 });
+    if (fees.length !== feeIds.length) return r.notFound('One or more fee records were not found');
+    if (fees.some(fee => (
+      String(fee.student) !== String(fees[0].student)
+      || String(fee.academicYear) !== String(fees[0].academicYear)
+    ))) {
+      return r.badRequest('Selected fee records must belong to the same student and academic year');
+    }
+    if (fees.some(fee => fee.status === 'Waived')) return r.badRequest('Waived fees cannot be paid online');
+
+    const studentId = fees[0].student;
+    if (!(request.user.studentIds || []).some(id => String(id) === String(studentId))) {
       return r.forbidden('Fee record is not linked to this parent');
     }
 
-    const student = await Student.findById(fee.student);
+    const student = await Student.findById(studentId);
     if (!student) return r.notFound('Student not found');
-    const payments = await FeePayment.find({ fee: fee._id }).select('amountPaid amountRefunded');
-    const paidAmount = payments.reduce((sum, payment) => sum + (payment.amountPaid || 0) - (payment.amountRefunded || 0), 0);
-    const outstanding = Math.max(0, Number(fee.finalAmount) - paidAmount);
-    if (outstanding < 0.01 || fee.status === 'Waived') return r.badRequest('This fee has no outstanding balance');
-
-    const existing = await CashfreePayment.findOne({ activeFeeKey: String(fee._id) }).select('+paymentSessionId');
+    const paymentTotals = await FeePayment.aggregate([
+      { $match: { fee: { $in: fees.map(fee => fee._id) } } },
+      {
+        $group: {
+          _id: '$fee',
+          paid: { $sum: { $subtract: ['$amountPaid', { $ifNull: ['$amountRefunded', 0] }] } },
+        },
+      },
+    ]);
+    const paidByFee = new Map(paymentTotals.map(item => [String(item._id), item.paid]));
+    const feeAllocations = fees.map(fee => ({
+      fee: fee._id,
+      amount: Number(Math.max(0, fee.finalAmount - (paidByFee.get(String(fee._id)) || 0)).toFixed(2)),
+    }));
+    if (feeAllocations.some(item => item.amount < 0.01)) {
+      return r.conflict('One or more selected fee months no longer have an outstanding balance');
+    }
+    const expectedAmount = Number(feeAllocations.reduce((sum, item) => sum + item.amount, 0).toFixed(2));
+    const activeFeeKeys = fees.map(fee => String(fee._id));
+    const existing = await CashfreePayment.findOne({
+      $or: [
+        { activeFeeKey: { $in: activeFeeKeys } },
+        { activeFeeKeys: { $in: activeFeeKeys } },
+      ],
+    }).select('+paymentSessionId');
     if (existing) {
-      if (existing.parent.toString() !== request.user._id.toString()) return r.conflict('A payment is already processing for this fee');
+      const existingFeeIds = (existing.feeAllocations || [{ fee: existing.fee }]).map(item => String(item.fee));
+      const sameSelection = existingFeeIds.length === activeFeeKeys.length
+        && activeFeeKeys.every(id => existingFeeIds.includes(id));
+      if (existing.parent.toString() !== request.user._id.toString() || !sameSelection)
+        return r.conflict('A payment is already processing for one or more selected fee months');
       if (existing.paymentSessionId) {
         return r.ok({ orderId: existing.orderId, paymentSessionId: existing.paymentSessionId, amount: existing.expectedAmount, mode: cashfreeConfig().mode }, 'Existing checkout resumed');
       }
@@ -56,16 +93,18 @@ export const POST = protect(async (request) => {
       payment = await CashfreePayment.create({
         student: student._id,
         parent: request.user._id,
-        fee: fee._id,
-        academicYear: fee.academicYear,
-        expectedAmount: Number(outstanding.toFixed(2)),
+        fee: fees[0]._id,
+        feeAllocations,
+        academicYear: fees[0].academicYear,
+        expectedAmount,
         currency: 'INR',
         orderId,
-        activeFeeKey: String(fee._id),
+        activeFeeKey: fees.length === 1 ? activeFeeKeys[0] : undefined,
+        activeFeeKeys,
       });
     } catch (error) {
       if (error.code === 11000) {
-        return r.conflict('A payment is already being created for this fee. Please retry shortly.');
+        return r.conflict('A payment is already being created for one or more selected fee months. Please retry shortly.');
       }
       throw error;
     }
@@ -74,7 +113,10 @@ export const POST = protect(async (request) => {
     const returnUrl = process.env.CASHFREE_RETURN_URL
       || `${appUrl}/parent/fees?payment=return&order_id={order_id}`;
     if (!appUrl && !process.env.CASHFREE_RETURN_URL) {
-      await CashfreePayment.updateOne({ _id: payment._id }, { $set: { status: 'Failed', failureReason: 'Return URL is not configured' }, $unset: { activeFeeKey: 1 } });
+      await CashfreePayment.updateOne({ _id: payment._id }, {
+        $set: { status: 'Failed', failureReason: 'Return URL is not configured' },
+        $unset: { activeFeeKey: 1, activeFeeKeys: 1 },
+      });
       return r.serverError('Payment return URL is not configured');
     }
 
@@ -92,7 +134,7 @@ export const POST = protect(async (request) => {
             customer_phone: customerPhone,
           },
           order_meta: { return_url: returnUrl },
-          order_note: `School fees ${student.admissionNo} ${fee.month}/${fee.year}`,
+          order_note: `School fees ${student.admissionNo} ${fees.map(fee => `${fee.month}/${fee.year}`).join(',')}`,
         }),
       });
       if (order.order_id !== orderId || !order.payment_session_id) throw new Error('Cashfree returned an invalid checkout session');
@@ -104,7 +146,10 @@ export const POST = protect(async (request) => {
     } catch (error) {
       await CashfreePayment.updateOne(
         { _id: payment._id, status: { $ne: 'Paid' } },
-        { $set: { status: 'Failed', failureReason: 'Unable to create checkout session' }, $unset: { activeFeeKey: 1 } },
+        {
+          $set: { status: 'Failed', failureReason: 'Unable to create checkout session' },
+          $unset: { activeFeeKey: 1, activeFeeKeys: 1 },
+        },
       );
       console.error('Cashfree order creation failed:', error.status || error.message);
       return r.serverError('Could not start payment. Please try again.');

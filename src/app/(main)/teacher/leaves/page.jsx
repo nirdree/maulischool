@@ -15,14 +15,13 @@ import { API } from '@/api/constants';
 import {
   PageContent, PageHeader, Card, Table, Pagination, Button, Input, Select, leaveStatusBadge, Badge, Modal,
 } from '@/components/ui.jsx';
-import { useAuth } from '@/context/AuthContext';
 import { validateApplyLeave } from '@/lib/validation.js';
 
 const LEAVE_TYPES = ['Sick', 'Casual', 'Earned', 'Maternity', 'Unpaid', 'Other'];
 
 export default function TeacherLeaves() {
-  const { user } = useAuth();
   const [leaves, setLeaves] = useState([]);
+  const [employeeId, setEmployeeId] = useState('');
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -36,9 +35,18 @@ export default function TeacherLeaves() {
 
     (async () => {
       try {
-        const ay = await api.get(API.ACADEMIC_YEARS.CURRENT);
+        const [ay, profile] = await Promise.all([
+          api.get(API.ACADEMIC_YEARS.CURRENT),
+          api.get(API.AUTH.ME),
+        ]);
         if (cancelled) return;
         setAyId(ay?.data?._id || '');
+        const linkedEmployeeId = profile.data?.employeeId?._id || profile.data?.employeeId;
+        if (!linkedEmployeeId) {
+          setAyError('Your account is not linked to an employee profile.');
+          return;
+        }
+        setEmployeeId(String(linkedEmployeeId));
         setAyError('');
       } catch (err) {
         if (cancelled) return;
@@ -117,7 +125,7 @@ export default function TeacherLeaves() {
       <PageHeader
         title="My Leaves"
         subtitle="Apply and track your leave applications"
-        actions={<Button onClick={() => setApplyOpen(true)} disabled={!ayId}><Plus className="w-4 h-4" /> Apply Leave</Button>}
+        actions={<Button onClick={() => setApplyOpen(true)} disabled={!ayId || !employeeId}><Plus className="w-4 h-4" /> Apply Leave</Button>}
       />
 
       {ayError && (
@@ -154,7 +162,7 @@ export default function TeacherLeaves() {
         open={applyOpen}
         onClose={() => setApplyOpen(false)}
         ayId={ayId}
-        employeeId={user?.employeeId}
+        employeeId={employeeId}
         onSuccess={() => { fetchLeaves(); setApplyOpen(false); }}
       />
     </PageContent>
@@ -189,13 +197,13 @@ function ApplyLeaveModal({ open, onClose, ayId, employeeId, onSuccess }) {
   };
 
   useEffect(() => {
-    const v = validateApplyLeave(form);
+    const v = validateApplyLeave({ ...form, employee: employeeId });
     setErrors(v.errors || {});
-  }, [form]);
+  }, [form, employeeId]);
 
   const handleSubmit = async () => {
     setSubmitted(true);
-    const v = validateApplyLeave(form);
+    const v = validateApplyLeave({ ...form, employee: employeeId });
     setErrors(v.errors || {});
     if (!v.valid) return;
     if (!ayId) {

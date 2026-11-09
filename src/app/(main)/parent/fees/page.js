@@ -10,7 +10,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react';
 import { load } from '@cashfreepayments/cashfree-js';
-import { Eye, AlertCircle, CreditCard, Download, LoaderCircle } from 'lucide-react';
+import { Eye, AlertCircle, CreditCard, Download, LoaderCircle, CheckSquare, Square } from 'lucide-react';
 import api from '@/api/client';
 import { API } from '@/api/constants';
 import { PageContent, PageHeader, Card, Table, Pagination, Button, Select, feeStatusBadge, Modal } from '@/components/ui.jsx';
@@ -27,6 +27,7 @@ export default function ParentFees() {
   const [loading, setLoading] = useState(false);
   const [viewPayments, setViewPayments] = useState(null);
   const [selectedFee, setSelectedFee] = useState(null);
+  const [multiPaymentOpen, setMultiPaymentOpen] = useState(false);
   const [payingFee, setPayingFee] = useState('');
   const [paymentNotice, setPaymentNotice] = useState(null);
   const [page, setPage] = useState(1);
@@ -94,12 +95,12 @@ export default function ParentFees() {
         .finally(() => window.history.replaceState({}, '', window.location.pathname));
       }, []);
 
-  const startPayment = async () => {
-    if (!selectedFee || payingFee) return;
-    setPayingFee(selectedFee._id);
+  const startCheckout = async (feeIds, paymentKey) => {
+    if (!feeIds.length || payingFee) return;
+    setPayingFee(paymentKey);
     setPaymentNotice(null);
     try {
-      const orderResponse = await api.post('/api/payments/cashfree/orders', { feeId: selectedFee._id });
+      const orderResponse = await api.post('/api/payments/cashfree/orders', { feeIds });
       const checkoutData = orderResponse.data;
       const cashfree = await load({ mode: checkoutData.mode });
       if (!cashfree) throw new Error('Cashfree checkout could not be loaded');
@@ -112,9 +113,17 @@ export default function ParentFees() {
       setPaymentNotice({ status: 'Failed', message: error.message || 'Could not start checkout. Please try again.' });
     } finally {
       setPayingFee('');
-      setSelectedFee(null);
+      if (paymentKey === 'multiple') setMultiPaymentOpen(false);
+      else setSelectedFee(null);
     }
   };
+
+  const startPayment = () => {
+    if (!selectedFee) return;
+    return startCheckout([selectedFee._id], selectedFee._id);
+  };
+
+  const startMultiMonthPayment = (feeIds) => startCheckout(feeIds, 'multiple');
 
   const downloadReceipt = async (payment) => {
     if (!payment.onlinePaymentId) return;
@@ -183,6 +192,14 @@ export default function ParentFees() {
 
       <div className="flex gap-3 mb-6">
         <Select options={childOptions} value={selectedChild} onChange={e => { setSelectedChild(e.target.value); setPage(1); setGatewayPage(1); }} className="w-52" label="Child" />
+        <Button
+          variant="success"
+          className="self-end"
+          onClick={() => setMultiPaymentOpen(true)}
+          disabled={loading || payingFee !== '' || !fees.some(fee => fee.status !== 'Waived' && fee.outstandingAmount > 0)}
+        >
+          <CreditCard className="mr-1 h-4 w-4" /> Pay multiple months online
+        </Button>
       </div>
 
       {/* Summary */}
@@ -216,7 +233,7 @@ export default function ParentFees() {
         <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center gap-2">
           <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
           <p className="text-sm text-rose-300">
-            You have outstanding fees of <strong>₹{summary.totalDue.toLocaleString()}</strong>. Choose an installment below to pay online.
+            You have outstanding fees of <strong>₹{summary.totalDue.toLocaleString()}</strong>. Pay one installment or select multiple months for one online checkout.
           </p>
         </div>
       )}
@@ -235,7 +252,9 @@ export default function ParentFees() {
         <Card className="!p-0 divide-y divide-slate-800">
           {gatewayPayments.length === 0 ? <p className="p-4 text-sm text-slate-500">No online payment attempts yet.</p> : gatewayPayments.map(payment => (
             <div key={payment._id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
-              <div><p className="font-medium text-white">{payment.fee ? `${MONTHS_FULL[payment.fee.month - 1]} ${payment.fee.year}` : 'School fee installment'}</p>
+              <div><p className="font-medium text-white">{payment.feeAllocations?.length
+                ? payment.feeAllocations.map(item => `${MONTHS_FULL[item.fee?.month - 1]} ${item.fee?.year}`).join(', ')
+                : payment.fee ? `${MONTHS_FULL[payment.fee.month - 1]} ${payment.fee.year}` : 'School fee installment'}</p>
                 <p className="text-xs text-slate-500">Order {payment.orderId} · {new Date(payment.createdAt).toLocaleDateString('en-IN')}</p></div>
               <div className="flex items-center gap-3"><span className="font-semibold">₹{Number(payment.expectedAmount).toLocaleString()}</span>
                 <span className={`rounded px-2 py-1 text-xs ${payment.status === 'Paid' ? 'bg-emerald-500/15 text-emerald-300' : ['Failed', 'Refunded'].includes(payment.status) ? 'bg-rose-500/15 text-rose-300' : 'bg-amber-500/15 text-amber-300'}`}>{payment.status}</span>
@@ -250,6 +269,15 @@ export default function ParentFees() {
 
       {viewPayments && (
         <PaymentHistoryModal fee={viewPayments} onClose={() => setViewPayments(null)} onDownload={downloadReceipt} />
+      )}
+      {multiPaymentOpen && (
+        <MultiMonthPaymentModal
+          fees={fees}
+          student={children.find(child => child._id === selectedChild)}
+          paying={payingFee === 'multiple'}
+          onClose={() => setMultiPaymentOpen(false)}
+          onConfirm={startMultiMonthPayment}
+        />
       )}
       {selectedFee && <PaymentSummaryModal fee={selectedFee} student={children.find(child => child._id === selectedChild)}
         paying={payingFee === selectedFee._id} onClose={() => setSelectedFee(null)} onConfirm={startPayment} />}
@@ -291,11 +319,11 @@ function PaymentHistoryModal({ fee, onClose, onDownload }) {
             <div key={p._id} className="p-3 bg-slate-800 rounded-lg border border-slate-700">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-semibold text-emerald-400">₹{p.amountPaid?.toLocaleString()}</p>
-                <p className="text-xs text-slate-500 font-mono">{p.receiptNo}</p>
+                <p className="text-xs text-slate-500 font-mono">{p.batchReceipt?.receiptNo || p.receiptNo}</p>
               </div>
               <div className="grid grid-cols-2 gap-1 text-xs text-slate-400">
                 <span>Mode: {p.paymentMode}</span>
-                <span>Date: {new Date(p.paymentDate).toLocaleDateString('en-IN')}</span>
+                <span>Date: {new Date(p.paymentDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                 {p.transactionId && <span className="col-span-2">Txn: {p.transactionId}</span>}
                 {p.onlinePaymentId && <button className="col-span-2 inline-flex items-center gap-1 text-sky-400 hover:text-sky-300" onClick={() => onDownload(p)}>
                   <Download className="w-3 h-3" /> Download verified PDF receipt
@@ -330,6 +358,58 @@ function PaymentSummaryModal({ fee, student, paying, onClose, onConfirm }) {
         <Button variant="success" onClick={onConfirm} disabled={paying}>
           {paying ? <><LoaderCircle className="w-4 h-4 mr-1 animate-spin" /> Starting...</> : <><CreditCard className="w-4 h-4 mr-1" /> Pay Fees Online</>}
         </Button>
+      </div>
+    </Modal>
+  );
+}
+
+function MultiMonthPaymentModal({ fees, student, paying, onClose, onConfirm }) {
+  const payableFees = fees.filter(fee => fee.status !== 'Waived' && fee.outstandingAmount > 0);
+  const [selectedFeeIds, setSelectedFeeIds] = useState(() => payableFees.map(fee => fee._id));
+  const selectedFees = payableFees.filter(fee => selectedFeeIds.includes(fee._id));
+  const total = selectedFees.reduce((sum, fee) => sum + Number(fee.outstandingAmount || 0), 0);
+  const toggleFee = (id) => setSelectedFeeIds(current => (
+    current.includes(id) ? current.filter(item => item !== id) : [...current, id]
+  ));
+
+  return (
+    <Modal open={true} onClose={onClose} title="Pay multiple months online">
+      <div className="mb-3 rounded-lg bg-slate-800 p-3 text-sm">
+        <p className="font-medium text-white">{student?.firstName} {student?.lastName}</p>
+        <p className="text-xs text-slate-400">{student?.admissionNo}</p>
+      </div>
+      {payableFees.length === 0 ? (
+        <p className="py-4 text-sm text-emerald-400">There are no outstanding months to pay.</p>
+      ) : (
+        <>
+          <div className="max-h-64 space-y-2 overflow-y-auto">
+            {payableFees.map(fee => (
+              <button key={fee._id} type="button" onClick={() => toggleFee(fee._id)}
+                className="flex w-full items-center justify-between rounded-lg border border-slate-700 bg-slate-800 p-3 text-left">
+                <span className="flex items-center gap-3">
+                  {selectedFeeIds.includes(fee._id)
+                    ? <CheckSquare className="h-4 w-4 text-emerald-400" />
+                    : <Square className="h-4 w-4 text-slate-500" />}
+                  <span className="text-sm text-white">{MONTHS_FULL[fee.month - 1]} {fee.year}</span>
+                </span>
+                <span className="text-sm font-semibold text-amber-400">₹{Number(fee.outstandingAmount).toLocaleString('en-IN')}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 flex justify-between rounded-lg bg-slate-800 p-3 text-sm">
+            <span className="text-slate-400">{selectedFees.length} month(s) selected</span>
+            <span className="font-bold text-emerald-400">₹{total.toLocaleString('en-IN')}</span>
+          </div>
+          <p className="mt-2 text-xs text-slate-500">A single online checkout and receipt will cover the selected months. Partial refunds are applied oldest month first.</p>
+        </>
+      )}
+      <div className="mt-5 flex justify-end gap-2">
+        <Button variant="ghost" onClick={onClose} disabled={paying}>Cancel</Button>
+        {payableFees.length > 0 && (
+          <Button variant="success" onClick={() => onConfirm(selectedFeeIds)} disabled={paying || selectedFeeIds.length === 0}>
+            {paying ? <><LoaderCircle className="mr-1 h-4 w-4 animate-spin" /> Starting...</> : <><CreditCard className="mr-1 h-4 w-4" /> Pay ₹{total.toLocaleString('en-IN')}</>}
+          </Button>
+        )}
       </div>
     </Modal>
   );

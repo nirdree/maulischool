@@ -70,7 +70,7 @@ const homeworkSchema = new mongoose.Schema({
 const noticeSchema = new mongoose.Schema({
   title:        { type: String, required: true, trim: true },
   content:      { type: String, required: true },
-  targetRoles:  [{ type: String, enum: ['parent', 'teacher', 'admin'] }],
+  targetRoles:  [{ type: String, enum: ['parent', 'teacher', 'admin', 'public'] }],
   priority:     { type: String, enum: ['Normal', 'Important', 'Urgent'], default: 'Normal' },
   publishDate:  { type: Date, required: true, default: Date.now },
   expiryDate:   { type: Date },
