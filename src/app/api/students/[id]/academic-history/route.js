@@ -1,5 +1,7 @@
 import { connectDB } from '@/lib/mongodb';
 import { Marks } from '@/models/Exam';
+import '@/models/AcademicYear';
+import '@/models/Subject';
 import { r } from '@/lib/response';
 import { protect } from '@/lib/auth';
 

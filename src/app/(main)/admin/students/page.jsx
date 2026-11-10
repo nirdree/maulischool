@@ -59,9 +59,13 @@ export default function StudentsPage() {
    const router = useRouter();
   const [students,     setStudents]     = useState([]);
   const [classrooms,   setClassrooms]   = useState([]);
+  const [admissionClassrooms, setAdmissionClassrooms] = useState([]);
+  const [academicYears, setAcademicYears] = useState([]);
   const [ayId,         setAyId]         = useState('');
+  const [currentAyId,  setCurrentAyId]  = useState('');
   const [loading,      setLoading]      = useState(true);
   const [search,       setSearch]       = useState('');
+  const searchRef = useRef(search);
   const [statusFilter, setStatusFilter] = useState('');
   const [classFilter,  setClassFilter]  = useState('');
   const [page,         setPage]         = useState(1);
@@ -75,22 +79,59 @@ export default function StudentsPage() {
   const [filterOpen,    setFilterOpen]    = useState(false);
 
   useEffect(() => {
+    searchRef.current = search;
+  }, [search]);
+
+  useEffect(() => {
     (async () => {
       try {
-        const ay  = await api.get(API.ACADEMIC_YEARS.CURRENT);
-        const id  = ay.data?._id || '';
-        setAyId(id);
-        const cls = await api.get(`${API.CLASSROOMS.BASE}?isActive=true&academicYear=${id}`);
-        setClassrooms(cls.data || []);
+        const [yearResponse, currentResponse] = await Promise.all([
+          api.get(`${API.ACADEMIC_YEARS.BASE}?limit=100`),
+          api.get(API.ACADEMIC_YEARS.CURRENT),
+        ]);
+        setAcademicYears(yearResponse.data || []);
+        const currentId = currentResponse.data?._id || '';
+        setCurrentAyId(currentId);
+        setAyId(currentId);
       } catch {}
     })();
   }, []);
+
+  useEffect(() => {
+    if (!ayId) return undefined;
+    let cancelled = false;
+    api.get(`${API.CLASSROOMS.BASE}?academicYear=${ayId}&limit=100`)
+      .then(response => {
+        if (cancelled) return;
+        const yearClassrooms = response.data || [];
+        setClassrooms(yearClassrooms);
+        setClassFilter(current => yearClassrooms.some(classroom => classroom._id === current) ? current : '');
+        setPage(1);
+      })
+      .catch(error => {
+        if (!cancelled) alert(error.response?.data?.message || error.message);
+      });
+    return () => { cancelled = true; };
+  }, [ayId]);
+
+  useEffect(() => {
+    if (!currentAyId) return undefined;
+    let cancelled = false;
+    api.get(`${API.CLASSROOMS.BASE}?academicYear=${currentAyId}&limit=100`)
+      .then(response => {
+        if (!cancelled) setAdmissionClassrooms(response.data || []);
+      })
+      .catch(error => {
+        if (!cancelled) alert(error.response?.data?.message || error.message);
+      });
+    return () => { cancelled = true; };
+  }, [currentAyId]);
 
   const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page, limit: 20 });
-      if (search)       params.set('search',       search);
+      if (searchRef.current) params.set('search', searchRef.current);
       if (statusFilter) params.set('status',       statusFilter);
       if (classFilter)  params.set('classId',      classFilter);
       if (ayId)         params.set('academicYear', ayId);
@@ -98,9 +139,9 @@ export default function StudentsPage() {
       setStudents(res.data  || []);
       setTotal(res.meta?.total || 0);
     } catch {} finally { setLoading(false); }
-  }, [page, statusFilter, classFilter, ayId, search]);
+  }, [page, statusFilter, classFilter, ayId]);
 
-  useEffect(() => { if (ayId) fetchStudents(); }, [page, statusFilter, classFilter, ayId]);
+  useEffect(() => { if (ayId) fetchStudents(); }, [fetchStudents, ayId]);
 
   const handleBlockParent = async (id, blocked) => {
     if (!(await confirm(`${blocked ? 'Block' : 'Unblock'} parent login for this student?`))) return;
@@ -129,6 +170,7 @@ export default function StudentsPage() {
     { value: '', label: 'All Classes' },
     ...classrooms.map((c) => ({ value: c._id, label: c.displayName })),
   ];
+  const academicYearOptions = academicYears.map(year => ({ value: year._id, label: year.name }));
   const pages = Math.ceil(total / 20);
 
   // Row actions popover (controlled, closes on outside click)
@@ -213,7 +255,39 @@ export default function StudentsPage() {
         </div>
       ),
     },
-    { key: 'classroom', label: 'Class', render: (s) => s.classroom?.displayName || '—' },
+    {
+      key: 'classroom', label: 'Class',
+      render: s => (
+        <div>
+          <p>{s.classroom?.displayName || '—'}</p>
+          <p className="text-xs text-slate-500">{s.academicYear?.name || ''}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'enrollmentOutcome', label: 'Year outcome',
+      render: s => {
+        const outcome = s.enrollmentOutcome;
+        if (!outcome) return <span className="text-slate-600">Current</span>;
+        if (outcome === 'Promoted' || outcome === 'Detained') {
+          if (s.isHistoricalEnrollment) {
+            return (
+              <span className="text-sky-300">
+                {outcome} to {s.nextEnrollmentClass?.displayName || 'next-year class'}
+                {s.nextEnrollmentYear?.name ? ` · ${s.nextEnrollmentYear.name}` : ''}
+              </span>
+            );
+          }
+          return (
+            <span className="text-sky-300">
+              {outcome}{s.enrolledFromClass?.displayName ? ` from ${s.enrolledFromClass.displayName}` : ''}
+              {s.enrolledFromYear?.name ? ` · ${s.enrolledFromYear.name}` : ''}
+            </span>
+          );
+        }
+        return <Badge label={outcome} color={outcome === 'Left' ? 'slate' : 'indigo'} />;
+      },
+    },
     {
       key: 'parents', label: 'Parents',
       render: (s) => (
@@ -247,7 +321,9 @@ export default function StudentsPage() {
     },
     {
       key: 'actions', label: '',
-      render: (s) => <RowActions s={s} />,
+      render: s => s.isHistoricalEnrollment
+        ? <span className="text-xs text-slate-500">History</span>
+        : <RowActions s={s} />,
     },
   ];
 
@@ -271,6 +347,16 @@ export default function StudentsPage() {
       />
 
       <div className="hidden sm:flex flex-wrap gap-3 mb-4">
+        <Select
+          options={academicYearOptions}
+          value={ayId}
+          onChange={event => {
+            setAyId(event.target.value);
+            setClassFilter('');
+            setPage(1);
+          }}
+          className="w-40"
+        />
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -296,6 +382,11 @@ export default function StudentsPage() {
       {/* Filters modal (mobile) */}
       <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
         <div className="space-y-4">
+          <Select
+            options={academicYearOptions}
+            value={ayId}
+            onChange={event => { setAyId(event.target.value); setClassFilter(''); setPage(1); }}
+          />
           <Input label="Search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, admission no, parent..." />
           <Select label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} options={STATUS_OPTIONS} />
           <Select label="Class" value={classFilter} onChange={(e) => setClassFilter(e.target.value)} options={classOptions} />
@@ -314,15 +405,15 @@ export default function StudentsPage() {
       <AdmissionModal
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        classrooms={classrooms}
-        ayId={ayId}
+        classrooms={admissionClassrooms}
+        ayId={currentAyId}
         onSuccess={fetchStudents}
       />
       <EditStudentModal
         open={!!editTarget}
         onClose={() => setEditTarget(null)}
         student={editTarget}
-        classrooms={classrooms}
+        classrooms={admissionClassrooms}
         onSuccess={() => { fetchStudents(); setEditTarget(null); }}
       />
       <ParentPasswordModal
@@ -456,7 +547,7 @@ function ParentSearchWidget({ label, value, onChange, errors }) {
                   className="w-full px-4 py-3 flex items-center gap-2 hover:bg-slate-700 text-left transition-colors border-t border-slate-700"
                 >
                   <UserPlus className="w-4 h-4 text-indigo-400" />
-                  <span className="text-sm text-indigo-400">Create new parent account for "{query}"</span>
+                  <span className="text-sm text-indigo-400">Create new parent account for &quot;{query}&quot;</span>
                 </button>
               )}
             </div>

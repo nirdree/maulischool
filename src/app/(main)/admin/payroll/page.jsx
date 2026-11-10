@@ -56,17 +56,19 @@ function getAcademicYearPayrollPeriods(startDate) {
 export default function PayrollPage() {
   const [payroll,   setPayroll]   = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [academicYears, setAcademicYears] = useState([]);
   const [ayId,      setAyId]      = useState('');
   const [academicYearName, setAcademicYearName] = useState('');
   const [ayStartDate, setAyStartDate] = useState(null);
+  const [filterAyId, setFilterAyId] = useState('');
+  const [filterPayrollPeriod, setFilterPayrollPeriod] = useState('');
+  const [defaultGenerationMonth, setDefaultGenerationMonth] = useState(currentMonth);
   const [loading,   setLoading]   = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [summary, setSummary] = useState({ totalPayable: 0, totalPaid: 0 });
 
   // filters
-  const [monthFilter,  setMonthFilter]  = useState(currentMonth);
-  const [yearFilter,   setYearFilter]   = useState(currentYear);
   const [statusFilter, setStatusFilter] = useState('');
   const [empFilter,    setEmpFilter]    = useState('');
 
@@ -81,7 +83,11 @@ export default function PayrollPage() {
   useEffect(() => {
     (async () => {
       try {
-        const ay  = await api.get(API.ACADEMIC_YEARS.CURRENT);
+        const [ay, yearResponse]  = await Promise.all([
+          api.get(API.ACADEMIC_YEARS.CURRENT),
+          api.get(`${API.ACADEMIC_YEARS.BASE}?limit=100`),
+        ]);
+        setAcademicYears(yearResponse.data || []);
         setAyId(ay.data?._id);
         setAcademicYearName(ay.data?.name || '');
         const startDate = ay.data?.startDate || ay.data?.start || null;
@@ -89,8 +95,7 @@ export default function PayrollPage() {
         const periods = getAcademicYearPayrollPeriods(startDate);
         const currentPeriod = periods.find(period => period.month === currentMonth && period.year === currentYear)
           || periods[0];
-        setMonthFilter(currentPeriod.month);
-        setYearFilter(currentPeriod.year);
+        setDefaultGenerationMonth(currentPeriod.month);
         const emp = await api.get(`${API.EMPLOYEES.BASE}?status=active`);
         setEmployees(emp.data || []);
       } catch {}
@@ -101,9 +106,13 @@ export default function PayrollPage() {
     if (!ayId) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        month: monthFilter, year: yearFilter, academicYear: ayId, page: String(page), limit: '20',
-      });
+      const params = new URLSearchParams({ page: String(page), limit: '20' });
+      if (filterAyId) params.set('academicYear', filterAyId);
+      if (filterPayrollPeriod) {
+        const [month, year] = filterPayrollPeriod.split('-');
+        params.set('month', month);
+        params.set('year', year);
+      }
       if (statusFilter) params.set('status',     statusFilter);
       if (empFilter)    params.set('employeeId', empFilter);
       const res = await api.get(`${API.PAYROLL.BASE}?${params}`);
@@ -114,9 +123,9 @@ export default function PayrollPage() {
         totalPaid: res.meta?.totalPaid || 0,
       });
     } catch {} finally { setLoading(false); }
-  }, [ayId, monthFilter, yearFilter, statusFilter, empFilter, page]);
+  }, [ayId, filterAyId, filterPayrollPeriod, statusFilter, empFilter, page]);
 
-  useEffect(() => { if (ayId) fetchPayroll(); }, [fetchPayroll]);
+  useEffect(() => { if (ayId) fetchPayroll(); }, [fetchPayroll, ayId]);
 
   const handlePay = async (id) => {
     if (!(await window.confirm('Mark as Paid? This will LOCK the record — no further edits, attendance changes, or leave approvals will be allowed for this month.'))) return;
@@ -134,14 +143,29 @@ export default function PayrollPage() {
     } catch (err) { alert(err.response?.data?.message || err.message); }
   };
 
-  const payrollPeriodOptions = getAcademicYearPayrollPeriods(ayStartDate);
-  const selectedPayrollPeriod = `${monthFilter}-${yearFilter}`;
+  const selectedFilterAcademicYear = academicYears.find(item => item._id === filterAyId);
+  const payrollPeriodOptions = filterAyId
+    ? [
+        { value: '', label: 'All periods' },
+        ...getAcademicYearPayrollPeriods(selectedFilterAcademicYear?.startDate),
+      ]
+    : [{ value: '', label: 'All periods' }];
   const handlePayrollPeriodChange = value => {
-    const [month, year] = value.split('-').map(Number);
-    setMonthFilter(month);
-    setYearFilter(year);
+    setFilterPayrollPeriod(value);
     setPage(1);
   };
+  const academicYearOptions = [
+    { value: '', label: 'All academic years' },
+    ...academicYears.map(item => ({ value: item._id, label: item.name })),
+  ];
+  const selectedPeriodLabel = filterPayrollPeriod
+    ? payrollPeriodOptions.find(option => option.value === filterPayrollPeriod)?.label
+    : '';
+  const payrollSubtitle = [
+    selectedFilterAcademicYear?.name || 'All academic years',
+    selectedPeriodLabel || 'All periods',
+    `${total} records`,
+  ].join(' · ');
   const statusOptions = [
     { value: '', label: 'All Status' },
     { value: 'Pending', label: 'Pending' },
@@ -166,6 +190,16 @@ export default function PayrollPage() {
           <p className="text-xs text-slate-500">{p.employee?.employeeId} · {p.employee?.role}</p>
         </div>
       ),
+    },
+    {
+      key: 'academicYear',
+      label: 'Academic year',
+      render: payrollRecord => payrollRecord.academicYear?.name || '—',
+    },
+    {
+      key: 'period',
+      label: 'Pay period',
+      render: payrollRecord => `${MONTHS[payrollRecord.month - 1]} ${payrollRecord.year}`,
     },
     {
       key: 'basic', label: 'Basic',
@@ -230,7 +264,7 @@ export default function PayrollPage() {
     <PageContent>
       <PageHeader
         title="Payroll"
-        subtitle={`${MONTHS[monthFilter - 1]} (${yearFilter}) · ${total} records`}
+        subtitle={payrollSubtitle}
         actions={
           <div className="flex gap-2 flex-wrap">
             <Button variant="ghost" onClick={() => setFilterOpen(true)} className="sm:hidden">
@@ -270,7 +304,17 @@ export default function PayrollPage() {
 
       {/* Filters */}
       <div className="hidden sm:flex flex-wrap gap-3 mb-4 items-center">
-        <Select options={payrollPeriodOptions} value={selectedPayrollPeriod} onChange={e => handlePayrollPeriodChange(e.target.value)} className="w-44" />
+        <Select
+          options={academicYearOptions}
+          value={filterAyId}
+          onChange={event => {
+            setFilterAyId(event.target.value);
+            setFilterPayrollPeriod('');
+            setPage(1);
+          }}
+          className="w-48"
+        />
+        <Select options={payrollPeriodOptions} value={filterPayrollPeriod} onChange={e => handlePayrollPeriodChange(e.target.value)} className="w-44" />
         <Select options={statusOptions} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}          className="w-36" />
         <Select options={empOptions}    value={empFilter}    onChange={e => { setEmpFilter(e.target.value); setPage(1); }}             className="w-52" />
         <Button variant="ghost" onClick={fetchPayroll}><RefreshCw className="w-4 h-4" /></Button>
@@ -280,8 +324,18 @@ export default function PayrollPage() {
       <Modal open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters" width="max-w-md">
         <div className="space-y-4">
           <Select
-            label="Month"
-            value={selectedPayrollPeriod}
+            label="Academic year"
+            value={filterAyId}
+            onChange={event => {
+              setFilterAyId(event.target.value);
+              setFilterPayrollPeriod('');
+              setPage(1);
+            }}
+            options={academicYearOptions}
+          />
+          <Select
+            label="Period"
+            value={filterPayrollPeriod}
             onChange={e => handlePayrollPeriodChange(e.target.value)}
             options={payrollPeriodOptions}
           />
@@ -300,7 +354,13 @@ export default function PayrollPage() {
           </div>
         </div>
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost" onClick={() => { setStatusFilter(''); setEmpFilter(''); setPage(1); }}>Clear</Button>
+          <Button variant="ghost" onClick={() => {
+            setFilterAyId('');
+            setFilterPayrollPeriod('');
+            setStatusFilter('');
+            setEmpFilter('');
+            setPage(1);
+          }}>Clear</Button>
           <Button onClick={() => { setPage(1); fetchPayroll(); setFilterOpen(false); }}>Apply</Button>
         </div>
       </Modal>
@@ -317,7 +377,7 @@ export default function PayrollPage() {
           ayId={ayId}
           academicYearName={academicYearName}
           ayStartDate={ayStartDate}
-          defaultMonth={monthFilter}
+          defaultMonth={defaultGenerationMonth}
           onClose={() => setAddOpen(false)}
           onSuccess={() => { fetchPayroll(); setAddOpen(false); }}
         />
@@ -359,7 +419,7 @@ export default function PayrollPage() {
           ayId={ayId}
           academicYearName={academicYearName}
           ayStartDate={ayStartDate}
-          defaultMonth={monthFilter}
+          defaultMonth={defaultGenerationMonth}
           employees={employees}
           onClose={() => setAutoGenOpen(false)}
           onSuccess={() => { fetchPayroll(); setAutoGenOpen(false); }}

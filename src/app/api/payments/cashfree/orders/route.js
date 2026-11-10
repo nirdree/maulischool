@@ -49,7 +49,9 @@ export const POST = protect(async (request) => {
     const paidByFee = new Map(paymentTotals.map(item => [String(item._id), item.paid]));
     const feeAllocations = fees.map(fee => ({
       fee: fee._id,
-      amount: Number(Math.max(0, fee.finalAmount - (paidByFee.get(String(fee._id)) || 0)).toFixed(2)),
+      amount: Number(Math.max(0, fee.finalAmount - (
+        paidByFee.get(String(fee._id)) ?? (fee.status === 'Paid' ? fee.finalAmount : 0)
+      )).toFixed(2)),
     }));
     if (feeAllocations.some(item => item.amount < 0.01)) {
       return r.conflict('One or more selected fee months no longer have an outstanding balance');

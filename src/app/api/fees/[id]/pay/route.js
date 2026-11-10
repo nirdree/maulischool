@@ -8,17 +8,37 @@ export const POST = authorize('admin', 'principal')(async (request, { params }) 
     await connectDB();
     const { id } = await params;
     const fee = await Fee.findById(id);
-    if (!fee)                  return r.notFound('Fee record not found');
-    if (fee.status === 'Paid') return r.badRequest('Fee is already fully paid');
+    if (!fee) return r.notFound('Fee record not found');
+    if (fee.status === 'Waived') return r.badRequest('Waived fees cannot be paid');
 
     const { amountPaid, paymentMode, transactionId, notes } = await request.json();
-    if (!amountPaid)   return r.badRequest('amountPaid is required');
-    if (!paymentMode)  return r.badRequest('paymentMode is required');
+    const paymentAmount = Number(amountPaid);
+    const paymentModes = ['Cash', 'Cheque', 'Online', 'UPI', 'BankTransfer'];
+    if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
+      return r.badRequest('amountPaid must be a positive number');
+    }
+    if (!paymentModes.includes(paymentMode)) {
+      return r.badRequest('A valid paymentMode is required');
+    }
+
+    const priorPayments = await FeePayment.find({ fee: fee._id }).select('amountPaid amountRefunded');
+    if (fee.status === 'Paid' && priorPayments.length === 0) {
+      return r.badRequest('Fee is already fully paid');
+    }
+    const totalPaid = priorPayments.reduce(
+      (sum, payment) => sum + (payment.amountPaid || 0) - (payment.amountRefunded || 0),
+      0,
+    );
+    const outstandingAmount = Math.max(0, fee.finalAmount - totalPaid);
+    if (paymentAmount > outstandingAmount) {
+      return r.badRequest(`Payment exceeds the outstanding balance of ${outstandingAmount}`);
+    }
+    if (outstandingAmount === 0) return r.badRequest('Fee is already fully paid');
 
     const payment = await FeePayment.create({
       fee:          fee._id,
       student:      fee.student,
-      amountPaid:   Number(amountPaid),
+      amountPaid:   paymentAmount,
       paymentDate:  new Date(),
       paymentMode,
       transactionId,
@@ -27,13 +47,14 @@ export const POST = authorize('admin', 'principal')(async (request, { params }) 
       academicYear: fee.academicYear,
     });
 
-    const allPayments = await FeePayment.find({ fee: fee._id });
-    const totalPaid   = allPayments.reduce((s, p) => s + (p.amountPaid || 0), 0);
-    fee.status = totalPaid >= fee.finalAmount ? 'Paid' : 'PartiallyPaid';
+    const newTotalPaid = totalPaid + paymentAmount;
+    fee.status = newTotalPaid >= fee.finalAmount
+      ? 'Paid'
+      : (fee.dueDate < new Date() ? 'Overdue' : 'PartiallyPaid');
     await fee.save();
 
     return r.ok(
-      { payment, receiptNo: payment.receiptNo, newStatus: fee.status, totalPaid },
+      { payment, receiptNo: payment.receiptNo, newStatus: fee.status, totalPaid: newTotalPaid },
       `Payment recorded. Receipt: ${payment.receiptNo}`,
     );
   } catch (err) {

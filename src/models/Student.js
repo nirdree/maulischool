@@ -42,10 +42,21 @@ const studentSchema = new mongoose.Schema({
   holdRemark:         { type: String },
   leavingDate:        { type: Date },
   leavingReason:      { type: String },
+  graduationDate:     { type: Date },
   // Link to parent user account
 fatherUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 motherUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   academicYear:       { type: mongoose.Schema.Types.ObjectId, ref: 'AcademicYear', required: true },
+  academicHistory: [{
+    academicYear: { type: mongoose.Schema.Types.ObjectId, ref: 'AcademicYear', required: true },
+    classroom:    { type: mongoose.Schema.Types.ObjectId, ref: 'Classroom', required: true },
+    rollNumber:   { type: Number },
+    status:       { type: String, default: 'Approved' },
+    outcome:      { type: String, enum: ['Promoted', 'Detained', 'Left', 'Graduated'] },
+    nextClassroom: { type: mongoose.Schema.Types.ObjectId, ref: 'Classroom' },
+    nextAcademicYear: { type: mongoose.Schema.Types.ObjectId, ref: 'AcademicYear' },
+    completedAt:  { type: Date, default: Date.now },
+  }],
 }, { timestamps: true });
 
 studentSchema.virtual('fullName').get(function () {
@@ -70,5 +81,14 @@ studentSchema.pre('save', async function () {
     this.admissionNo = `ADM-${year}-${String(nextNumber).padStart(4, '0')}`;
   }
 });
+
+const cachedStudentModel = mongoose.models.Student;
+const cachedHistorySchema = cachedStudentModel?.schema.path('academicHistory')?.schema;
+if (cachedStudentModel && (
+  !cachedHistorySchema?.path('nextClassroom')
+  || !cachedHistorySchema?.path('nextAcademicYear')
+)) {
+  delete mongoose.models.Student;
+}
 
 export default mongoose.models.Student || mongoose.model('Student', studentSchema);

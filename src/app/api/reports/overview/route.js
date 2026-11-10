@@ -26,13 +26,50 @@ export const GET = authorize('admin', 'principal')(async (request) => {
       pendingLeaves,
     ] = await Promise.all([
       Student.aggregate([
-        { $match: { academicYear: yearId } },
+        {
+          $project: {
+            enrollments: {
+              $concatArrays: [
+                [{
+                  academicYear: '$academicYear',
+                  classroom: '$classroom',
+                  status: '$status',
+                }],
+                {
+                  $map: {
+                    input: {
+                      $filter: {
+                        input: { $ifNull: ['$academicHistory', []] },
+                        as: 'enrollment',
+                        cond: {
+                          $not: [{
+                            $and: [
+                              { $eq: ['$$enrollment.academicYear', '$academicYear'] },
+                              { $eq: ['$$enrollment.classroom', '$classroom'] },
+                            ],
+                          }],
+                        },
+                      },
+                    },
+                    as: 'enrollment',
+                    in: {
+                      academicYear: '$$enrollment.academicYear',
+                      status: '$$enrollment.status',
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        },
+        { $unwind: '$enrollments' },
+        { $match: { 'enrollments.academicYear': yearId } },
         {
           $group: {
             _id: null,
             total: { $sum: 1 },
-            approved: { $sum: { $cond: [{ $eq: ['$status', 'Approved'] }, 1, 0] } },
-            underReview: { $sum: { $cond: [{ $eq: ['$status', 'UnderReview'] }, 1, 0] } },
+            approved: { $sum: { $cond: [{ $eq: ['$enrollments.status', 'Approved'] }, 1, 0] } },
+            underReview: { $sum: { $cond: [{ $eq: ['$enrollments.status', 'UnderReview'] }, 1, 0] } },
           },
         },
       ]),

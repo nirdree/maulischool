@@ -1,9 +1,9 @@
 import { connectDB } from '@/lib/mongodb';
 import Classroom from '@/models/Classroom';
-import Student from '@/models/Student';
 import Subject from '@/models/Subject';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
+import { getClassroomEnrollmentCounts } from '@/lib/student-enrollment';
 
 export const GET = protect(async (request, { params }) => {
   try {
@@ -14,9 +14,8 @@ export const GET = protect(async (request, { params }) => {
       .populate('academicYear', 'name');
     if (!classroom) return r.notFound('Classroom not found');
 
-    const studentCount = await Student.countDocuments({
-      classroom: classroom._id, status: { $nin: ['Left', 'Alumni'] },
-    });
+    const counts = await getClassroomEnrollmentCounts([classroom._id]);
+    const studentCount = counts[String(classroom._id)] || 0;
     return r.ok({ ...classroom.toObject(), studentCount });
   } catch (err) {
     return r.serverError(err.message);
@@ -54,9 +53,8 @@ export const DELETE = authorize('admin')(async (request, { params }) => {
     const classroom = await Classroom.findById(id);
     if (!classroom) return r.notFound('Classroom not found');
 
-    const activeStudentCount = await Student.countDocuments({
-      classroom: id, status: { $nin: ['Left', 'Alumni'] },
-    });
+    const counts = await getClassroomEnrollmentCounts([classroom._id]);
+    const activeStudentCount = counts[String(classroom._id)] || 0;
     if (activeStudentCount > 0) {
       return r.badRequest(`Cannot delete: ${activeStudentCount} student(s) still enrolled. Transfer or remove them first.`);
     }

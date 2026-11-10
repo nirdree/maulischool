@@ -59,31 +59,104 @@ export const GET = protect(async (request) => {
     if (pagination.error) return r.badRequest(pagination.error);
 
     const filter = {};
-    if (classId)      filter.classroom    = classId;
-    if (status)       filter.status       = status;
-    if (academicYear) filter.academicYear = academicYear;
     if (request.user.role === 'parent') filter._id = { $in: request.user.studentIds || [] };
-    if (search) {
+    if (academicYear || classId) {
+      const currentEnrollment = {};
+      const historicalEnrollment = {};
+      if (academicYear) {
+        currentEnrollment.academicYear = academicYear;
+        historicalEnrollment.academicYear = academicYear;
+      }
+      if (classId) {
+        currentEnrollment.classroom = classId;
+        historicalEnrollment.classroom = classId;
+      }
+      if (status) {
+        currentEnrollment.status = status;
+        historicalEnrollment.status = status;
+      }
       filter.$or = [
+        currentEnrollment,
+        { academicHistory: { $elemMatch: historicalEnrollment } },
+      ];
+    } else if (status) {
+      filter.status = status;
+    }
+    if (search) {
+      filter.$and = [{
+        $or: [
         { firstName:   { $regex: search, $options: 'i' } },
         { lastName:    { $regex: search, $options: 'i' } },
         { admissionNo: { $regex: search, $options: 'i' } },
         { fatherName:  { $regex: search, $options: 'i' } },
         { motherName:  { $regex: search, $options: 'i' } },
-      ];
+        ],
+      }];
     }
 
     const total    = await Student.countDocuments(filter);
     const students = await Student.find(filter)
       .populate('classroom',    'displayName className section')
-      .populate('academicYear', 'name')
+      .populate('academicYear', 'name startDate endDate')
+      .populate('academicHistory.classroom', 'displayName className section')
+      .populate('academicHistory.academicYear', 'name startDate endDate')
+      .populate('academicHistory.nextClassroom', 'displayName className section')
+      .populate('academicHistory.nextAcademicYear', 'name startDate endDate')
       .populate('fatherUser',   'name email status')
       .populate('motherUser',   'name email status')
       .sort({ rollNumber: 1, createdAt: -1 })
       .skip(pagination.skip)
       .limit(pagination.limit);
 
-    return r.ok(students, 'Students fetched', paginationMeta(total, pagination));
+    const data = students.map(student => {
+      const history = student.academicHistory || [];
+      const historicalEnrollment = history.find(enrollment =>
+        (!academicYear || String(enrollment.academicYear?._id || enrollment.academicYear) === academicYear)
+        && (!classId || String(enrollment.classroom?._id || enrollment.classroom) === classId)
+        && (!status || enrollment.status === status),
+      );
+      const currentMatches = (!academicYear || String(student.academicYear?._id || student.academicYear) === academicYear)
+        && (!classId || String(student.classroom?._id || student.classroom) === classId)
+        && (!status || student.status === status);
+      const row = student.toObject();
+      if (!currentMatches && historicalEnrollment) {
+        row.isHistoricalEnrollment = true;
+        row.classroom = historicalEnrollment.classroom;
+        row.academicYear = historicalEnrollment.academicYear;
+        row.rollNumber = historicalEnrollment.rollNumber;
+        row.status = historicalEnrollment.status;
+        const nextHistory = history
+          .filter(enrollment => new Date(enrollment.academicYear?.startDate) > new Date(historicalEnrollment.academicYear?.startDate))
+          .sort((a, b) => new Date(a.academicYear?.startDate) - new Date(b.academicYear?.startDate))[0];
+        row.enrollmentOutcome = historicalEnrollment.outcome
+          || (student.status === 'Left' && String(student.academicYear?._id || student.academicYear) === String(historicalEnrollment.academicYear?._id || historicalEnrollment.academicYear)
+            ? 'Left'
+            : student.status === 'Alumni' && String(student.academicYear?._id || student.academicYear) === String(historicalEnrollment.academicYear?._id || historicalEnrollment.academicYear)
+              ? 'Graduated'
+              : nextHistory || new Date(student.academicYear?.startDate) > new Date(historicalEnrollment.academicYear?.startDate)
+                ? (String((nextHistory?.classroom?._id || nextHistory?.classroom) || student.classroom?._id || student.classroom)
+                  === String(historicalEnrollment.classroom?._id || historicalEnrollment.classroom) ? 'Detained' : 'Promoted')
+                : '');
+        row.nextEnrollmentClass = historicalEnrollment.nextClassroom || nextHistory?.classroom
+          || (row.enrollmentOutcome === 'Promoted' || row.enrollmentOutcome === 'Detained' ? student.classroom : null);
+        row.nextEnrollmentYear = historicalEnrollment.nextAcademicYear || nextHistory?.academicYear
+          || (row.enrollmentOutcome === 'Promoted' || row.enrollmentOutcome === 'Detained' ? student.academicYear : null);
+        return row;
+      }
+
+      const previousEnrollment = history
+        .filter(enrollment => String(enrollment.nextAcademicYear?._id || enrollment.nextAcademicYear || '') === String(student.academicYear?._id || student.academicYear)
+          || String(enrollment.nextClassroom?._id || enrollment.nextClassroom || '') === String(student.classroom?._id || student.classroom))
+        .sort((a, b) => new Date(b.academicYear?.startDate) - new Date(a.academicYear?.startDate))[0];
+      row.enrollmentOutcome = previousEnrollment?.outcome || '';
+      row.enrolledFromClass = previousEnrollment?.classroom || null;
+      row.enrolledFromYear = previousEnrollment?.academicYear || null;
+      if (!row.enrollmentOutcome && student.status === 'Left') row.enrollmentOutcome = 'Left';
+      if (!row.enrollmentOutcome && student.status === 'Alumni') row.enrollmentOutcome = 'Graduated';
+      return row;
+    });
+
+    return r.ok(data, 'Students fetched', paginationMeta(total, pagination));
   } catch (err) {
     return r.serverError(err.message);
   }

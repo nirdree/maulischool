@@ -1,11 +1,11 @@
 import { connectDB } from '@/lib/mongodb';
 import Classroom from '@/models/Classroom';
-import Student from '@/models/Student';
 import AcademicYear from '@/models/AcademicYear';
 import Employee from '@/models/Employee';
 import { r } from '@/lib/response';
 import { protect, authorize } from '@/lib/auth';
 import { parsePagination, paginationMeta } from '@/lib/pagination';
+import { getClassroomEnrollmentCounts } from '@/lib/student-enrollment';
 
 export const GET = protect(async (request) => {
   try {
@@ -35,11 +35,7 @@ export const GET = protect(async (request) => {
       pagination ? Classroom.countDocuments(filter) : Promise.resolve(null),
     ]);
 
-    const counts = await Student.aggregate([
-      { $match: { classroom: { $in: classrooms.map(c => c._id) }, status: { $nin: ['Left', 'Alumni'] } } },
-      { $group: { _id: '$classroom', count: { $sum: 1 } } },
-    ]);
-    const countMap = Object.fromEntries(counts.map(c => [c._id.toString(), c.count]));
+    const countMap = await getClassroomEnrollmentCounts(classrooms.map(c => c._id));
 
     const data = classrooms.map(c => ({ ...c.toObject(), studentCount: countMap[c._id.toString()] || 0 }));
     return pagination

@@ -79,8 +79,17 @@ export const POST = authorize('admin', 'principal', 'teacher')(async (request, {
 
     const students = await Student.find({
       _id: { $in: studentIds },
-      classroom: exam.classroom,
-      academicYear: exam.academicYear,
+      $or: [
+        { classroom: exam.classroom, academicYear: exam.academicYear },
+        {
+          academicHistory: {
+            $elemMatch: {
+              classroom: exam.classroom,
+              academicYear: exam.academicYear,
+            },
+          },
+        },
+      ],
     }).select('_id');
     if (students.length !== studentIds.length) {
       return r.badRequest('All students must belong to this exam classroom and academic year');

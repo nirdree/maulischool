@@ -713,6 +713,7 @@ function FeesTab({ studentId }) {
   const [data,    setData]    = useState({ fees: [], payments: [] });
   const [loading, setLoading] = useState(true);
   const [expanded,setExpanded]= useState(null); // fee _id
+  const [payFee, setPayFee] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -732,8 +733,26 @@ function FeesTab({ studentId }) {
   }
 
   const total   = data.fees.reduce((s, f) => s + f.finalAmount, 0);
-  const paid    = data.fees.filter(f => f.status === 'Paid').reduce((s, f) => s + f.finalAmount, 0);
-  const pending = total - paid;
+  const paid    = data.fees.reduce((sum, fee) => sum + (fee.amountPaid || 0), 0);
+  const pending = data.fees.reduce((sum, fee) => sum + (fee.outstandingAmount || 0), 0);
+  const feeGroups = Object.values(data.fees.reduce((groups, fee) => {
+    const yearId = fee.academicYear?._id || fee.academicYear || 'unknown-year';
+    const classroomId = fee.classroom?._id || fee.classroom || 'unknown-class';
+    const key = `${yearId}-${classroomId}`;
+    if (!groups[key]) {
+      groups[key] = {
+        key,
+        year: fee.academicYear,
+        classroom: fee.classroom,
+        fees: [],
+      };
+    }
+    groups[key].fees.push(fee);
+    return groups;
+  }, {})).sort((a, b) => (
+    new Date(b.year?.startDate || 0) - new Date(a.year?.startDate || 0)
+    || String(a.classroom?.displayName || '').localeCompare(String(b.classroom?.displayName || ''))
+  ));
 
   return (
     <div className="space-y-6">
@@ -751,85 +770,180 @@ function FeesTab({ studentId }) {
           ? <div className="text-center py-8 text-slate-500">No fee records found</div>
           : (
             <div className="space-y-3">
-              {data.fees.map((f) => {
-                const isOpen    = expanded === f._id;
-                const payments  = paymentsByFee[String(f._id)] || [];
+              {feeGroups.map((group) => {
+                const groupTotal = group.fees.reduce((sum, fee) => sum + Number(fee.finalAmount || 0), 0);
+                const groupPaid = group.fees.reduce((sum, fee) => sum + Number(fee.amountPaid || 0), 0);
+                const groupDue = group.fees.reduce((sum, fee) => sum + Number(fee.outstandingAmount || 0), 0);
                 return (
-                  <Card key={f._id} className="!p-0 overflow-hidden">
-                    <button
-                      onClick={() => setExpanded(isOpen ? null : f._id)}
-                      className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="text-left">
-                          <p className="text-sm font-medium text-white">{MONTH_NAMES[f.month]} {f.year}</p>
-                          <p className="text-xs text-slate-500">Due: {fmt(f.dueDate)}</p>
-                        </div>
-                        <Badge label={f.status} color={FEE_STATUS_COLOR[f.status] || 'gray'} />
+                  <Card key={group.key} className="!p-0 overflow-hidden">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
+                      <div>
+                        <p className="text-sm font-semibold text-white">
+                          {group.year?.name || 'Academic year unavailable'} · {group.classroom?.displayName || 'Class unavailable'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Total {fmtMoney(groupTotal)} · Paid {fmtMoney(groupPaid)} · Balance {fmtMoney(groupDue)}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-white">{fmtMoney(f.finalAmount)}</p>
-                          {f.discount > 0 && <p className="text-xs text-emerald-400">-{fmtMoney(f.discount)} discount</p>}
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                      </div>
-                    </button>
-
-                    {isOpen && (
-                      <div className="border-t border-slate-800 px-5 pb-4 pt-3 space-y-4">
-                        {/* Breakdown */}
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                          {[
-                            ['Tuition',   f.tuitionFee],
-                            ['Transport', f.transportFee],
-                            ['Activity',  f.activityFee],
-                            ['Other',     f.otherFee],
-                            ['Late Fine', f.lateFine],
-                          ].map(([label, amt]) => amt > 0 && (
-                            <div key={label} className="bg-slate-800 rounded-lg px-3 py-2">
-                              <p className="text-xs text-slate-500">{label}</p>
-                              <p className="text-white">{fmtMoney(amt)}</p>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Payments */}
-                        {payments.length > 0 ? (
-                          <div>
-                            <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Payment Receipts</p>
-                            <div className="space-y-2">
-                              {payments.map((p) => (
-                                <div key={p._id} className="flex items-center justify-between text-sm bg-slate-800 rounded-lg px-3 py-2">
-                                  <div>
-                                    <span className="text-white">{p.receiptNo}</span>
-                                    <span className="text-slate-500 ml-2">· {p.paymentMode}</span>
-                                    {p.transactionId && <span className="text-slate-600 ml-2 text-xs">{p.transactionId}</span>}
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-emerald-400 font-medium">{fmtMoney(p.amountPaid)}</p>
-                                    <p className="text-xs text-slate-500">{fmt(p.paymentDate)} · {p.collectedBy?.name || '—'}</p>
-                                  </div>
+                    </div>
+                    <div className="divide-y divide-slate-800">
+                      {[...group.fees].sort((a, b) => a.year - b.year || a.month - b.month).map(f => {
+                        const isOpen = expanded === f._id;
+                        const payments = paymentsByFee[String(f._id)] || [];
+                        return (
+                          <div key={f._id}>
+                            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+                              <button
+                                onClick={() => setExpanded(isOpen ? null : f._id)}
+                                className="flex min-w-0 flex-1 items-center gap-3 text-left hover:text-white"
+                              >
+                                <span className="text-sm font-medium text-white">{MONTH_NAMES[f.month]} {f.year}</span>
+                                <Badge label={f.status} color={FEE_STATUS_COLOR[f.status] || 'gray'} />
+                                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                              </button>
+                              <div className="flex items-center gap-3">
+                                <div className="text-right">
+                                  <p className="text-sm font-medium text-white">{fmtMoney(f.finalAmount)}</p>
+                                  <p className="text-xs text-amber-400">Due {fmtMoney(f.outstandingAmount)}</p>
                                 </div>
-                              ))}
+                                {f.outstandingAmount > 0 && f.status !== 'Waived' && (
+                                  <Button size="sm" onClick={() => setPayFee(f)}>Collect</Button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <p className="text-xs text-slate-600">No payments recorded yet</p>
-                        )}
 
-                        {f.notes && (
-                          <p className="text-xs text-slate-500 italic">{f.notes}</p>
-                        )}
-                      </div>
-                    )}
+                            {isOpen && (
+                              <div className="border-t border-slate-800 bg-slate-950/40 px-5 pb-4 pt-3 space-y-4">
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                                  {[
+                                    ['Tuition', f.tuitionFee],
+                                    ['Transport', f.transportFee],
+                                    ['Activity', f.activityFee],
+                                    ['Other', f.otherFee],
+                                    ['Late Fine', f.lateFine],
+                                  ].map(([label, amount]) => amount > 0 && (
+                                    <div key={label} className="bg-slate-800 rounded-lg px-3 py-2">
+                                      <p className="text-xs text-slate-500">{label}</p>
+                                      <p className="text-white">{fmtMoney(amount)}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                                {payments.length > 0 ? (
+                                  <div>
+                                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Payment Receipts</p>
+                                    <div className="space-y-2">
+                                      {payments.map(payment => (
+                                        <div key={payment._id} className="flex items-center justify-between text-sm bg-slate-800 rounded-lg px-3 py-2">
+                                          <div>
+                                            <span className="text-white">{payment.receiptNo}</span>
+                                            <span className="text-slate-500 ml-2">· {payment.paymentMode}</span>
+                                            {payment.transactionId && <span className="text-slate-600 ml-2 text-xs">{payment.transactionId}</span>}
+                                          </div>
+                                          <div className="text-right">
+                                            <p className="text-emerald-400 font-medium">{fmtMoney(payment.amountPaid)}</p>
+                                            <p className="text-xs text-slate-500">{fmt(payment.paymentDate)} · {payment.collectedBy?.name || '—'}</p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ) : <p className="text-xs text-slate-600">No payments recorded yet</p>}
+                                {f.notes && <p className="text-xs text-slate-500 italic">{f.notes}</p>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </Card>
                 );
               })}
             </div>
           )
       }
+      {payFee && (
+        <StudentFeePaymentModal
+          fee={payFee}
+          onClose={() => setPayFee(null)}
+          onSuccess={() => { setPayFee(null); load(); }}
+        />
+      )}
     </div>
+  );
+}
+
+function StudentFeePaymentModal({ fee, onClose, onSuccess }) {
+  const [form, setForm] = useState({
+    amountPaid: fee.outstandingAmount,
+    paymentMode: 'Cash',
+    transactionId: '',
+    notes: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    const amount = Number(form.amountPaid);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > fee.outstandingAmount) {
+      alert(`Enter an amount between 1 and ${fmtMoney(fee.outstandingAmount)}.`);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await api.post(API.FEES.PAY(fee._id), { ...form, amountPaid: amount });
+      alert(`Payment recorded. Receipt: ${response.data?.receiptNo}`);
+      onSuccess();
+    } catch (error) {
+      alert(error?.response?.data?.message || error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal open onClose={onClose} title="Collect Student Fee">
+      <div className="mb-4 rounded-lg bg-slate-800 p-3 text-sm">
+        <p className="font-medium text-white">
+          {fee.student?.firstName} {fee.student?.lastName}
+        </p>
+        <p className="mt-1 text-slate-400">
+          {fee.academicYear?.name} · {fee.classroom?.displayName} · {MONTH_NAMES[fee.month]} {fee.year}
+        </p>
+        <p className="mt-1 text-amber-400">Outstanding: {fmtMoney(fee.outstandingAmount)}</p>
+      </div>
+      <div className="space-y-3">
+        <Input
+          label="Amount *"
+          type="number"
+          min="1"
+          max={fee.outstandingAmount}
+          value={form.amountPaid}
+          onChange={event => setForm(current => ({ ...current, amountPaid: event.target.value }))}
+        />
+        <Select
+          label="Payment Mode *"
+          value={form.paymentMode}
+          onChange={event => setForm(current => ({ ...current, paymentMode: event.target.value }))}
+          options={['Cash', 'Cheque', 'Online', 'UPI', 'BankTransfer'].map(mode => ({ value: mode, label: mode }))}
+        />
+        <Input
+          label="Transaction ID"
+          value={form.transactionId}
+          onChange={event => setForm(current => ({ ...current, transactionId: event.target.value }))}
+        />
+        <Input
+          label="Notes"
+          value={form.notes}
+          onChange={event => setForm(current => ({ ...current, notes: event.target.value }))}
+        />
+      </div>
+      <div className="mt-6 flex justify-end gap-3">
+        <Button variant="ghost" onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSubmit} disabled={saving}>
+          {saving ? 'Processing...' : 'Collect Payment'}
+        </Button>
+      </div>
+    </Modal>
   );
 }
 

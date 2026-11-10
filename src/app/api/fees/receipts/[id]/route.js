@@ -1,7 +1,7 @@
 import PDFDocument from 'pdfkit';
 import mongoose from 'mongoose';
 import { connectDB } from '@/lib/mongodb';
-import { authorize } from '@/lib/auth';
+import { protect } from '@/lib/auth';
 import { FeePayment } from '@/models/Fee';
 import FeeReceipt from '@/models/FeeReceipt';
 import { SchoolSettings } from '@/models/Others';
@@ -9,8 +9,9 @@ import { r } from '@/lib/response';
 
 export const runtime = 'nodejs';
 
-export const GET = authorize('admin', 'principal')(async (request, { params }) => {
+export const GET = protect(async (request, { params }) => {
   try {
+    if (!['admin', 'principal', 'parent'].includes(request.user.role)) return r.forbidden();
     await connectDB();
     const { id } = await params;
     if (!mongoose.isValidObjectId(id)) return r.notFound('Fee receipt not found');
@@ -35,6 +36,14 @@ export const GET = authorize('admin', 'principal')(async (request, { params }) =
     if (!paymentReceipt) return r.notFound('Fee receipt not found');
 
     const student = paymentReceipt.student;
+    if (request.user.role === 'parent') {
+      const isLinkedStudent = (request.user.studentIds || [])
+        .some(studentId => String(studentId) === String(student?._id));
+      if (!isLinkedStudent) return r.forbidden('Receipt is not linked to this parent');
+    } else if (!['admin', 'principal'].includes(request.user.role)) {
+      return r.forbidden();
+    }
+
     const studentName = [student?.firstName, student?.lastName].filter(Boolean).join(' ');
     const items = receipt
       ? receipt.items.map(item => ({

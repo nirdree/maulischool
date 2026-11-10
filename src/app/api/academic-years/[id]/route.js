@@ -39,7 +39,12 @@ export const DELETE = authorize('admin')(async (request, { params }) => {
     if (year.isCurrent) return r.badRequest('Cannot delete the current academic year');
 
     const [studentCount, classCount] = await Promise.all([
-      Student.countDocuments({ academicYear: id }),
+      Student.countDocuments({
+        $or: [
+          { academicYear: id },
+          { academicHistory: { $elemMatch: { academicYear: id } } },
+        ],
+      }),
       Classroom.countDocuments({ academicYear: id }),
     ]);
 

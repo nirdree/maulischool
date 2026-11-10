@@ -16,6 +16,8 @@ export const GET = protect(async (request, { params }) => {
     const student = await Student.findById(id)
       .populate('classroom',    'displayName className section monthlyFees')
       .populate('academicYear', 'name')
+      .populate('academicHistory.classroom', 'displayName className section')
+      .populate('academicHistory.academicYear', 'name')
       .populate('fatherUser',   'name email status studentIds')
       .populate('motherUser',   'name email status studentIds');
 

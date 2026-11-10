@@ -55,7 +55,8 @@ export const GET = protect(async (request) => {
       : filter;
     const query = Fee.find(queryFilter)
       .populate('student',   'firstName lastName admissionNo')
-      .populate('classroom', 'displayName')
+      .populate('classroom', 'displayName className section')
+      .populate('academicYear', 'name startDate endDate')
       .sort({ year: groupedView ? 1 : -1, month: groupedView ? 1 : -1 });
     if (pagination && !groupedView) query.skip(pagination.skip).limit(pagination.limit);
     const [fees, total, summary, parentSummary] = await Promise.all([
@@ -93,7 +94,7 @@ export const GET = protect(async (request) => {
         : Promise.resolve(null),
       pagination && request.user.role === 'parent'
         ? (async () => {
-            const allFees = await Fee.find(filter).select('_id finalAmount').lean();
+            const allFees = await Fee.find(filter).select('_id finalAmount status').lean();
             const payments = await FeePayment.aggregate([
               { $match: { fee: { $in: allFees.map(fee => fee._id) } } },
               {
@@ -107,9 +108,13 @@ export const GET = protect(async (request) => {
             ]);
             const paidByFee = new Map(payments.map(payment => [String(payment._id), payment.amountPaid]));
             const annualTotal = allFees.reduce((sum, fee) => sum + (fee.finalAmount || 0), 0);
-            const totalPaid = allFees.reduce((sum, fee) => sum + (paidByFee.get(String(fee._id)) || 0), 0);
+            const totalPaid = allFees.reduce((sum, fee) => (
+              sum + (paidByFee.get(String(fee._id)) ?? (fee.status === 'Paid' ? fee.finalAmount : 0))
+            ), 0);
             const totalDue = allFees.reduce((sum, fee) => (
-              sum + Math.max(0, fee.finalAmount - (paidByFee.get(String(fee._id)) || 0))
+              sum + (fee.status === 'Waived'
+                ? 0
+                : Math.max(0, fee.finalAmount - (paidByFee.get(String(fee._id)) ?? (fee.status === 'Paid' ? fee.finalAmount : 0))))
             ), 0);
             return { annualTotal, totalPaid, totalDue };
           })()
@@ -131,11 +136,11 @@ export const GET = protect(async (request) => {
       : [];
     const paidByFee = new Map(paymentTotals.map(item => [String(item._id), item.amountPaid]));
     const feesWithBalance = fees.map(fee => {
-      const amountPaid = paidByFee.get(String(fee._id)) || 0;
+      const amountPaid = paidByFee.get(String(fee._id)) ?? (fee.status === 'Paid' ? fee.finalAmount : 0);
       return {
         ...fee.toObject(),
         amountPaid,
-        outstandingAmount: Math.max(0, fee.finalAmount - amountPaid),
+        outstandingAmount: fee.status === 'Waived' ? 0 : Math.max(0, fee.finalAmount - amountPaid),
       };
     });
     const data = groupedView

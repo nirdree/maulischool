@@ -34,7 +34,7 @@ const ALL_NAV = [
   { label: 'Homework',       path: 'homework',        icon: ClipboardList,   roles: ['teacher', 'parent'] },
   { label: 'Fees',           path: 'fees',            icon: DollarSign,      roles: ['admin', 'principal', 'parent'] },
   { label: 'Online Fee Payments', path: 'online-fee-payments', icon: CreditCard, roles: ['admin', 'principal'] },
-  { label: 'Payroll',        path: 'payroll',         icon: Banknote,        roles: ['admin'] },
+  { label: 'Payroll',        path: 'payroll',         icon: Banknote,        roles: ['admin', 'teacher'] },
   { label: 'Leaves',         path: 'leaves',          icon: CalendarDays,    roles: ['admin', 'principal', 'teacher'] },
   { label: 'Notices',        path: 'notices',         icon: Bell,            roles: ['admin', 'principal', 'teacher', 'parent'] },
   { label: 'Promote',        path: 'promote',         icon: ArrowUpCircle,   roles: ['admin', 'principal'] },

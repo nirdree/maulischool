@@ -95,6 +95,8 @@ export default function FeesPage() {
   const [multiPayStudent, setMultiPayStudent] = useState(null);
   const [viewMonths, setViewMonths] = useState(null);
   const [viewPayments, setViewPayments] = useState(null);
+  const [allYearsStudent, setAllYearsStudent] = useState(null);
+  const [studentFeesRefresh, setStudentFeesRefresh] = useState(0);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [autoGenOpen, setAutoGenOpen]   = useState(false);
   const [receiptsOpen, setReceiptsOpen] = useState(false);
@@ -223,10 +225,16 @@ export default function FeesPage() {
     {
       key: 'student', label: 'Student',
       render: (group) => (
-        <div>
-          <p className="font-medium text-white">{group.student?.firstName} {group.student?.lastName}</p>
+        <button
+          className="text-left"
+          onClick={() => setAllYearsStudent(group.student)}
+          title="View this student's fees across academic years"
+        >
+          <p className="font-medium text-indigo-300 hover:text-indigo-200">
+            {group.student?.firstName} {group.student?.lastName}
+          </p>
           <p className="text-xs text-slate-500">{group.student?.admissionNo}</p>
-        </div>
+        </button>
       ),
     },
     { key: 'classroom', label: 'Class', render: (group) => group.classroom?.displayName || '—' },
@@ -400,11 +408,26 @@ export default function FeesPage() {
         />
       )}
 
+      {allYearsStudent && (
+        <AllYearsStudentFeesModal
+          key={allYearsStudent._id}
+          student={allYearsStudent}
+          refreshKey={studentFeesRefresh}
+          onClose={() => setAllYearsStudent(null)}
+          onCollect={fee => setPayFee(fee)}
+          onHistory={fee => setViewPayments(fee)}
+        />
+      )}
+
       {payFee && (
         <CollectPaymentModal
           fee={payFee}
           onClose={() => setPayFee(null)}
-          onSuccess={() => { fetchFees(); setPayFee(null); }}
+          onSuccess={() => {
+            fetchFees();
+            setStudentFeesRefresh(value => value + 1);
+            setPayFee(null);
+          }}
         />
       )}
 
@@ -547,6 +570,117 @@ function FeeGroupActions({ onView, onPayMultiple, hasOutstanding }) {
       : []),
   ];
   return <ActionMenu items={items} />;
+}
+
+function AllYearsStudentFeesModal({ student, refreshKey, onClose, onCollect, onHistory }) {
+  const [fees, setFees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    api.get(API.STUDENTS.FEES(student._id))
+      .then(response => {
+        if (!cancelled) {
+          setError('');
+          setFees(response.data?.fees || []);
+        }
+      })
+      .catch(requestError => {
+        if (!cancelled) setError(requestError?.response?.data?.message || requestError.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [student._id, refreshKey]);
+
+  const groups = Object.values(fees.reduce((result, fee) => {
+    const yearId = fee.academicYear?._id || fee.academicYear || 'unknown-year';
+    const classroomId = fee.classroom?._id || fee.classroom || 'unknown-class';
+    const key = `${yearId}-${classroomId}`;
+    if (!result[key]) {
+      result[key] = { key, year: fee.academicYear, classroom: fee.classroom, fees: [] };
+    }
+    result[key].fees.push(fee);
+    return result;
+  }, {})).sort((a, b) => (
+    new Date(b.year?.startDate || 0) - new Date(a.year?.startDate || 0)
+    || String(a.classroom?.displayName || '').localeCompare(String(b.classroom?.displayName || ''))
+  ));
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={`All academic-year fees — ${student.firstName || ''} ${student.lastName || ''}`}
+      width="max-w-4xl"
+    >
+      <div className="mb-4 flex flex-wrap gap-x-6 gap-y-1 rounded-lg bg-slate-800 p-3 text-sm text-slate-300">
+        <span>Admission no. <strong className="text-white">{student.admissionNo || '—'}</strong></span>
+        <span>Fees are grouped by academic year and class.</span>
+      </div>
+      {loading ? (
+        <div className="py-10 text-center text-slate-400">Loading fee history...</div>
+      ) : error ? (
+        <div className="py-6 text-center text-red-400">{error}</div>
+      ) : groups.length === 0 ? (
+        <div className="py-10 text-center text-slate-500">No fee records found for this student.</div>
+      ) : (
+        <div className="max-h-[65vh] space-y-4 overflow-y-auto pr-1">
+          {groups.map(group => {
+            const total = group.fees.reduce((sum, fee) => sum + Number(fee.finalAmount || 0), 0);
+            const paid = group.fees.reduce((sum, fee) => sum + Number(fee.amountPaid || 0), 0);
+            const due = group.fees.reduce((sum, fee) => sum + Number(fee.outstandingAmount || 0), 0);
+            return (
+              <section key={group.key} className="overflow-hidden rounded-xl border border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-800/70 px-4 py-3">
+                  <div>
+                    <h3 className="font-semibold text-white">
+                      {group.year?.name || 'Academic year unavailable'} · {group.classroom?.displayName || 'Class unavailable'}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Total ₹{total.toLocaleString('en-IN')} · Paid ₹{paid.toLocaleString('en-IN')} · Balance ₹{due.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                </div>
+                <div className="divide-y divide-slate-800">
+                  {[...group.fees].sort((a, b) => a.year - b.year || a.month - b.month).map(fee => (
+                    <div key={fee._id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-white">{monthName(fee.month)} {fee.year}</p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Fee ₹{Number(fee.finalAmount || 0).toLocaleString('en-IN')}
+                          {' · '}Paid ₹{Number(fee.amountPaid || 0).toLocaleString('en-IN')}
+                          {' · '}Due ₹{Number(fee.outstandingAmount || 0).toLocaleString('en-IN')}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        {feeStatusBadge(fee.status)}
+                        {fee.outstandingAmount > 0 && fee.status !== 'Waived' && (
+                          <Button size="sm" onClick={() => onCollect(fee)}>
+                            <DollarSign className="mr-1 h-4 w-4" /> Collect
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onHistory(fee)}
+                          title="Payment history"
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
+    </Modal>
+  );
 }
 
 function FeeMonthsModal({ group, onClose, onCollect, onHistory, onEdit, onDelete }) {
@@ -813,7 +947,7 @@ function EditFeeModal({ fee, onClose, onSuccess }) {
 
 function CollectPaymentModal({ fee, onClose, onSuccess }) {
   const [form, setForm] = useState({
-    amountPaid: fee.finalAmount, paymentMode: 'Cash', transactionId: '', notes: '',
+    amountPaid: fee.outstandingAmount ?? fee.finalAmount, paymentMode: 'Cash', transactionId: '', notes: '',
   });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -831,10 +965,21 @@ function CollectPaymentModal({ fee, onClose, onSuccess }) {
     <Modal open={true} onClose={onClose} title="Collect Payment">
       <div className="mb-4 p-3 bg-slate-800 rounded-lg text-sm">
         <p className="text-white font-medium">{fee.student?.firstName} {fee.student?.lastName}</p>
-        <p className="text-slate-400">{monthName(fee.month)} {fee.year} · Due: <span className="text-amber-400">₹{fee.finalAmount?.toLocaleString()}</span></p>
+        <p className="text-slate-400">
+          {fee.academicYear?.name ? `${fee.academicYear.name} · ` : ''}
+          {fee.classroom?.displayName ? `${fee.classroom.displayName} · ` : ''}
+          {monthName(fee.month)} {fee.year} · Due: <span className="text-amber-400">₹{(fee.outstandingAmount ?? fee.finalAmount)?.toLocaleString('en-IN')}</span>
+        </p>
       </div>
       <div className="space-y-3">
-        <Input label="Amount *" type="number" value={form.amountPaid} onChange={e => set('amountPaid', e.target.value)} />
+        <Input
+          label="Amount *"
+          type="number"
+          min="1"
+          max={fee.outstandingAmount ?? fee.finalAmount}
+          value={form.amountPaid}
+          onChange={e => set('amountPaid', e.target.value)}
+        />
         <Select label="Payment Mode *" value={form.paymentMode} onChange={e => set('paymentMode', e.target.value)}
           options={['Cash','Cheque','Online','UPI','BankTransfer'].map(m => ({ value: m, label: m }))} />
         <Input label="Transaction ID" value={form.transactionId} onChange={e => set('transactionId', e.target.value)} placeholder="Optional" />

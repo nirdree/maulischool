@@ -16,7 +16,30 @@ export const GET = authorize('admin', 'principal')(async (request) => {
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
     if (searchParams.get('paymentMethod')) filter.paymentMethod = searchParams.get('paymentMethod');
     if (searchParams.get('classId')) {
-      const students = await Student.find({ classroom: searchParams.get('classId') }).select('_id');
+      const classFilter = { classroom: searchParams.get('classId') };
+      if (searchParams.get('academicYear')) {
+        classFilter.$or = [
+          {
+            classroom: searchParams.get('classId'),
+            academicYear: searchParams.get('academicYear'),
+          },
+          {
+            academicHistory: {
+              $elemMatch: {
+                classroom: searchParams.get('classId'),
+                academicYear: searchParams.get('academicYear'),
+              },
+            },
+          },
+        ];
+        delete classFilter.classroom;
+      } else {
+        classFilter.$or = [
+          { classroom: searchParams.get('classId') },
+          { academicHistory: { $elemMatch: { classroom: searchParams.get('classId') } } },
+        ];
+      }
+      const students = await Student.find(classFilter).select('_id');
       filter.student = { $in: students.map(student => student._id) };
     }
     if (searchParams.get('from') || searchParams.get('to')) {

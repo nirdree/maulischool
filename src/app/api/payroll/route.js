@@ -43,7 +43,7 @@ export function calculateSalary({ basicSalary, totalDays, holidays, daysPresent,
 
 // ─── routes ─────────────────────────────────────────────────
 
-export const GET = authorize('admin', 'principal')(async (request) => {
+export const GET = authorize('admin', 'principal', 'teacher')(async (request) => {
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);
@@ -56,8 +56,16 @@ export const GET = authorize('admin', 'principal')(async (request) => {
     if (searchParams.get('status'))       filter.status       = searchParams.get('status');
     if (searchParams.get('academicYear')) filter.academicYear = searchParams.get('academicYear');
 
+    if (request.user.role === 'teacher') {
+      if (!request.user.employeeId) {
+        return r.forbidden('Your account is not linked to an employee profile');
+      }
+      filter.employee = request.user.employeeId;
+    }
+
     const query = Payroll.find(filter)
       .populate('employee',    'name employeeId role monthlySalary')
+      .populate('academicYear', 'name startDate endDate')
       .populate('generatedBy', 'name')
       .populate('paidBy',      'name')
       .sort({ year: -1, month: -1 });

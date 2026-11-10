@@ -128,6 +128,7 @@ export const API = {
   PROMOTE: {
     PREVIEW: `/api/promote/preview`,
     EXECUTE: `/api/promote`,
+    SETUP: `/api/promote/setup`,
   },
 
   // ── ⚙️ Settings ───────────────────────────────────────────
